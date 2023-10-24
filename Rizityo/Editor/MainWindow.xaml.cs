@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Editor.GameProject;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +26,13 @@ namespace Editor
         {
             InitializeComponent();
             Loaded += OnMainWindowLoaded;
+            Closing += OnMainWindowClosing;
+        }
+
+        private void OnMainWindowClosing(object sender, CancelEventArgs e)
+        {
+            Closing -= OnMainWindowClosing;
+            Project.CurrentProject?.Unload();
         }
 
         private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
@@ -35,13 +44,14 @@ namespace Editor
         private void OpenProjectBrowserDialog()
         {
             var projectBrowser = new GameProject.ProjectBrowserDialog();
-            if(projectBrowser.ShowDialog() == false)
+            if(projectBrowser.ShowDialog() == false || projectBrowser.DataContext == null)
             {
                 Application.Current.Shutdown();
             }
             else
             {
-
+                Project.CurrentProject?.Unload(); // 現在のプロジェクトを閉じる
+                DataContext = projectBrowser.DataContext;
             }
             
         }
