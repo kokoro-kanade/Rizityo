@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>pprop</Title>
+      <Shortcut>pprop</Shortcut>
+      <Description>setによる変更を通知するプロパティ</Description>
+      <Author>佐々木</Author>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal Editable="true">
+            <ID> prop </ID>
+            <Default> propertyName </Default>
+        </Literal>
+      </Declarations>
+      <Code Language="csharp"><![CDATA[private bool _$prop$;
+        public bool $prop$
+        {
+            get => _$prop$;
+            set
+            {
+                if (_$prop$ != value)
+                {
+                    _$prop$ = value;
+                    OnPropertyChanged(nameof($prop$));
+                }
+            }
+        }$end$]]></Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>
