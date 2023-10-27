@@ -34,7 +34,7 @@ namespace Rizityo::Id
 
 	constexpr IdType GetGeneration(IdType id)
 	{
-		return (id >> Internal::INDEX_BITS) & id;
+		return (id >> Internal::INDEX_BITS);
 	}
 
 	constexpr IdType IncrementGeneration(IdType id)
