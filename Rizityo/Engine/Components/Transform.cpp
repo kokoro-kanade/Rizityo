@@ -4,9 +4,9 @@ namespace Rizityo::Transform
 {
 	namespace
 	{
-		Utility::vector<Math::Vector3> positions;
-		Utility::vector<Math::Vector4> rotations;
-		Utility::vector<Math::Vector3> scales;
+		Utility::Vector<Math::Vector3> positions;
+		Utility::Vector<Math::Vector4> rotations;
+		Utility::Vector<Math::Vector3> scales;
 	}
 
 	Transform::Component CreateTransformComponent(const InitInfo& info, GameEntity::Entity entity)

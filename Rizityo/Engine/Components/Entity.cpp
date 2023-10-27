@@ -5,10 +5,10 @@ namespace Rizityo::GameEntity
 {
 	namespace
 	{
-		Utility::vector<Transform::Component> TransformComponents;
+		Utility::Vector<Transform::Component> TransformComponents;
 
-		Utility::vector<Id::GENERATION_TYPE> Generations;
-		Utility::deque<EntityId> FreeIds;
+		Utility::Vector<Id::GENERATION_TYPE> Generations;
+		Utility::Deque<EntityId> FreeIds;
 	}
 
 	Entity CreateGameEntity(const EntityInfo& info)
@@ -59,7 +59,7 @@ namespace Rizityo::GameEntity
 	bool IsAlive(Entity entity)
 	{
 		assert(entity.IsValid());
-		EntityId entityId = entity.GetId();
+		EntityId entityId{ entity.GetId() };
 		Id::IdType index{ Id::GetIndex(entityId) };
 		assert(index < Generations.size());
 		return (Generations[index] == Id::GetGeneration(entityId) && TransformComponents[index].IsValid());

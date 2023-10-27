@@ -8,7 +8,7 @@
 namespace Rizityo::Utility
 {
 	template<typename T>
-	using vector = std::vector<T>;
+	using Vector = std::vector<T>;
 }
 #endif // USE_STL_VECTOR
 
@@ -17,7 +17,7 @@ namespace Rizityo::Utility
 namespace Rizityo::Utility
 {
 	template<typename T>
-	using deque = std::deque<T>;
+	using Deque = std::deque<T>;
 }
 #endif // USE_STL_DEQUE
 
