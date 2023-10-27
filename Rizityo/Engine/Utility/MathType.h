@@ -23,4 +23,5 @@ namespace Rizityo::Math
 	using Matrix4x4 = DirectX::XMFLOAT4X4;
 	using Matrix4x4a = DirectX::XMFLOAT4X4A;
 #endif
+
 }
