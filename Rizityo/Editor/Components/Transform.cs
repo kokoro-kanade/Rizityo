@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Editor.Components
 {
     [DataContract]
-    class TransformComponent : Component
+    class Transform : Component
     {
         private Vector3 _position;
         [DataMember]
@@ -56,7 +56,7 @@ namespace Editor.Components
             }
         }
 
-        public TransformComponent(GameEntity owner) : base(owner)
+        public Transform(GameEntity owner) : base(owner)
         {
         }
     }
