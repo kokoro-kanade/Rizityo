@@ -148,14 +148,14 @@ namespace Editor.GameProject
                     template.ProjectFilePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), template.ProjectFile));
 
                     _projectTemplates.Add(template);
-                    IsValidProjectPath();
+                    IsValidProjectPath(); // TODO for文内で呼ぶ必要?
                 }
             }
             catch(Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 Logger.Log(Verbosity.Error, "Failed to read project templates");
-
+                throw;
             }
         }
 

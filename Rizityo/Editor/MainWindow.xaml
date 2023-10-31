@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:Editor"
         xmlns:editors="clr-namespace:Editor.Editors"
         mc:Ignorable="d" WindowStartupLocation="CenterScreen"
-        Title="Rizityo Editor" Height="1080" Width="1920">
+        Title="Rizityo Editor" Height="1080" Width="1920"
+        Style="{StaticResource WindowStyle}">
     <Grid>
         <editors:LevelEditorView/>
     </Grid>

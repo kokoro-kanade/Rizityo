@@ -32,7 +32,6 @@ namespace Editor.Editors
         {
             Loaded -= OnLevelEditorViewLoaded;
             Focus();
-            ((INotifyCollectionChanged)Project.UndoRedo.UndoList).CollectionChanged += (s, e) => Focus(); //undoやredo時にエディタへのフォーカスが失われるのを防ぐ
         }
     }
 }

@@ -18,9 +18,9 @@ namespace Editor.Utility
     /// <summary>
     /// UndoRedoHistory.xaml の相互作用ロジック
     /// </summary>
-    public partial class UndoRedoHistory : UserControl
+    public partial class UndoRedoView : UserControl
     {
-        public UndoRedoHistory()
+        public UndoRedoView()
         {
             InitializeComponent();
         }
