@@ -37,46 +37,45 @@ namespace Editor.Utility.Controls
             = DependencyProperty.Register(nameof(VectorType), typeof(VectorType), typeof(VectorTextBox),
                 new PropertyMetadata(VectorType.Vector3));
 
-
-        public double X
+        public string X
         {
-            get => (double)GetValue(XProperty);
+            get => (string)GetValue(XProperty);
             set => SetValue(XProperty, value);
         }
 
         public static readonly DependencyProperty XProperty
-            = DependencyProperty.Register(nameof(X), typeof(double), typeof(VectorTextBox),
-                new PropertyMetadata(1.0));
+            = DependencyProperty.Register(nameof(X), typeof(string), typeof(VectorTextBox),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
-        public double Y
+        public string Y
         {
-            get => (double)GetValue(YProperty);
+            get => (string)GetValue(YProperty);
             set => SetValue(YProperty, value);
         }
 
         public static readonly DependencyProperty YProperty
-            = DependencyProperty.Register(nameof(Y), typeof(double), typeof(VectorTextBox),
-                new PropertyMetadata(1.0));
+            = DependencyProperty.Register(nameof(Y), typeof(string), typeof(VectorTextBox),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
-        public double Z
+        public string Z
         {
-            get => (double)GetValue(ZProperty);
+            get => (string)GetValue(ZProperty);
             set => SetValue(ZProperty, value);
         }
 
         public static readonly DependencyProperty ZProperty
-            = DependencyProperty.Register(nameof(Z), typeof(double), typeof(VectorTextBox),
-                new PropertyMetadata(1.0));
+            = DependencyProperty.Register(nameof(Z), typeof(string), typeof(VectorTextBox),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
-        public double W
+        public string W
         {
-            get => (double)GetValue(WProperty);
+            get => (string)GetValue(WProperty);
             set => SetValue(WProperty, value);
         }
 
         public static readonly DependencyProperty WProperty
-            = DependencyProperty.Register(nameof(W), typeof(double), typeof(VectorTextBox),
-                new PropertyMetadata(1.0));
+            = DependencyProperty.Register(nameof(W), typeof(string), typeof(VectorTextBox),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
         public double Speed
         {

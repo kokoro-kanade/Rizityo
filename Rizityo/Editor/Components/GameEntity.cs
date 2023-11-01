@@ -46,9 +46,10 @@ namespace Editor.Components
                         EntityId = EngineAPI.CreateGameEntity(this);
                         Debug.Assert(Id.IsValid(EntityId));
                     }
-                    else
+                    else if(Id.IsValid(EntityId))
                     {
                         EngineAPI.RemoveGameEntity(this);
+                        EntityId = Id.INVALID_ID;
                     }
                     OnPropertyChanged(nameof(IsActive));
                 }
@@ -117,7 +118,7 @@ namespace Editor.Components
 
     abstract class MultiSelectedEntity : ViewModelBase
     {
-        private bool? _isEnabled; // 選択しているすべてのエンティティの値が等しくない場合はnullにするためにbool?になっている
+        private bool? _isEnabled = true; // 選択しているすべてのエンティティの値が等しくない場合はnullにするためにbool?になっている
         [DataMember]
         public bool? IsEnabled
         {
@@ -152,44 +153,30 @@ namespace Editor.Components
 
         public List<GameEntity> SelectedEntities { get; }
 
+        public T GetMultiSelectedComponent<T>() where T : IMultiSelectedComponent
+        {
+            return (T)Components.FirstOrDefault(c => c.GetType() == typeof(T));
+        }
+
+
         // 選択しているエンティティの値が同じならその値、そうでなければnull
-        public static float? GetMixedValue(List<GameEntity> entities, Func<GameEntity, float> getPropertyFunc)
+        // TODO: Utilityでも良い？ ここでしか使わないならここでも良い
+        public static float? GetMixedValue<T>(List<T> objects, Func<T, float> getPropertyFunc)
         {
-            var value = getPropertyFunc(entities.First());
-            foreach (var entity in entities.Skip(1))
-            {
-                if (!value.IsTheSameAs(getPropertyFunc(entity)))
-                {
-                    return null;
-                }
-            }
-            return value;
+            var value = getPropertyFunc(objects.First());
+            return objects.Skip(1).Any(o => !getPropertyFunc(o).IsTheSameAs(value)) ? (float?)null : value ;
         }
 
-        public static bool? GetMixedValue(List<GameEntity> entities, Func<GameEntity, bool> getPropertyFunc)
+        public static bool? GetMixedValue<T>(List<T> objects, Func<T, bool> getPropertyFunc)
         {
-            var value = getPropertyFunc(entities.First());
-            foreach (var entity in entities.Skip(1))
-            {
-                if (value != getPropertyFunc(entity))
-                {
-                    return null;
-                }
-            }
-            return value;
+            var value = getPropertyFunc(objects.First());
+            return objects.Skip(1).Any(o => getPropertyFunc(o) != value) ? (bool?)null : value;
         }
 
-        public static string GetMixedValue(List<GameEntity> entities, Func<GameEntity, string> getPropertyFunc)
+        public static string GetMixedValue<T>(List<T> objects, Func<T, string> getPropertyFunc)
         {
-            var value = getPropertyFunc(entities.First());
-            foreach (var entity in entities.Skip(1))
-            {
-                if (value != getPropertyFunc(entity))
-                {
-                    return null;
-                }
-            }
-            return value;
+            var value = getPropertyFunc(objects.First());
+            return objects.Skip(1).Any(o => getPropertyFunc(o) != value) ? null : value;
         }
 
         private bool _enableUpdateEntities = true;
@@ -198,30 +185,47 @@ namespace Editor.Components
             switch (propertyName)
             {
                 case nameof(IsEnabled):
-                    SelectedEntities.ForEach(x => x.IsEnabled = IsEnabled.Value);
+                    SelectedEntities.ForEach(e => e.IsEnabled = IsEnabled.Value);
                     return true;
                 case nameof(Name):
-                    SelectedEntities.ForEach(x => x.Name = Name);
+                    SelectedEntities.ForEach(e => e.Name = Name);
                     return true;
             }
             return false; // 派生クラスにしかないプロパティの場合
         }
 
-        // 選択しているエンティティの共通プロパティ値を調べる
-        protected virtual bool UpdateMultiSelectedEntity()
+        protected virtual bool UpdateCommonProperty()
         {
             IsEnabled = GetMixedValue(SelectedEntities, new Func<GameEntity, bool>(x => x.IsEnabled));
             Name = GetMixedValue(SelectedEntities, new Func<GameEntity, string>(x => x.Name));
             return true;
         }
 
+        private void MakeComponentList()
+        {
+            _components.Clear();
+            var firstEntity = SelectedEntities.FirstOrDefault();
+            if (firstEntity == null)
+                return;
+
+            foreach (var component in firstEntity.Components)
+            {
+                var type = component.GetType();
+                if (!SelectedEntities.Skip(1).Any(e => e.GetComponent(type) == null))
+                {
+                    Debug.Assert(Components.FirstOrDefault(c => c.GetType() == type) == null);
+                    _components.Add(component.GetMultiSelectedComponent(this));
+                }
+            }
+        }
+
         public void Refresh()
         {
             _enableUpdateEntities = false;
-            UpdateMultiSelectedEntity();
+            UpdateCommonProperty();
+            MakeComponentList();
             _enableUpdateEntities = true;
         }
-
 
         public MultiSelectedEntity(List<GameEntity> entities)
         {

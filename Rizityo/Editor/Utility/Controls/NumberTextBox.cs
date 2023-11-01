@@ -61,6 +61,7 @@ namespace Editor.Utility.Controls
             _mouseKeyDown = true;
             _valueChanged = false;
             _mouseXStart = e.GetPosition(this).X;
+            Focus();
         }
         private void OnTextBlock_Mouse_LBU(object sender, MouseButtonEventArgs e)
         {

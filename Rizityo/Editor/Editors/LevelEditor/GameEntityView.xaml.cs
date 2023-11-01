@@ -54,6 +54,7 @@ namespace Editor.Editors
         // フォーカスされた時点での古いプロパティ値でUndo
         private void OnNameTextBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
+            _propertyName = string.Empty;
             _undoAction = GetRenameAction();
         }
 
