@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>propdp</Title>
+      <Shortcut>propdp</Shortcut>
+      <Description>Dependencyプロパティ</Description>
+      <Author>佐々木</Author>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal Editable="true">
+            <ID> type </ID>
+            <Default> int </Default>
+        </Literal>
+        <Literal Editable="true">
+          <ID> prop </ID>
+          <Default> propertyName </Default>
+        </Literal>
+        <Literal Editable="true">
+          <ID> owner </ID>
+          <Default> ownerClass </Default>
+        </Literal>
+        <Literal Editable="true">
+          <ID> meta </ID>
+          <Default> 0 </Default>
+        </Literal>
+      </Declarations>
+      <Code Language="csharp"><![CDATA[
+        public $type$ $prop$
+        {
+            get => ($type$)GetValue($prop$Property);
+            set => SetValue($prop$Property, value);
+        }
+
+        public static readonly DependencyProperty $prop$Property
+            = DependencyProperty.Register(nameof($prop$), typeof($type$), typeof($owner$),
+                new PropertyMetadata($meta$));]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

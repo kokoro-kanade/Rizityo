@@ -1,11 +1,13 @@
 #include "Entity.h"
 #include "Transform.h"
+#include "Script.h"
 
 namespace Rizityo::GameEntity
 {
 	namespace
 	{
 		Utility::Vector<Transform::Component> TransformComponents;
+		Utility::Vector<Script::Component> ScriptComponents;
 
 		Utility::Vector<Id::GENERATION_TYPE> Generations;
 		Utility::Deque<EntityId> FreeIds;
@@ -17,11 +19,12 @@ namespace Rizityo::GameEntity
 		if (!info.Transform)
 			return Entity{};
 
+		// IDï¿½ï¿½ï¿½æ“¾
 		EntityId id;
-		if (FreeIds.size() > Id::MIN_DELETED_ELEMENTS) // FreeIds‚ª­‚È‚¢ó‘Ô‚ÅŽg‚¢‚Ü‚í‚·‚Æ‚·‚®‚Égeneration‚ªˆêŽü‚µ‚Ä‚µ‚Ü‚¤‚Ì‚Åè‡’l‚ðÝ‚¯‚é
+		if (FreeIds.size() > Id::MIN_DELETED_ELEMENTS) // FreeIdsï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½ï¿½Ô‚ÅŽgï¿½ï¿½ï¿½Ü‚í‚·ï¿½Æ‚ï¿½ï¿½ï¿½ï¿½ï¿½generationï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½Ü‚ï¿½ï¿½Ì‚ï¿½è‡’lï¿½ï¿½Ý‚ï¿½ï¿½ï¿½
 		{
 			id = FreeIds.front();
-			assert(!IsAlive(Entity{ id }));
+			assert(!IsAlive(id));
 			FreeIds.pop_front();
 			id = EntityId{ Id::IncrementGeneration(id) };
 			Generations[Id::GetIndex(id)]++;
@@ -32,43 +35,65 @@ namespace Rizityo::GameEntity
 			Generations.push_back(0);
 
 			TransformComponents.emplace_back();
+			ScriptComponents.emplace_back();
 		}
 
 		const Entity newEntity{ id };
 		const Id::IdType index{ Id::GetIndex(id) };
 
+		// TransformComponentï¿½ì¬
 		assert(!TransformComponents[index].IsValid());
-		TransformComponents[index] = Transform::CreateTransformComponent(*info.Transform, newEntity);
+		TransformComponents[index] = Transform::CreateComponent(*info.Transform, newEntity);
 		if (!TransformComponents[index].IsValid())
 			return Entity{};
+
+		// ScriptComponentï¿½ì¬
+		if (info.Script && info.Script->CreateFunc)
+		{
+			assert(!ScriptComponents[index].IsValid());
+			ScriptComponents[index] = Script::CreateComponent(*info.Script, newEntity);
+			assert(ScriptComponents[index].IsValid());
+		}
+
 		return newEntity;
 	}
 
-	void RemoveGameEnity(Entity entity)
+	void RemoveGameEnity(EntityId id)
 	{
-		assert(IsAlive(entity));
-		if (IsAlive(entity))
+		assert(IsAlive(id));
+		Id::IdType index{ Id::GetIndex(id) };
+
+		Transform::RemoveComponent(TransformComponents[index]);
+		TransformComponents[index] = {};
+
+		if (ScriptComponents[index].IsValid())
 		{
-			EntityId id{ entity.GetId() };
-			Id::IdType index{ Id::GetIndex(id) };
-			TransformComponents[index] = {};
-			FreeIds.push_back(id);
+			Script::RemoveComponent(ScriptComponents[index]);
+			ScriptComponents[index] = {};
 		}
+
+		FreeIds.push_back(id);
 	}
 
-	bool IsAlive(Entity entity)
+	bool IsAlive(EntityId id)
 	{
-		assert(entity.IsValid());
-		EntityId entityId{ entity.GetId() };
-		Id::IdType index{ Id::GetIndex(entityId) };
+		assert(Id::IsValid(id));
+		Id::IdType index{ Id::GetIndex(id) };
 		assert(index < Generations.size());
-		return (Generations[index] == Id::GetGeneration(entityId) && TransformComponents[index].IsValid());
+		return (Generations[index] == Id::GetGeneration(id) && TransformComponents[index].IsValid());
 	}
 
 	Transform::Component Entity::GetTransformComponent() const
 	{
-		assert(IsAlive(*this));
+		assert(IsAlive(Id));
 		const Id::IdType index{ Id::GetIndex(Id) };
 		return TransformComponents[index];
+	}
+
+	Script::Component Entity::GetScriptComponent() const
+	{
+		assert(IsAlive(Id));
+		const Id::IdType index{ Id::GetIndex(Id) };
+		return ScriptComponents[index];
 	}
 }

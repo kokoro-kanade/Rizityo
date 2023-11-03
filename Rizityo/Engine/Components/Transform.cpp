@@ -9,7 +9,7 @@ namespace Rizityo::Transform
 		Utility::Vector<Math::Vector3> scales;
 	}
 
-	Transform::Component CreateTransformComponent(const InitInfo& info, GameEntity::Entity entity)
+	Transform::Component CreateComponent(const InitInfo& info, GameEntity::Entity entity)
 	{
 		assert(entity.IsValid());
 		const Id::IdType index = Id::GetIndex(entity.GetId());
@@ -27,10 +27,11 @@ namespace Rizityo::Transform
 			scales.emplace_back(info.Scale);
 		}
 
+		// Why: なぜ毎回最後のインデックスを返しているのか
 		return Component{ TransformId{(Id::IdType)positions.size() - 1} };
 	}
 
-	void RemoveTransformComponent(Transform::Component component)
+	void RemoveComponent(Transform::Component component)
 	{
 		assert(component.IsValid());
 	}

@@ -10,12 +10,17 @@
     <Snippet>
       <Declarations>
         <Literal Editable="true">
+          <ID> type </ID>
+          <Default> int </Default>
+        </Literal>
+        <Literal Editable="true">
             <ID> prop </ID>
             <Default> propertyName </Default>
         </Literal>
       </Declarations>
-      <Code Language="csharp"><![CDATA[private bool _$prop$;
-        public bool $prop$
+      <Code Language="csharp"><![CDATA[
+        private $type$ _$prop$;
+        public $type$ $prop$
         {
             get => _$prop$;
             set
@@ -26,7 +31,8 @@
                     OnPropertyChanged(nameof($prop$));
                 }
             }
-        }$end$]]></Code>
+        }$end$]]>
+      </Code>
     </Snippet>
   </CodeSnippet>
 </CodeSnippets>

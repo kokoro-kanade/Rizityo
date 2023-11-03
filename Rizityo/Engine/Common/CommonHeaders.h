@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <assert.h>
 #include <typeinfo>
+#include <memory>
+#include <unordered_map>
 
 #if defined(_WIN64)
 #include <DirectXMath.h>
@@ -13,5 +15,5 @@
 
 // ã§í ÉwÉbÉ_Å[
 #include "PrimitiveTypes.h"
-#include "../Utility/Utility.h"
-#include "../Utility/MathType.h"
+#include "..\Utility\Utility.h"
+#include "..\Utility\MathType.h"
