@@ -1,11 +1,11 @@
-﻿using Editor.Utility;
+﻿using Editor.GameProject;
+using Editor.Utility;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
-using System.Security;
 
 namespace Editor.GameDev
 {
@@ -13,6 +13,9 @@ namespace Editor.GameDev
     {
         private static EnvDTE80.DTE2 _vsInstance = null;
         private static readonly string _progId = "VisualStudio.DTE.16.0";
+
+        public static bool BuildSucceeded { get; private set; } = true;
+        public static bool BuildDone { get; private set; } = true;
 
         [DllImport("ole32.dll")]
         private static extern int GetRunningObjectTable(uint reserved, out IRunningObjectTable pprot);
@@ -138,5 +141,97 @@ namespace Editor.GameDev
                 return false;
             }
         }
+
+        public static bool IsDebugging()
+        {
+            bool result = false;
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+                    result = _vsInstance != null &&
+                        (_vsInstance.Debugger.CurrentProgram != null ||
+                        _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
+                    if (result)
+                        break;
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    // おそらくVSが忙しくて対応できていないので待つ
+                    if (!result)
+                        System.Threading.Thread.Sleep(1000);
+                }
+
+            }
+            return result;
+        }
+
+        private static void OnBulidSolutionBegin(string project, string projectConfig, string platform, string solutionConfig)
+        {
+            Logger.Log(Verbosity.Display, $"ビルド開始{project}, {projectConfig}, {platform}, {solutionConfig}");
+        }
+
+        private static void OnBulidSolutionDone(string project, string projectConfig, string platform, string solutionConfig, bool success)
+        {
+            if (BuildDone)
+                return;
+
+            if (success)
+                Logger.Log(Verbosity.Display, $"{projectConfig}ビルドは成功しました");
+            else
+                Logger.Log(Verbosity.Error, $"{projectConfig}ビルドは失敗しました");
+        }
+
+        public static void BuildSolution(Project project, string configName, bool showVSWindow = true)
+        {
+            if (IsDebugging())
+            {
+                Logger.Log(Verbosity.Error, "Visual Studioは現在プロセスを実行中です");
+                return;
+            }
+
+            OpenVisualStudio(project.SolutionFilePath);
+            BuildSucceeded = BuildDone = false;
+
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+                    if (!_vsInstance.Solution.IsOpen)
+                        _vsInstance.Solution.Open(project.SolutionFilePath);
+                    _vsInstance.MainWindow.Visible = showVSWindow;
+
+                    _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBulidSolutionBegin;
+                    _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBulidSolutionDone;
+
+                    try
+                    {
+                        // 参照しているpbdファイルは削除しようとすると例外を投げるので消されない
+                        foreach (var pbdFile in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{configName}"), "*.pbd"))
+                        {
+                            File.Delete(pbdFile);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                    }
+
+                    _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(configName).Activate();
+                    _vsInstance.ExecuteCommand("Build.BuildSolution");
+                    
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    Debug.WriteLine($"{i}回目: {project.Name}のビルドに失敗");
+                    System.Threading.Thread.Sleep(1000);
+                }
+            }
+            
+        }
+
     }
 }

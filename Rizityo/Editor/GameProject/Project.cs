@@ -1,21 +1,26 @@
-﻿using Editor.GameDev;
+﻿using Editor.DLLWrapper;
+using Editor.GameDev;
 using Editor.Utility;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
 namespace Editor.GameProject
 {
+    enum BuildConfigutation
+    {
+        Debug,
+        DebugEditor,
+        Release,
+        ReleaseEditor
+    }
+
     [DataContract(Name = "Game")]
     class Project : ViewModelBase
     {
@@ -27,6 +32,9 @@ namespace Editor.GameProject
         public string ProjectFilePath => $@"{Path}{Name}{Extension}";
         public string SolutionFilePath => $@"{Path}{Name}.sln";
 
+        public static Project Current => Application.Current.MainWindow.DataContext as Project;
+
+        // レベル
         [DataMember(Name = "Levels")]
         private ObservableCollection<Level> _levels = new ObservableCollection<Level>();
         public ReadOnlyObservableCollection<Level> Levels { get; private set; }
@@ -44,7 +52,6 @@ namespace Editor.GameProject
                 }
             }
         }
-
         public ICommand AddLevelCommand { get; private set; }
         public ICommand RemoveLevelCommand { get; private set; }
         private void AddLevel(string levelName)
@@ -58,12 +65,13 @@ namespace Editor.GameProject
             _levels.Remove(level);
         }
 
-        public static Project Current => Application.Current.MainWindow.DataContext as Project;
+
         public static UndoRedo UndoRedo { get; } = new UndoRedo();
         public ICommand UndoCommand { get; private set; }
         public ICommand RedoCommand { get; private set; }
-        public ICommand SaveCommand { get; private set; }
 
+
+        public ICommand SaveCommand { get; private set; }
         public static Project Load(string projectFile)
         {
             Debug.Assert(File.Exists(projectFile));
@@ -80,20 +88,71 @@ namespace Editor.GameProject
             UndoRedo.Reset();
         }
 
-        // ロード時にコンストラクタを用いずに初期化するための処理
-        [OnDeserialized]
-        private void OnDeserialized(StreamingContext context)
+        // ビルド
+        private int _buildConfig;
+        [DataMember]
+        public int BuildConfig
         {
-            if (_levels != null)
+            get => _buildConfig;
+            set
             {
-                Levels = new ReadOnlyObservableCollection<Level>(_levels);
-                OnPropertyChanged(nameof(Levels));
+                if (_buildConfig != value)
+                {
+                    _buildConfig = value;
+                    OnPropertyChanged(nameof(BuildConfig));
+                }
             }
-            ActiveLevel = Levels.FirstOrDefault(x => x.IsActive);
+        }
+        public BuildConfigutation ApplicationBuildConfig => BuildConfig == 0 ? BuildConfigutation.Debug : BuildConfigutation.Release;
+        public BuildConfigutation DllBuildConfig => BuildConfig == 0 ? BuildConfigutation.DebugEditor : BuildConfigutation.ReleaseEditor;
 
+        private static readonly string[] _buildConfigurationNames
+            = new string[] { "Debug", "DebugEditor", "Release", "ReleaseEditor" };
+        private static string GetConfigurationName(BuildConfigutation config) => _buildConfigurationNames[(int)config];
+        public ICommand BuildCommand { get; private set; }
+        private async Task BuildGameCodeDll(bool showVSWindow)
+        {
+            try
+            {
+                UnLoadGameCodeDll();
+                await Task.Run(() => VisualStudio.BuildSolution(this, GetConfigurationName(DllBuildConfig), showVSWindow));
+                if (VisualStudio.BuildSucceeded)
+                {
+                    LoadGameCodeDll();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw;
+            }
+        }
+        private void LoadGameCodeDll()
+        {
+            var configName = GetConfigurationName(DllBuildConfig);
+            var dllPath = $@"{Path}x64\{configName}\{Name}.dll";
+            if(File.Exists(dllPath) && EngineAPI.LoadGameCodeDll(dllPath) != 0)
+            {
+                Logger.Log(Verbosity.Display, "ゲームコードのDLLをロードしました");
+            }
+            else
+            {
+                Logger.Log(Verbosity.Warning, "ゲームコードのDLLのロードに失敗しました。まずプロジェクトのビルドを試してください");
+            }
+        }
+        private void UnLoadGameCodeDll()
+        {
+            if(EngineAPI.UnLoadGameCodeDll() != 0)
+            {
+                Logger.Log(Verbosity.Display, "ゲームコードのDLLをアンロードしました");
+            }
+        }
+
+        private void SetCommands()
+        {
             AddLevelCommand = new RelayCommand<object>(x =>
             {
-                AddLevel($"Level {_levels.Count+1}");
+                AddLevel($"Level {_levels.Count + 1}");
                 var newLevel = _levels.Last();
                 var levelIndex = _levels.Count - 1;
                 UndoRedo.Add(new UndoRedoAction(
@@ -112,9 +171,33 @@ namespace Editor.GameProject
                     $"Remove {x.Name}"));
             }, x => !x.IsActive);
 
-            UndoCommand = new RelayCommand<object>(x => UndoRedo.Undo());
-            RedoCommand = new RelayCommand<object>(x => UndoRedo.Redo());
+            UndoCommand = new RelayCommand<object>(x => UndoRedo.Undo(), x => UndoRedo.UndoList.Any());
+            RedoCommand = new RelayCommand<object>(x => UndoRedo.Redo(), x => UndoRedo.RedoList.Any());
             SaveCommand = new RelayCommand<object>(x => Save(this));
+            BuildCommand = new RelayCommand<bool>(async x => await BuildGameCodeDll(x), x => !(VisualStudio.IsDebugging() && VisualStudio.BuildDone));
+
+            OnPropertyChanged(nameof(AddLevelCommand));
+            OnPropertyChanged(nameof(RemoveLevelCommand));
+            OnPropertyChanged(nameof(UndoCommand));
+            OnPropertyChanged(nameof(RedoCommand));
+            OnPropertyChanged(nameof(SaveCommand));
+            OnPropertyChanged(nameof(BuildCommand));
+        }
+
+        // ロード時にコンストラクタを用いずに初期化するための処理
+        [OnDeserialized]
+        private async void OnDeserialized(StreamingContext context)
+        {
+            if (_levels != null)
+            {
+                Levels = new ReadOnlyObservableCollection<Level>(_levels);
+                OnPropertyChanged(nameof(Levels));
+            }
+            ActiveLevel = Levels.FirstOrDefault(x => x.IsActive);
+
+            await BuildGameCodeDll(false);
+
+            SetCommands();
         }
 
         public Project(string name, string path)

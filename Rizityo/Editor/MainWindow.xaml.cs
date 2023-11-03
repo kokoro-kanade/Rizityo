@@ -20,7 +20,7 @@ namespace Editor
             Closing += OnMainWindowClosing;
         }
 
-        public static string RizityoFolderPath { get; private set; } = @"C:\GameProg\Engine\Rizityo";
+        public static string RizityoFolderPath { get; private set; }
 
         private void OnMainWindowClosing(object sender, CancelEventArgs e)
         {
