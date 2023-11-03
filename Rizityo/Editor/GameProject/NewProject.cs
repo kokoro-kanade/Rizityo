@@ -19,19 +19,19 @@ namespace Editor.GameProject
         [DataMember]
         public string  ProjectType { get; set; }
         [DataMember]
-        public string ProjectFile { get; set; }
+        public string ProjectFileName { get; set; }
         [DataMember]
         public List<string> Folders { get; set; }
         public byte[] Screenshot { get; set; }
         public string ScreenshotFilePath { get; set; }
         public string ProjectFilePath { get; set; }
-        
+        public string TemplateFolderPath { get; set; }
     }
 
     class NewProject : ViewModelBase
     {
         // TODO: インストール場所からのパスを取得する
-        private readonly string _templatePath = @"..\..\Editor\ProjectTemplates";
+        private readonly string _projectTemplatesFolderPath = @"..\..\Editor\ProjectTemplates";
 
         private string _projectName = "NewProject"; //デフォルト
         public string ProjectName
@@ -48,17 +48,17 @@ namespace Editor.GameProject
             }
         }
 
-        private string _projectPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\RizityoProjects\"; //デフォルトではドキュメント\RizityoProjectsに保存
-        public string ProjectPath
+        private string _createProjectPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\RizityoProjects\"; //デフォルトではドキュメント\RizityoProjectsに保存
+        public string CreateProjectPath
         {
-            get => _projectPath;
+            get => _createProjectPath;
             set
             {
-                if (_projectPath != value)
+                if (_createProjectPath != value)
                 {
-                    _projectPath = value;
+                    _createProjectPath = value;
                     IsValidProjectPath();
-                    OnPropertyChanged(nameof(ProjectPath));
+                    OnPropertyChanged(nameof(CreateProjectPath));
                 }
             }
         }
@@ -94,9 +94,36 @@ namespace Editor.GameProject
         private ObservableCollection<ProjectTemplate> _projectTemplates = new ObservableCollection<ProjectTemplate>();
         public ReadOnlyObservableCollection<ProjectTemplate> ProjectTemplates { get; }
 
+        public NewProject()
+        {
+            ProjectTemplates = new ReadOnlyObservableCollection<ProjectTemplate>(_projectTemplates);
+            try
+            {
+                var templateFiles = Directory.GetFiles(_projectTemplatesFolderPath, "template.xml", SearchOption.AllDirectories);
+                Debug.Assert(templateFiles.Any());
+                foreach (var file in templateFiles)
+                {
+                    var template = Serializer.FromFile<ProjectTemplate>(file);
+                    template.TemplateFolderPath = Path.GetDirectoryName(file);
+                    template.ScreenshotFilePath = Path.GetFullPath(Path.Combine(template.TemplateFolderPath, "Screenshot.png"));
+                    template.Screenshot = File.ReadAllBytes(template.ScreenshotFilePath);
+                    template.ProjectFilePath = Path.GetFullPath(Path.Combine(template.TemplateFolderPath, template.ProjectFileName));
+
+                    _projectTemplates.Add(template);
+                }
+                IsValidProjectPath();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                Logger.Log(Verbosity.Error, "Failed to read project templates");
+                throw;
+            }
+        }
+
         private bool IsValidProjectPath()
         {
-            var path = ProjectPath;
+            var path = CreateProjectPath;
             if (!Path.EndsInDirectorySeparator(path))
             {
                 path += @"\";
@@ -112,11 +139,11 @@ namespace Editor.GameProject
             {
                 ErrorMsg = "プロジェクト名に不正な文字が使われています";
             }
-            else if (string.IsNullOrWhiteSpace(ProjectPath.Trim()))
+            else if (string.IsNullOrWhiteSpace(CreateProjectPath.Trim()))
             {
                 ErrorMsg = "フォルダ名を入力してください";
             }
-            else if (ProjectPath.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+            else if (CreateProjectPath.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {
                 ErrorMsg = "フォルダ名に不正な文字が使われています";
             }
@@ -133,64 +160,39 @@ namespace Editor.GameProject
             return IsValid;
         }
 
-        public NewProject()
-        {
-            ProjectTemplates = new ReadOnlyObservableCollection<ProjectTemplate>(_projectTemplates);
-            try
-            {
-                var templateFiles = Directory.GetFiles(_templatePath, "template.xml", SearchOption.AllDirectories);
-                Debug.Assert(templateFiles.Any());
-                foreach (var file in templateFiles)
-                {
-                    var template = Serializer.FromFile<ProjectTemplate>(file);
-                    template.ScreenshotFilePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), "Screenshot.png"));
-                    template.Screenshot = File.ReadAllBytes(template.ScreenshotFilePath);
-                    template.ProjectFilePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(file), template.ProjectFile));
-
-                    _projectTemplates.Add(template);
-                    IsValidProjectPath(); // TODO for文内で呼ぶ必要?
-                }
-            }
-            catch(Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                Logger.Log(Verbosity.Error, "Failed to read project templates");
-                throw;
-            }
-        }
-
         public string CreateProject(ProjectTemplate template)
         {
             IsValidProjectPath();
-            // ProjectPathの最後にバックスラッシュをつける
-            if (!Path.EndsInDirectorySeparator(ProjectPath))
+            if (!Path.EndsInDirectorySeparator(CreateProjectPath))
             {
-                ProjectPath += @"\";
+                CreateProjectPath += @"\";
             }
-            var path = $@"{ProjectPath}{ProjectName}\";
+            var projectFolderPath = $@"{CreateProjectPath}{ProjectName}\";
 
             try
             {
-                if (!Directory.Exists(path))
+                if (!Directory.Exists(projectFolderPath))
                 {
-                    Directory.CreateDirectory(path);
+                    Directory.CreateDirectory(projectFolderPath);
                 }
 
                 foreach (var folder in template.Folders)
                 {
-                    Directory.CreateDirectory(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path), folder)));
+                    Directory.CreateDirectory(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(projectFolderPath), folder)));
                 }
-                var dirInfo = new DirectoryInfo(path + @".Rizityo\");
+                var dirInfo = new DirectoryInfo(projectFolderPath + @".Rizityo\");
                 dirInfo.Attributes |= FileAttributes.Hidden;
                 File.Copy(template.ScreenshotFilePath, Path.GetFullPath(Path.Combine(dirInfo.FullName, "Screenshot.png")));
 
                 // テンプレートのプロジェクトファイルの名前とパスを変更したものを作成
                 var projectXml = File.ReadAllText(template.ProjectFilePath);
-                projectXml = string.Format(projectXml, ProjectName, ProjectPath);
-                var projectPath = Path.GetFullPath(Path.Combine(path, $"{ProjectName}{Project.Extension}"));
-                File.WriteAllText(projectPath, projectXml);
+                projectXml = string.Format(projectXml, ProjectName, projectFolderPath);
+                var projectFilePath = Path.GetFullPath(Path.Combine(projectFolderPath, $"{ProjectName}{Project.Extension}"));
+                File.WriteAllText(projectFilePath, projectXml);
+
+                CreateMSVCSolution(template, projectFolderPath);
                 
-                return path;
+                return projectFolderPath;
             }
             catch (Exception ex)
             {
@@ -199,6 +201,31 @@ namespace Editor.GameProject
                 throw;
             }
         }
+
+        private void CreateMSVCSolution(ProjectTemplate template, string projectFolderPath)
+        {
+            var templateSolutionFilePath = Path.Combine(template.TemplateFolderPath, "MSVCSolution");
+            var templateProjectFilePath = Path.Combine(template.TemplateFolderPath, "MSVCProject");
+            Debug.Assert(File.Exists(templateSolutionFilePath));
+            Debug.Assert(File.Exists(templateProjectFilePath));
+
+            var engineAPIFolderPath = Path.Combine(MainWindow.RizityoFolderPath, @"Engine\EngineAPI\");
+            Debug.Assert(Directory.Exists(engineAPIFolderPath));
+
+            var _0 = ProjectName;
+            var _1 = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
+            var _2 = engineAPIFolderPath;
+            var _3 = MainWindow.RizityoFolderPath;
+
+            var solution = File.ReadAllText(templateSolutionFilePath);
+            solution = string.Format(solution, _0, _1, "{" + Guid.NewGuid().ToString().ToUpper() + "}");
+            File.WriteAllText(Path.GetFullPath(Path.Combine(projectFolderPath, $"{_0}.sln")), solution);
+
+            var project = File.ReadAllText(templateProjectFilePath);
+            project = string.Format(project, _0, _1, _2, _3);
+            File.WriteAllText(Path.GetFullPath(Path.Combine(projectFolderPath, $@"Source\{_0}.vcxproj")), project);
+        }
+
     }
 
 

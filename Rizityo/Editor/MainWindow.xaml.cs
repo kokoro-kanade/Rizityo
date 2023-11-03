@@ -1,19 +1,10 @@
 ﻿using Editor.GameProject;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
+
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+
 
 namespace Editor
 {
@@ -29,16 +20,41 @@ namespace Editor
             Closing += OnMainWindowClosing;
         }
 
+        public static string RizityoFolderPath { get; private set; } = @"C:\GameProg\Engine\Rizityo";
+
         private void OnMainWindowClosing(object sender, CancelEventArgs e)
         {
             Closing -= OnMainWindowClosing;
-            Project.CurrentProject?.Unload();
+            Project.Current?.Unload();
         }
 
         private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
         {
             Loaded -= OnMainWindowLoaded;
+            GetEnginePath();
             OpenProjectBrowserDialog();
+        }
+
+        private void GetEnginePath()
+        {
+            var path = Environment.GetEnvironmentVariable("RIZITYO_ENGINE", EnvironmentVariableTarget.User);
+            if (path == null || !Directory.Exists(Path.Combine(path, @"Engine\EngineAPI")))
+            {
+                var dialog = new EnginePathDialog();
+                if (dialog.ShowDialog() == true)
+                {
+                    RizityoFolderPath = dialog.RizityoFolderPath;
+                    Environment.SetEnvironmentVariable("RIZITYO_ENGINE", RizityoFolderPath, EnvironmentVariableTarget.User);
+                }
+                else
+                {
+                    Application.Current.Shutdown();
+                }
+            }
+            else
+            {
+                RizityoFolderPath = path;
+            }
         }
 
         private void OpenProjectBrowserDialog()
@@ -50,7 +66,7 @@ namespace Editor
             }
             else
             {
-                Project.CurrentProject?.Unload(); // 現在のプロジェクトを閉じる
+                Project.Current?.Unload(); // 現在のプロジェクトを閉じる
                 DataContext = projectBrowser.DataContext;
             }
             

@@ -1,4 +1,5 @@
-﻿using Editor.GameProject;
+﻿using Editor.GameDev;
+using Editor.GameProject;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -32,6 +33,12 @@ namespace Editor.Editors
         {
             Loaded -= OnLevelEditorViewLoaded;
             Focus();
+        }
+
+        private void OnNewScriptButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new NewScriptDialog();
+            dialog.ShowDialog();
         }
     }
 }

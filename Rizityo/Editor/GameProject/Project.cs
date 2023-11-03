@@ -1,4 +1,5 @@
-﻿using Editor.Utility;
+﻿using Editor.GameDev;
+using Editor.Utility;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,7 +24,8 @@ namespace Editor.GameProject
         public string Name { get; private set; }
         [DataMember]
         public string Path { get; private set; }
-        public string FullPath => $@"{Path}{Name}\{Name}{Extension}";
+        public string ProjectFilePath => $@"{Path}{Name}{Extension}";
+        public string SolutionFilePath => $@"{Path}{Name}.sln";
 
         [DataMember(Name = "Levels")]
         private ObservableCollection<Level> _levels = new ObservableCollection<Level>();
@@ -56,7 +58,7 @@ namespace Editor.GameProject
             _levels.Remove(level);
         }
 
-        public static Project CurrentProject => Application.Current.MainWindow.DataContext as Project;
+        public static Project Current => Application.Current.MainWindow.DataContext as Project;
         public static UndoRedo UndoRedo { get; } = new UndoRedo();
         public ICommand UndoCommand { get; private set; }
         public ICommand RedoCommand { get; private set; }
@@ -69,11 +71,12 @@ namespace Editor.GameProject
         }
         public static void Save(Project project)
         {
-            Serializer.ToFile(project, project.FullPath);
-            Logger.Log(Verbosity.Display, $"Project saved to {project.FullPath}");
+            Serializer.ToFile(project, project.ProjectFilePath);
+            Logger.Log(Verbosity.Display, $"Project saved to {project.ProjectFilePath}");
         }
         public void Unload()
         {
+            VisualStudio.CloseVisualStudio();
             UndoRedo.Reset();
         }
 
