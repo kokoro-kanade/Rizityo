@@ -6,13 +6,17 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
 
 namespace Editor.Components
 {
     [DataContract]
-    [KnownType(typeof(Transform))] // コンポーネントの継承クラスをシリアライズするため
+    // コンポーネントの継承クラスをシリアライズするため
+    [KnownType(typeof(Transform))] 
+    [KnownType(typeof(Script))]
+
     class GameEntity : ViewModelBase // Rename: -> Entity (c++と対応させるため)
     {
         private int _entityId = Id.INVALID_ID;
@@ -53,7 +57,7 @@ namespace Editor.Components
             }
         }
 
-        private bool _isEnabled;
+        private bool _isEnabled = true;
         [DataMember]
         public bool IsEnabled
         {
@@ -89,9 +93,34 @@ namespace Editor.Components
         [DataMember(Name = nameof(Components))]
         private readonly ObservableCollection<Component> _components = new ObservableCollection<Component>();
         public ReadOnlyObservableCollection<Component> Components { get; private set; }
-
         public Component GetComponent(Type type) => Components.FirstOrDefault(c => c.GetType() == type);
         public T GetComponent<T>() where T : Component => GetComponent(typeof(T)) as T; 
+        public bool AddComponent(Component component)
+        {
+            Debug.Assert(component != null);
+            if (!Components.Any(c => c.GetType() == component.GetType()))
+            {
+                IsActive = false; // エンジン側から削除
+                _components.Add(component);
+                IsActive = true; // エンジン側に追加
+                return true;
+            }
+            Logger.Log(Verbosity.Warning, $"エンティティ{Name}はすでに{component.GetType().Name}コンポーネントを持っています");
+            return false;
+        }
+        public void RemoveComponent(Component component)
+        {
+            Debug.Assert(component != null);
+            if (component is Transform)
+                return;
+
+            if (Components.Contains(component))
+            {
+                IsActive = false; // エンジン側から削除
+                _components.Remove(component);
+                IsActive = true; // エンジン側に追加
+            }
+        }
 
         [OnDeserialized]
         void OnDeserialized(StreamingContext context)
@@ -115,7 +144,7 @@ namespace Editor.Components
 
     abstract class MultiSelectedEntity : ViewModelBase
     {
-        private bool? _isEnabled = true; // 選択しているすべてのエンティティの値が等しくない場合はnullにするためにbool?になっている
+        private bool? _isEnabled; // 選択しているすべてのエンティティの値が等しくない場合はnullにするためにbool?になっている
         [DataMember]
         public bool? IsEnabled
         {

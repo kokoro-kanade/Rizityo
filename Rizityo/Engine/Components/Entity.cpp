@@ -19,9 +19,9 @@ namespace Rizityo::GameEntity
 		if (!info.Transform)
 			return Entity{};
 
-		// ID���擾
+		// ID取得
 		EntityId id;
-		if (FreeIds.size() > Id::MIN_DELETED_ELEMENTS) // FreeIds�����Ȃ���ԂŎg���܂킷�Ƃ�����generation��������Ă��܂��̂�臒l��݂���
+		if (FreeIds.size() > Id::MIN_DELETED_ELEMENTS) // FreeIdsが少ない状態で使いまわすとすぐにgenerationが一周してしまうので閾値を設ける
 		{
 			id = FreeIds.front();
 			assert(!IsAlive(id));
@@ -41,13 +41,13 @@ namespace Rizityo::GameEntity
 		const Entity newEntity{ id };
 		const Id::IdType index{ Id::GetIndex(id) };
 
-		// TransformComponent�쐬
+		// TransformComponent作成
 		assert(!TransformComponents[index].IsValid());
 		TransformComponents[index] = Transform::CreateComponent(*info.Transform, newEntity);
 		if (!TransformComponents[index].IsValid())
 			return Entity{};
 
-		// ScriptComponent�쐬
+		// ScriptComponent作成
 		if (info.Script && info.Script->CreateFunc)
 		{
 			assert(!ScriptComponents[index].IsValid());

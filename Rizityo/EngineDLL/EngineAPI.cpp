@@ -1,37 +1,58 @@
 #include "Common.h"
 #include "CommonHeaders.h"
+#include "../Engine/Components/Script.h"
 
-#ifndef WIN32_MEAN_AND_LEAN
-#define WIN32_MEAN_AND_LEAN
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #endif
 
 #include <Windows.h>
+#include <atlsafe.h>
 
 using namespace Rizityo;
 
 namespace
 {
-	HMODULE gameCodeDll{ nullptr };
+	HMODULE GameCodeDll{ nullptr };
+	using _GetScriptCreateFunc = Rizityo::Script::Internal::ScriptCreateFunc(*)(size_t);
+	_GetScriptCreateFunc GetScriptCreateFunc{ nullptr };
+	using _GetScriptNames = LPSAFEARRAY(*)(void);
+	_GetScriptNames GetScriptNames{ nullptr };
 }
 
 EDITOR_INTERFACE
 uint32 LoadGameCodeDll(const char* dllPath)
 {
-	if (gameCodeDll)
+	if (GameCodeDll)
 		return FALSE;
-	LoadLibraryA(dllPath);
-	assert(gameCodeDll);
+	GameCodeDll = LoadLibraryA(dllPath);
+	assert(GameCodeDll);
 
-	return gameCodeDll ? TRUE : FALSE;
+	GetScriptCreateFunc = (_GetScriptCreateFunc)GetProcAddress(GameCodeDll, "GetScriptCreateFunc");
+	GetScriptNames = (_GetScriptNames)GetProcAddress(GameCodeDll, "GetScriptNames");
+
+	return (GameCodeDll && GetScriptCreateFunc && GetScriptNames) ? TRUE : FALSE;
 }
 
 EDITOR_INTERFACE
 uint32 UnLoadGameCodeDll()
 {
-	if (!gameCodeDll)
+	if (!GameCodeDll)
 		return FALSE;
-	assert(gameCodeDll);
-	int result = FreeLibrary(gameCodeDll);
-	gameCodeDll = nullptr;
+	assert(GameCodeDll);
+	int result = FreeLibrary(GameCodeDll);
+	GameCodeDll = nullptr;
 	return TRUE;
+}
+
+EDITOR_INTERFACE
+Script::Internal::ScriptCreateFunc GetGameScriptCreateFunc(const char* name)
+{
+	return (GameCodeDll && GetScriptCreateFunc) ? GetScriptCreateFunc(Script::Internal::StringHash()(name)) : nullptr;
+}
+
+EDITOR_INTERFACE
+LPSAFEARRAY GetGameScriptNames()
+{
+	return (GameCodeDll && GetScriptNames) ? GetScriptNames() : nullptr;
 }

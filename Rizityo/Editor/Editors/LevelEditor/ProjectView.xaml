@@ -42,7 +42,7 @@
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{Binding Name}"/>
-                                            <Button Content="Remove" Command="{Binding ParentLevel.RemoveGameEntityCommand}"
+                                            <Button Content="削除" Command="{Binding ParentLevel.RemoveGameEntityCommand}"
                                                     CommandParameter="{Binding}"/>
                                         </StackPanel>
                                     </DataTemplate>

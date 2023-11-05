@@ -3,6 +3,7 @@
 #include "Id.h"
 #include "../Engine/Components/Entity.h"
 #include "../Engine/Components/Transform.h"
+#include "../Engine/Components/Script.h"
 
 using namespace Rizityo;
 
@@ -30,9 +31,22 @@ namespace // エディタとエンジン間をつなぐ処理
 		}
 	};
 
+	struct ScriptComponent
+	{
+		Script::Internal::ScriptCreateFunc ScriptCreateFunc;
+
+		Script::InitInfo ToInitInfo()
+		{
+			Script::InitInfo info{};
+			info.CreateFunc = ScriptCreateFunc;
+			return info;
+		}
+	};
+
 	struct GameEntityDescriptor
 	{
 		TransformComponent Transform;
+		ScriptComponent Script;
 	};
 
 	GameEntity::Entity EntityFromId(Id::IdType id)
@@ -47,8 +61,10 @@ Id::IdType CreateGameEntity(GameEntityDescriptor* d)
 	assert(d);
 	GameEntityDescriptor& desc{ *d };
 	Transform::InitInfo transformInfo{ desc.Transform.ToInitInfo() };
+	Script::InitInfo scriptInfo{ desc.Script.ToInitInfo() };
 	GameEntity::EntityInfo entityInfo{
-		&transformInfo
+		&transformInfo,
+		&scriptInfo
 	};
 	return GameEntity::CreateGameEntity(entityInfo).GetId();
 }

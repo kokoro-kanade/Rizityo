@@ -26,6 +26,15 @@ namespace Rizityo::Script
 			static ScriptRegister reg;
 			return reg;
 		}
+
+#ifdef USE_EDITOR
+		Utility::Vector<std::string>& ScriptNames()
+		{
+			static Utility::Vector<std::string> names;
+			return names;
+		}
+#endif // USE_EDITOR
+
 	}
 
 	namespace Internal
@@ -36,6 +45,22 @@ namespace Rizityo::Script
 			assert(result);
 			return result;
 		}
+
+		ScriptCreateFunc GetScriptCreateFunc(size_t tag)
+		{
+			auto iter = Register().find(tag);
+			assert(iter != Register().end() && iter->first == tag);
+			return iter->second;
+		}
+
+#ifdef USE_EDITOR
+		uint8 AddScriptName(const char* name)
+		{
+			ScriptNames().emplace_back(name);
+			return true;
+		}
+#endif // USE_EDITOR
+
 	}
 
 	Script::Component CreateComponent(const InitInfo& info, GameEntity::Entity entity)
@@ -72,9 +97,27 @@ namespace Rizityo::Script
 		assert(component.IsValid() && Exists(component.GetId()));
 		const ScriptId id{ component.GetId() };
 		const Id::IdType scriptEntityIndex{ IdMapping[Id::GetIndex(id)] };
-		const ScriptId lastId{ EntityScripts.back()->GetScriptComponent().GetId() };
+		const ScriptId lastId{ (scriptEntityIndex != EntityScripts.size()-1) ? EntityScripts.back()->GetScriptComponent().GetId() : id };
 		Utility::EraseUnordered(EntityScripts, scriptEntityIndex);
 		IdMapping[Id::GetIndex(lastId)] = scriptEntityIndex; 
 		IdMapping[Id::GetIndex(id)] = Id::INVALID_ID; // —v‘f‚ªˆê‚Â‚ÌŽž‚Íid == lastId‚È‚Ì‚Åinvalid_id‚Ì‘ã“ü‚ªŒã
 	}
 }
+
+#ifdef USE_EDITOR
+#include <atlsafe.h>
+
+extern "C" __declspec(dllexport)
+LPSAFEARRAY GetScriptNames()
+{
+	const uint32 size = Rizityo::Script::ScriptNames().size();
+	if (!size)
+		return nullptr;
+	CComSafeArray<BSTR> names(size);
+	for (uint32 i = 0; i < size; i++)
+	{
+		names.SetAt(i, A2BSTR_EX(Rizityo::Script::ScriptNames()[i].c_str()), false);
+	}
+	return names.Detach();
+}
+#endif // USE_EDITOR

@@ -46,7 +46,12 @@ namespace Rizityo
 			using ScriptCreateFunc = ScriptPtr(*)(GameEntity::Entity entity);
 			using StringHash = std::hash<std::string>;
 
-			uint8 RegisterScript(size_t, ScriptCreateFunc);
+			uint8 RegisterScript(size_t, ScriptCreateFunc); // エンジン側にスクリプトクラスのハッシュと生成関数を登録
+
+#ifdef USE_EDITOR
+			extern "C" __declspec(dllexport)
+#endif // USE_EDITOR
+			ScriptCreateFunc GetScriptCreateFunc(size_t tag);
 
 			template<class ScriptClass>
 			ScriptPtr CreateScript(GameEntity::Entity entity)
@@ -55,18 +60,33 @@ namespace Rizityo
 				return std::make_unique<ScriptClass>(entity);
 			}
 
+#ifdef USE_EDITOR
+			uint8 AddScriptName(const char* name);
+
 #define REGISTER_SCRIPT(TYPE)												      \
-			class TYPE;															  \
 			namespace															  \
 			{																	  \
 				const uint8 _Reg_##TYPE										      \
 					= Rizityo::Script::Internal::RegisterScript(				  \
 						Rizityo::Script::Internal::StringHash()(#TYPE),           \
 						&Rizityo::Script::Internal::CreateScript<TYPE>);		  \
-																				  \
+				const uint8 _Name_##TYPE                                          \
+					= Rizityo::Script::Internal::AddScriptName(#TYPE);			  \
+			}                                                                     
+
+#else
+
+#define REGISTER_SCRIPT(TYPE)												      \
+			namespace															  \
+			{																	  \
+				const uint8 _Reg_##TYPE										      \
+					= Rizityo::Script::Internal::RegisterScript(				  \
+						Rizityo::Script::Internal::StringHash()(#TYPE),           \
+						&Rizityo::Script::Internal::CreateScript<TYPE>);		  \
 			}
 
-		} // Internal
+#endif // USE_EDITOR
 
+		} // Internal
 	} // Script
 }// Rizityo

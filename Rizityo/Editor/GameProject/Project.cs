@@ -1,4 +1,5 @@
-﻿using Editor.DLLWrapper;
+﻿using Editor.Components;
+using Editor.DLLWrapper;
 using Editor.GameDev;
 using Editor.Utility;
 using System;
@@ -65,6 +66,19 @@ namespace Editor.GameProject
             _levels.Remove(level);
         }
 
+        private string[] _availableScripts;
+        public string[] AvailableScripts
+        {
+            get => _availableScripts;
+            set
+            {
+                if (_availableScripts != value)
+                {
+                    _availableScripts = value;
+                    OnPropertyChanged(nameof(AvailableScripts));
+                }
+            }
+        }
 
         public static UndoRedo UndoRedo { get; } = new UndoRedo();
         public ICommand UndoCommand { get; private set; }
@@ -84,6 +98,7 @@ namespace Editor.GameProject
         }
         public void Unload()
         {
+            UnLoadGameCodeDll();
             VisualStudio.CloseVisualStudio();
             UndoRedo.Reset();
         }
@@ -133,6 +148,8 @@ namespace Editor.GameProject
             var dllPath = $@"{Path}x64\{configName}\{Name}.dll";
             if(File.Exists(dllPath) && EngineAPI.LoadGameCodeDll(dllPath) != 0)
             {
+                AvailableScripts = EngineAPI.GetGameScriptNames();
+                ActiveLevel.GameEntities.Where(e => e.GetComponent<Script>() != null).ToList().ForEach(e => e.IsActive = true);
                 Logger.Log(Verbosity.Display, "ゲームコードのDLLをロードしました");
             }
             else
@@ -142,6 +159,7 @@ namespace Editor.GameProject
         }
         private void UnLoadGameCodeDll()
         {
+            ActiveLevel.GameEntities.Where(e => e.GetComponent<Script>() != null).ToList().ForEach(e => e.IsActive = false);
             if(EngineAPI.UnLoadGameCodeDll() != 0)
             {
                 Logger.Log(Verbosity.Display, "ゲームコードのDLLをアンロードしました");

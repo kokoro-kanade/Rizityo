@@ -1,5 +1,9 @@
 ﻿using Editor.Components;
 using Editor.EngineAPIStructs;
+using Editor.GameProject;
+using Editor.Utility;
+using System;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
@@ -14,9 +18,16 @@ namespace Editor.EngineAPIStructs
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    class ScriptComponent
+    {
+        public IntPtr ScriptCreateFunc;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     class GameEntityDescriptor
     {
         public TransformComponent Transform = new TransformComponent();
+        public ScriptComponent Script = new ScriptComponent();
     }
 }
 
@@ -32,6 +43,13 @@ namespace Editor.DLLWrapper // Rename: EngineWrapper?
         [DllImport(_engineDllName, CharSet = CharSet.Ansi)]
         public static extern int UnLoadGameCodeDll();
 
+        [DllImport(_engineDllName)]
+        public static extern IntPtr GetGameScriptCreateFunc(string name);
+
+        [DllImport(_engineDllName)]
+        [return: MarshalAs(UnmanagedType.SafeArray)]
+        public static extern string[] GetGameScriptNames(); // Rename
+
         internal static class EntityAPI
         {
 
@@ -41,11 +59,30 @@ namespace Editor.DLLWrapper // Rename: EngineWrapper?
             {
                 GameEntityDescriptor desc = new GameEntityDescriptor();
 
+
+                // Transform Component
                 {
-                    var c = entity.GetComponent<Components.Transform>();
+                    var c = entity.GetComponent<Transform>();
                     desc.Transform.Position = c.Position;
                     desc.Transform.Rotation = c.Rotation;
                     desc.Transform.Scale = c.Scale;
+                }
+
+                // Script Component
+                {
+                    var c = entity.GetComponent<Script>();
+                    // プロジェクトがまだロードされてない場合はゲームコードのDLLがロードされる時に生成
+                    if (c != null && Project.Current != null)
+                    {
+                        if (Project.Current.AvailableScripts.Contains(c.Name))
+                        {
+                            desc.Script.ScriptCreateFunc = GetGameScriptCreateFunc(c.Name);
+                        }
+                        else
+                        {
+                            Logger.Log(Verbosity.Error, $"{c.Name}スクリプトが見つかりませんでした。スクリプトコンポーネントなしで生成されます");
+                        }
+                    }
                 }
 
                 return CreateGameEntity(desc);
