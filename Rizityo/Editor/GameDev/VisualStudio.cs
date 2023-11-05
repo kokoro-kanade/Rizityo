@@ -152,16 +152,14 @@ namespace Editor.GameDev
                     result = _vsInstance != null &&
                         (_vsInstance.Debugger.CurrentProgram != null ||
                         _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
-                    if (result)
-                        break;
+                    break;
 
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine(ex.Message);
                     // おそらくVSが忙しくて対応できていないので待つ
-                    if (!result)
-                        System.Threading.Thread.Sleep(1000);
+                    System.Threading.Thread.Sleep(1000);
                 }
 
             }
@@ -182,6 +180,9 @@ namespace Editor.GameDev
                 Logger.Log(Verbosity.Display, $"{projectConfig}ビルドは成功しました");
             else
                 Logger.Log(Verbosity.Error, $"{projectConfig}ビルドは失敗しました");
+
+            BuildDone = true;
+            BuildSucceeded = success;
         }
 
         public static void BuildSolution(Project project, string configName, bool showVSWindow = true)
@@ -195,7 +196,7 @@ namespace Editor.GameDev
             OpenVisualStudio(project.SolutionFilePath);
             BuildSucceeded = BuildDone = false;
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3 && !BuildDone; i++)
             {
                 try
                 {
@@ -208,10 +209,10 @@ namespace Editor.GameDev
 
                     try
                     {
-                        // 参照しているpbdファイルは削除しようとすると例外を投げるので消されない
-                        foreach (var pbdFile in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{configName}"), "*.pbd"))
+                        // 参照しているpdbファイルは削除しようとすると例外を投げるので消されない
+                        foreach (var pdbFile in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{configName}"), "*.pdb"))
                         {
-                            File.Delete(pbdFile);
+                            File.Delete(pdbFile);
                         }
                     }
                     catch (Exception ex)

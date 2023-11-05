@@ -31,8 +31,8 @@ namespace Editor.Components
         public List<T> SelectedComponents { get; }
 
         private bool _enableUpdateComponents = true;
-        protected abstract bool UpdateComponents(string propertyName);
         protected abstract bool UpdateCommonProperty();
+        protected abstract bool UpdateComponents(string propertyName);
 
         public void Refresh()
         {
