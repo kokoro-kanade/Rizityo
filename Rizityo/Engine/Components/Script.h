@@ -10,6 +10,6 @@ namespace Rizityo::Script
 
 	Script::Component CreateComponent(const InitInfo& info, GameEntity::Entity entity); // TODO?: QÆ“n‚µ‚©‚ç’l“n‚µ‚É‚·‚é
 	void RemoveComponent(Script::Component component);
-
+	void Update(float dt);
 
 }

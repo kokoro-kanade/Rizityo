@@ -27,5 +27,15 @@ namespace Editor.Components
             Debug.Assert((int)componentType < (int)_functions.Length);
             return _functions[(int)componentType];
         }
+
+        public static ComponentType ToEnumType(this Component component)
+        {
+            return component switch
+            {
+                Transform _ => ComponentType.Transform,
+                Script _ => ComponentType.Script,
+                _ => throw new ArgumentException("未知のコンポーネントタイプです")
+            };
+        }
     }
 }

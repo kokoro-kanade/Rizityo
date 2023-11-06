@@ -35,6 +35,7 @@ namespace Editor.GameProject
 
         public static Project Current => Application.Current.MainWindow.DataContext as Project;
 
+
         // レベル
         [DataMember(Name = "Levels")]
         private ObservableCollection<Level> _levels = new ObservableCollection<Level>();
@@ -80,27 +81,48 @@ namespace Editor.GameProject
             }
         }
 
+
         public static UndoRedo UndoRedo { get; } = new UndoRedo();
         public ICommand UndoCommand { get; private set; }
         public ICommand RedoCommand { get; private set; }
 
 
-        public ICommand SaveCommand { get; private set; }
         public static Project Load(string projectFile)
         {
             Debug.Assert(File.Exists(projectFile));
             return Serializer.FromFile<Project>(projectFile);
-        }
-        public static void Save(Project project)
-        {
-            Serializer.ToFile(project, project.ProjectFilePath);
-            Logger.Log(Verbosity.Display, $"Project saved to {project.ProjectFilePath}");
         }
         public void Unload()
         {
             UnLoadGameCodeDll();
             VisualStudio.CloseVisualStudio();
             UndoRedo.Reset();
+        }
+        public ICommand SaveCommand { get; private set; }
+        public static void Save(Project project)
+        {
+            Serializer.ToFile(project, project.ProjectFilePath);
+            Logger.Log(Verbosity.Display, $"Project saved to {project.ProjectFilePath}");
+        }
+        private void SaveToBinary()
+        {
+            var configName = GetConfigurationName(ApplicationBuildConfig);
+            var bin = $@"{Path}x64\{configName}\game.bin";
+
+            using (var bw = new BinaryWriter(File.Open(bin, FileMode.Create, FileAccess.Write)))
+            {
+                bw.Write(ActiveLevel.GameEntities.Count);
+                foreach (var entity in ActiveLevel.GameEntities)
+                {
+                    bw.Write(0); // エンティティのタイプ
+                    bw.Write(entity.Components.Count);
+                    foreach (var component in entity.Components)
+                    {
+                        bw.Write((int)component.ToEnumType());
+                        component.WriteToBinary(bw);
+                    }
+                }
+            }
         }
 
         // ビルド
@@ -166,6 +188,22 @@ namespace Editor.GameProject
             }
         }
 
+        // デバッグ
+        public ICommand DebugStartCommand { get; private set; }
+        public ICommand DebugStartWithoutDebuggingCommand { get; private set; }
+        public ICommand DebugStopCommand { get; private set; }
+        private async Task RunGame(bool debug)
+        {
+            var configName = GetConfigurationName(ApplicationBuildConfig);
+            await Task.Run(() => VisualStudio.BuildSolution(this, configName, debug));
+            if (VisualStudio.BuildSucceeded)
+            {
+                SaveToBinary();
+                await Task.Run(() => VisualStudio.Run(this, configName, debug));
+            }
+        }
+        private async Task StopGame() => await Task.Run(() => VisualStudio.Stop());
+
         private void SetCommands()
         {
             AddLevelCommand = new RelayCommand<object>(x =>
@@ -193,6 +231,9 @@ namespace Editor.GameProject
             RedoCommand = new RelayCommand<object>(x => UndoRedo.Redo(), x => UndoRedo.RedoList.Any());
             SaveCommand = new RelayCommand<object>(x => Save(this));
             BuildCommand = new RelayCommand<bool>(async x => await BuildGameCodeDll(x), x => !(VisualStudio.IsDebugging() && VisualStudio.BuildDone));
+            DebugStartCommand = new RelayCommand<object>(async x => await RunGame(true), x => !(VisualStudio.IsDebugging() && VisualStudio.BuildDone));
+            DebugStartWithoutDebuggingCommand = new RelayCommand<object>(async x => await RunGame(false), x => !(VisualStudio.IsDebugging() && VisualStudio.BuildDone));
+            DebugStopCommand = new RelayCommand<object>(async x => await StopGame(), x => VisualStudio.IsDebugging());
 
             OnPropertyChanged(nameof(AddLevelCommand));
             OnPropertyChanged(nameof(RemoveLevelCommand));
@@ -200,6 +241,10 @@ namespace Editor.GameProject
             OnPropertyChanged(nameof(RedoCommand));
             OnPropertyChanged(nameof(SaveCommand));
             OnPropertyChanged(nameof(BuildCommand));
+            OnPropertyChanged(nameof(DebugStartCommand));
+            OnPropertyChanged(nameof(DebugStartWithoutDebuggingCommand));
+            OnPropertyChanged(nameof(DebugStopCommand));
+
         }
 
         // ロード時にコンストラクタを用いずに初期化するための処理

@@ -5,7 +5,8 @@ namespace Rizityo
 {
 #define INIT_INFO(Component) namespace Component { struct InitInfo; }
 
-	INIT_INFO(Transform); // 前方宣言
+	// 前方宣言
+	INIT_INFO(Transform);
 	INIT_INFO(Script);
 
 #undef INIT_INFO
@@ -14,7 +15,6 @@ namespace Rizityo
 	{
 		struct EntityInfo // Rename: InitInfo
 		{
-			// Why: なぜポインタで持つのか
 			Transform::InitInfo* Transform{ nullptr };
 			Script::InitInfo* Script{ nullptr };
 		};

@@ -102,7 +102,16 @@ namespace Rizityo::Script
 		IdMapping[Id::GetIndex(lastId)] = scriptEntityIndex; 
 		IdMapping[Id::GetIndex(id)] = Id::INVALID_ID; // —v‘f‚ªˆê‚Â‚ÌŽž‚Íid == lastId‚È‚Ì‚Åinvalid_id‚Ì‘ã“ü‚ªŒã
 	}
-}
+
+	void Update(float dt)
+	{
+		for (auto& ptr : EntityScripts)
+		{
+			ptr->Update(dt);
+		}
+	}
+
+} // Script
 
 #ifdef USE_EDITOR
 #include <atlsafe.h>

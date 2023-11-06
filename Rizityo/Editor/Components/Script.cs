@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -28,6 +29,13 @@ namespace Editor.Components
 
         public override IMultiSelectedComponent GetMultiSelectedComponent(MultiSelectedEntity msEntity)
             => new MultiSelectedScript(msEntity);
+
+        public override void WriteToBinary(BinaryWriter bw)
+        {
+            var nameBytes = Encoding.UTF8.GetBytes(Name);
+            bw.Write(nameBytes.Length);
+            bw.Write(nameBytes);
+        }
 
         public Script(GameEntity owner) : base(owner) { }
     }

@@ -19,14 +19,14 @@ namespace // エディタとエンジン間をつなぐ処理
 		{
 			using namespace DirectX;
 			Transform::InitInfo info{};
-			memcpy(&info.Position[0], &Position[0], sizeof(float32) * _countof(Position));
+			memcpy(&info.Position[0], &Position[0], sizeof(Position));
 			// オイラー角からクォータニオンへの変換
 			XMFLOAT3A rot{ &Rotation[0] };
 			XMVECTOR q{ XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3A(&rot)) };
 			XMFLOAT4A rotQ{};
 			XMStoreFloat4A(&rotQ, q);
-			memcpy(&info.Rotation[0], &rotQ.x, sizeof(float32) * _countof(Rotation));
-			memcpy(&info.Scale[0], &Scale[0], sizeof(float32) * _countof(Scale));
+			memcpy(&info.Rotation[0], &rotQ.x, sizeof(Rotation));
+			memcpy(&info.Scale[0], &Scale[0], sizeof(Scale));
 			return info;
 		}
 	};
