@@ -110,12 +110,22 @@ namespace Rizityo::Platform
 		void ResizeWindow(WindowId id, uint32 width, uint32 height)
 		{
 			WindowInfo& info{ GetWindowInfoFromId(id) };
-			// スクリーンの解像度を変えたときにも対応できるようにフルスクリーンでもリサイズする
-			RECT& area{ info.IsFullScreen ? info.FullScreenArea : info.ClientArea };
-			area.bottom = area.top + height;
-			area.right = area.left + width;
 
-			ResizeWindow(info, area);
+			// 親のウィンドウがいるなら内部の情報だけ更新
+			if (info.Style & WS_CHILD)
+			{
+				GetClientRect(info.Hwnd, &info.ClientArea);
+			}
+			else
+			{
+				// スクリーンの解像度を変えたときにも対応できるようにフルスクリーンでもリサイズする
+				RECT& area{ info.IsFullScreen ? info.FullScreenArea : info.ClientArea };
+				area.bottom = area.top + height;
+				area.right = area.left + width;
+
+				ResizeWindow(info, area);
+			}
+
 		}
 
 		void SetWindowFullScreen(WindowId id, bool isFullScreen)
@@ -134,13 +144,11 @@ namespace Rizityo::Platform
 				GetWindowRect(info.Hwnd, &rect);
 				info.TopLeft.x = rect.left;
 				info.TopLeft.y = rect.top;
-				info.Style = 0;
-				SetWindowLongPtr(info.Hwnd, GWL_STYLE, info.Style);
+				SetWindowLongPtr(info.Hwnd, GWL_STYLE, 0);
 				ShowWindow(info.Hwnd, SW_MAXIMIZE);
 			}
 			else
 			{
-				info.Style = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
 				SetWindowLongPtr(info.Hwnd, GWL_STYLE, info.Style);
 				ResizeWindow(info, info.ClientArea);
 				ShowWindow(info.Hwnd, SW_SHOWNORMAL);
@@ -167,7 +175,7 @@ namespace Rizityo::Platform
 		Math::U32Vector4 GetWindowSize(WindowId id)
 		{
 			WindowInfo& info{ GetWindowInfoFromId(id) };
-			RECT area{ info.IsFullScreen ? info.FullScreenArea : info.ClientArea };
+			RECT& area{ info.IsFullScreen ? info.FullScreenArea : info.ClientArea };
 			return { (uint32)area.left, (uint32)area.top, (uint32)area.right, (uint32)area.bottom };
 		}
 
@@ -205,6 +213,7 @@ namespace Rizityo::Platform
 		WindowInfo info{};
 		info.ClientArea.right = (initInfo && initInfo->Width) ? info.ClientArea.left + initInfo->Width : info.ClientArea.right;
 		info.ClientArea.bottom = (initInfo && initInfo->Height) ? info.ClientArea.top + initInfo->Height : info.ClientArea.bottom;
+		info.Style |= parent ? WS_CHILD : WS_OVERLAPPEDWINDOW;
 		RECT rect{ info.ClientArea };
 
 		AdjustWindowRect(&rect, info.Style, FALSE);
@@ -215,7 +224,6 @@ namespace Rizityo::Platform
 		const int32 width = rect.right - rect.left;
 		const int32 height = rect.bottom - rect.top;
 
-		info.Style |= parent ? WS_CHILD : WS_OVERLAPPEDWINDOW;
 		// ウィンドウクラスのインスタンスを作成
 		info.Hwnd = CreateWindowEx(
 			0,						 // extended style

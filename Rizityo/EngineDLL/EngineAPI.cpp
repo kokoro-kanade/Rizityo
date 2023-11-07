@@ -1,6 +1,9 @@
 #include "Common.h"
 #include "CommonHeaders.h"
 #include "../Engine/Components/Script.h"
+#include "../Graphics/Renderer.h"
+#include "../Platform/PlatformTypes.h"
+#include "../Platform/Platform.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -18,6 +21,8 @@ namespace
 	_GetScriptCreateFunc GetScriptCreateFunc{ nullptr };
 	using _GetScriptNames = LPSAFEARRAY(*)(void);
 	_GetScriptNames GetScriptNames{ nullptr };
+
+	Utility::Vector<Graphics::RenderSurface> Surfaces;
 }
 
 EDITOR_INTERFACE
@@ -55,4 +60,36 @@ EDITOR_INTERFACE
 LPSAFEARRAY GetGameScriptNames()
 {
 	return (GameCodeDll && GetScriptNames) ? GetScriptNames() : nullptr;
+}
+
+EDITOR_INTERFACE
+uint32 CreateRenderSurface(HWND host, int32 width, int32 height)
+{
+	assert(host);
+	Platform::WindowInitInfo info{ nullptr, host, nullptr, 0, 0, width, height };
+	Graphics::RenderSurface surface{ Platform::Create_Window(&info), {} };
+	assert(surface.Window.IsValid());
+	Surfaces.emplace_back(surface);
+	return (uint32)Surfaces.size() - 1;
+}
+
+EDITOR_INTERFACE
+void RemoveRenderSurface(uint32 id)
+{
+	assert(id < Surfaces.size());
+	Platform::Remove_Window(Surfaces[id].Window.GetId());
+}
+
+EDITOR_INTERFACE
+HWND GetWindowHandle(uint32 id)
+{
+	assert(id < Surfaces.size());
+	return (HWND)Surfaces[id].Window.GetHandle();
+}
+
+EDITOR_INTERFACE
+void ResizeRenderSurface(uint32 id)
+{
+	assert(id < Surfaces.size());
+	Surfaces[id].Window.Resize(0, 0);
 }
