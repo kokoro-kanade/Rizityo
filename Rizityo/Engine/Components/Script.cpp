@@ -9,7 +9,7 @@ namespace Rizityo::Script
 		Utility::Vector<Id::IdType> IdMapping; // Componentのindex -> EntityScriptsの場所
 
 		Utility::Vector<Id::GENERATION_TYPE> Generations;
-		Utility::Vector<ScriptId> FreeIds;
+		Utility::Deque<ScriptId> FreeIds;
 
 		// Why: EntityのIsAliveのようにヘッダーに関数宣言して定義すればよいのではないか？
 		bool Exists(ScriptId id)
@@ -73,7 +73,7 @@ namespace Rizityo::Script
 		{
 			id = FreeIds.front();
 			assert(!Exists(id));
-			FreeIds.pop_back();
+			FreeIds.pop_front();
 			id = ScriptId{ Id::IncrementGeneration(id) };
 			Generations[Id::GetIndex(id)]++;
 		}

@@ -15,5 +15,13 @@
 
 // ã§í ÉwÉbÉ_Å[
 #include "PrimitiveTypes.h"
+#include "Id.h"
 #include "..\Utility\Utility.h"
 #include "..\Utility\MathType.h"
+
+#ifdef _DEBUG
+#define DEBUG_OP(x) x
+#else
+#define DEBUG_OP(x) (void(0))
+#endif // _DEBUG
+
