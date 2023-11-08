@@ -18,6 +18,7 @@
 #include "Id.h"
 #include "..\Utility\Utility.h"
 #include "..\Utility\MathType.h"
+#include "../Utility/Math.h"
 
 #ifdef _DEBUG
 #define DEBUG_OP(x) x
