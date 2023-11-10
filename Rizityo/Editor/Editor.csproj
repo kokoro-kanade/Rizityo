@@ -4,6 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <XamlDebuggingInformation>True</XamlDebuggingInformation>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Configurations>DebugEditor;ReleaseEditor</Configurations>
     <Platforms>x64</Platforms>
@@ -18,6 +19,11 @@
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\x64\ReleaseEditor\</OutputPath>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\PrimitiveMeshView\gandam.png" />
+    <None Remove="Resources\PrimitiveMeshView\UVTest.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <COMReference Include="EnvDTE80">
@@ -38,6 +44,11 @@
       <Isolated>false</Isolated>
       <EmbedInteropTypes>false</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\PrimitiveMeshView\gandam.png" />
+    <Resource Include="Resources\PrimitiveMeshView\UVTest.png" />
   </ItemGroup>
 
 </Project>

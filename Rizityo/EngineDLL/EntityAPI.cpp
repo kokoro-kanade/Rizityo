@@ -25,7 +25,7 @@ namespace // エディタとエンジン間をつなぐ処理
 			XMVECTOR q{ XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3A(&rot)) };
 			XMFLOAT4A rotQ{};
 			XMStoreFloat4A(&rotQ, q);
-			memcpy(&info.Rotation[0], &rotQ.x, sizeof(Rotation));
+			memcpy(&info.Rotation[0], &rotQ.x, sizeof(info.Rotation));
 			memcpy(&info.Scale[0], &Scale[0], sizeof(Scale));
 			return info;
 		}

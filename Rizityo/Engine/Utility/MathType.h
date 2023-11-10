@@ -4,6 +4,7 @@
 namespace Rizityo::Math
 {
 	constexpr float PI = 3.1415926535897932384626433832795;
+	constexpr float TWO_PI = 2.f * PI;
 	constexpr float EPSILON = 1e-5f;
 
 #if defined(_WIN64)

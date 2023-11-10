@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -38,7 +39,23 @@ namespace Editor.Utility.Controls
 
         public static readonly DependencyProperty ValueProperty
             = DependencyProperty.Register(nameof(Value), typeof(string), typeof(NumberTextBox),
-                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                    new PropertyChangedCallback(OnValueChanged)));
+
+        private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            (d as NumberTextBox).RaiseEvent(new RoutedEventArgs(ValueChangedEvent));
+        }
+
+        public event RoutedEventHandler ValueChanged
+        {
+            add => AddHandler(ValueChangedEvent, value);
+            remove => RemoveHandler(ValueChangedEvent, value);
+        }
+
+        public static readonly RoutedEvent ValueChangedEvent
+            = EventManager.RegisterRoutedEvent(nameof(ValueChanged), RoutingStrategy.Bubble,
+                typeof(RoutedEventHandler), typeof(NumberTextBox));
 
         public override void OnApplyTemplate()
         {
@@ -93,11 +110,10 @@ namespace Editor.Utility.Controls
                 else
                     _multiplier = 0.01;
                 var newValue = _originalValue + (dx * _multiplier * Speed);
-                Value = newValue.ToString("0.####");
+                Value = newValue.ToString("G5");
                 _valueChanged = true;
             }
         }
-
 
         static NumberTextBox()
         {

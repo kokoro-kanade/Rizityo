@@ -31,7 +31,7 @@ namespace Editor.EngineAPIStructs
     }
 }
 
-namespace Editor.DLLWrapper // Rename: EngineWrapper?
+namespace Editor.DLLWrapper
 {
     static class EngineAPI
     {

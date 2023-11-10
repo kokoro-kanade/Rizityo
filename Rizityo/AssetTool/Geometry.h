@@ -18,9 +18,9 @@ namespace Rizityo::AssetTool
 
 	struct Vertex
 	{
+		Math::Vector4 Tangent{};
 		Math::Vector3 Position{};
 		Math::Vector3 Normal{};
-		Math::Vector4 Tangent{};
 		Math::Vector2 UV{};
 	};
 
@@ -68,8 +68,8 @@ namespace Rizityo::AssetTool
 
 	struct LevelData
 	{
-		uint8* Buffer;
-		uint32 BufferSize;
+		uint8* Data;
+		uint32 DataSize;
 		GeometryImportSetting Setting;
 	};
 

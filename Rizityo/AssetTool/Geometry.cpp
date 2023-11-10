@@ -10,7 +10,7 @@ namespace Rizityo::AssetTool
 		void RecalculateNormals(Mesh& mesh)
 		{
 			const uint32 numIndices = (uint32)mesh.RawIndices.size();
-			mesh.Normals.reserve(numIndices);
+			mesh.Normals.resize(numIndices);
 
 			for (uint32 i = 0; i < numIndices; i++)
 			{
@@ -35,7 +35,7 @@ namespace Rizityo::AssetTool
 
 		void ProcessNormals(Mesh& mesh, float32 smoothingAngle)
 		{
-			const float32 cosSmoothingAngle = XMScalarACos(PI - smoothingAngle * PI / 180.f);
+			const float32 cosSmoothingAngle = XMScalarCos(PI - smoothingAngle * PI / 180.f);
 			const bool isHardEdge = XMScalarNearEqual(smoothingAngle, 180.f, EPSILON);
 			const bool isSoftEdge = XMScalarNearEqual(smoothingAngle, 0.f, EPSILON);
 			const uint32 numIndices = (uint32)mesh.RawIndices.size();
@@ -134,17 +134,16 @@ namespace Rizityo::AssetTool
 
 		void PackVerticesStatic(Mesh& mesh)
 		{
-			const uint32 numVertices = mesh.Vertices.size();
+			const uint32 numVertices = (uint32)mesh.Vertices.size();
 			assert(numVertices);
 			mesh.PackedVerticesStatic.reserve(numVertices);
 
 			for (uint32 i = 0; i < numVertices; i++)
 			{
 				Vertex& v{ mesh.Vertices[i] };
-				const uint8 signs = (uint8)(v.Normal.z > 0.f) << 1;
+				const uint8 signs = (uint8)((v.Normal.z > 0.f) << 1);
 				const uint16 normalX = (uint16)PackFloat<16>(v.Normal.x, -1.f, 1.f);
 				const uint16 normalY = (uint16)PackFloat<16>(v.Normal.y, -1.f, 1.f);
-
 
 				mesh.PackedVerticesStatic.emplace_back(
 					PackedVertex::VertexStatic
@@ -175,113 +174,113 @@ namespace Rizityo::AssetTool
 		}
 
 		uint64 GetMeshSize(const Mesh& mesh)
-	{
-		const uint64 numVertices = mesh.Vertices.size();
-		const uint64 vertexBufferSize = sizeof(PackedVertex::VertexStatic) * numVertices;
-		const uint64 indexSize = (numVertices < (1 << 16)) ? sizeof(uint16) : sizeof(uint32);
-		const uint64 indexBufferSize = indexSize * mesh.Indices.size();
-		constexpr uint64 su32 = sizeof(uint32);
-		const uint64 size
 		{
-			su32 + mesh.Name.size() +   // メッシュ名の長さと文字列データ
-			su32 +						// LODのid
-			su32 +						// 頂点サイズ
-			su32 +						// 頂点数
-			su32 +						// インデックスサイズ
-			su32 +						// インデックス数
-			sizeof(float32) +			// LOD threshold
-			vertexBufferSize +			// 頂点データ
-			indexBufferSize				// インデックスデータ
-		};
-
-		return size;
-	}
-
-		uint64 GetLevelSize(const Level& level)
-	{
-		constexpr uint64 su32 = sizeof(uint32);
-		uint64 size{
-			su32 + level.Name.size() +	 // レベル名と文字列データ
-			su32						 // LODの数
-		};
-
-		for (auto& lod : level.LodGroups)
-		{
-			uint64 lodSize
+			const uint64 numVertices = mesh.Vertices.size();
+			const uint64 vertexBufferSize = sizeof(PackedVertex::VertexStatic) * numVertices;
+			const uint64 indexSize = (numVertices < (1 << 16)) ? sizeof(uint16) : sizeof(uint32);
+			const uint64 indexBufferSize = indexSize * mesh.Indices.size();
+			constexpr uint64 su32 = sizeof(uint32);
+			const uint64 size
 			{
-				su32 + lod.Name.size() + // LOD名と文字列データ
-				su32					 // LOD内のメッシュの数
+				su32 + mesh.Name.size() +   // メッシュ名の長さと文字列データ
+				su32 +						// LODのid
+				su32 +						// 頂点サイズ
+				su32 +						// 頂点数
+				su32 +						// インデックスサイズ
+				su32 +						// インデックス数
+				sizeof(float32) +			// LOD threshold
+				vertexBufferSize +			// 頂点データ
+				indexBufferSize				// インデックスデータ
 			};
 
-			// メッシュデータ
-			for (auto& mesh : lod.Meshes)
-			{
-				lodSize += GetMeshSize(mesh);
-			}
-
-			size += lodSize;
+			return size;
 		}
 
-		return size;
-	}
+		uint64 GetLevelSize(const Level& level)
+		{
+			constexpr uint64 su32 = sizeof(uint32);
+			uint64 size{
+				su32 + level.Name.size() +	 // レベル名と文字列データ
+				su32						 // LODの数
+			};
+
+			for (auto& lod : level.LodGroups)
+			{
+				uint64 lodSize
+				{
+					su32 + lod.Name.size() + // LOD名と文字列データ
+					su32					 // LOD内のメッシュの数
+				};
+
+				// メッシュデータ
+				for (auto& mesh : lod.Meshes)
+				{
+					lodSize += GetMeshSize(mesh);
+				}
+
+				size += lodSize;
+			}
+
+			return size;
+		}
 
 		void PackMeshData(const Mesh& mesh, uint8* const buffer, uint64& at)
-	{
-		constexpr uint64 su32 = sizeof(uint32);
-		uint32 s = 0;
-
-		// メッシュ名
-		s = mesh.Name.size();
-		memcpy(&buffer[at], &s, su32); at += su32;
-		memcpy(&buffer[at], mesh.Name.c_str(), s); at += s;
-
-		// LOD id
-		s = mesh.LodId;
-		memcpy(&buffer[at], &s, su32); at += su32;
-
-		// 頂点サイズ
-		constexpr uint32 vertexSize = sizeof(PackedVertex::VertexStatic);
-		s = vertexSize;
-		memcpy(&buffer[at], &s, su32); at += su32;
-
-		// 頂点数
-		const uint32 numVertices = (uint32)mesh.Vertices.size();
-		s = numVertices;
-		memcpy(&buffer[at], &s, su32); at += su32;
-
-		// インデックスサイズ
-		const uint64 indexSize = (numVertices < (1 << 16)) ? sizeof(uint16) : sizeof(uint32);
-		s = indexSize;
-		memcpy(&buffer[at], &s, su32); at += su32;
-
-		// インデックス数
-		const uint32 numIndices = (uint32)mesh.Indices.size();
-		s = numIndices;
-		memcpy(&buffer[at], &s, su32); at += su32;
-
-		// LOD threshold
-		memcpy(&buffer[at], &mesh.LodThreshold, sizeof(float32)); at += sizeof(float32);
-
-		// 頂点データ
-		s = vertexSize * numVertices;
-		memcpy(&buffer[at], mesh.PackedVerticesStatic.data(), s); at += s;
-
-		// インデックスデータ
-		s = indexSize * numIndices;
-		void* data = (void*)mesh.Indices.data();
-		// インデックスは32bitで保存していたのでサイズが16bitの場合は変換する
-		if (indexSize == sizeof(uint16))
 		{
+			constexpr uint64 su32 = sizeof(uint32);
+			uint32 s = 0;
+
+			// メッシュ名
+			s = (uint32)mesh.Name.size();
+			memcpy(&buffer[at], &s, su32); at += su32;
+			memcpy(&buffer[at], mesh.Name.c_str(), s); at += s;
+
+			// LOD id
+			s = mesh.LodId;
+			memcpy(&buffer[at], &s, su32); at += su32;
+
+			// 頂点サイズ
+			constexpr uint32 vertexSize = sizeof(PackedVertex::VertexStatic);
+			s = vertexSize;
+			memcpy(&buffer[at], &s, su32); at += su32;
+
+			// 頂点数
+			const uint32 numVertices = (uint32)mesh.Vertices.size();
+			s = numVertices;
+			memcpy(&buffer[at], &s, su32); at += su32;
+
+			// インデックスサイズ
+			const uint32 indexSize = (numVertices < (1 << 16)) ? sizeof(uint16) : sizeof(uint32);
+			s = indexSize;
+			memcpy(&buffer[at], &s, su32); at += su32;
+
+			// インデックス数
+			const uint32 numIndices = (uint32)mesh.Indices.size();
+			s = numIndices;
+			memcpy(&buffer[at], &s, su32); at += su32;
+
+			// LOD threshold
+			memcpy(&buffer[at], &mesh.LodThreshold, sizeof(float32)); at += sizeof(float32);
+
+			// 頂点データ
+			s = vertexSize * numVertices;
+			memcpy(&buffer[at], mesh.PackedVerticesStatic.data(), s); at += s;
+
+			// インデックスデータ
+			s = indexSize * numIndices;
+			void* data = (void*)mesh.Indices.data();
 			Utility::Vector<uint16> indices;
-			indices.resize(numIndices);
-			for (uint32 i = 0; i < numIndices; i++)
+			// インデックスは32bitで保存していたのでサイズが16bitの場合は変換する
+			if (indexSize == sizeof(uint16))
 			{
-				indices[i] = (uint16)mesh.Indices[i];
+				indices.resize(numIndices);
+				for (uint32 i = 0; i < numIndices; i++)
+				{
+					indices[i] = (uint16)mesh.Indices[i];
+				}
+				data = (void*)indices.data();
 			}
-			data = (void*)indices.data();
+			memcpy(&buffer[at], data, s); at += s;
 		}
-		memcpy(&buffer[at], data, s); at += s;
-	}
 
 	} // 無名空間
 
@@ -300,17 +299,18 @@ namespace Rizityo::AssetTool
 	{
 		constexpr uint64 su32 = sizeof(uint32);
 		const uint64 levelSize = GetLevelSize(level);
-		data.BufferSize = (uint32)levelSize;
-		data.Buffer = (uint8*)CoTaskMemAlloc(levelSize);
-		assert(data.Buffer);
+		data.DataSize = (uint32)levelSize;
+		data.Data = (uint8*)CoTaskMemAlloc(levelSize);
+		assert(data.Data);
 
-		uint8* const buffer = data.Buffer;
+		uint8* const buffer = data.Data;
 		uint64 at = 0;
 		uint32 s = 0;
 
+		// レベル名の長さ
 		s = (uint32)level.Name.size();
-		// レベル名
 		memcpy(&buffer[at], &s, su32); at += su32;
+		// レベル名
 		memcpy(&buffer[at], level.Name.c_str(), s); at += s;
 
 		// LODの数
@@ -323,7 +323,7 @@ namespace Rizityo::AssetTool
 			// LODの名前
 			s = (uint32)lod.Name.size();
 			memcpy(&buffer[at], &s, su32); at += su32;
-			memcpy(&buffer[at], level.Name.c_str(), s); at += s;
+			memcpy(&buffer[at], lod.Name.c_str(), s); at += s;
 
 			// LOD内のメッシュの数
 			s = (uint32)lod.Meshes.size();
@@ -335,6 +335,8 @@ namespace Rizityo::AssetTool
 				PackMeshData(mesh, buffer, at);
 			}
 		}
+
+		assert(levelSize == at);
 
 	}
 }

@@ -8,8 +8,14 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Editor", "Editor\Editor.csproj", "{E2C42028-B9FE-4F9A-BF60-FB135D4B6A69}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{27B287F8-F3CB-4B07-BD6F-9F8652DB311C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0E23CEAF-C429-4255-A496-BAAA96B30C73} = {0E23CEAF-C429-4255-A496-BAAA96B30C73}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EngineDLL", "EngineDLL\EngineDLL.vcxproj", "{AA01C602-8FEB-47F0-B12E-D17163A097E9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0E23CEAF-C429-4255-A496-BAAA96B30C73} = {0E23CEAF-C429-4255-A496-BAAA96B30C73}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssetTool", "AssetTool\AssetTool.vcxproj", "{8EB7E7E3-C5CE-4F61-B54C-0A197F25DBCB}"
 EndProject
