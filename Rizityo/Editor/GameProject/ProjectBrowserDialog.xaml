@@ -48,7 +48,6 @@
             <RowDefinition Height="auto"/>
             <RowDefinition />
         </Grid.RowDefinitions>
-
         <!--
         <Canvas x:Name="canvas">
             <Rectangle Width="{Binding Path=ActualWidth, ElementName=createProjectButton}"
@@ -101,7 +100,7 @@
                 <DropShadowEffect Opacity="0.6" BlurRadius="15" ShadowDepth="2"/>
             </StackPanel.Effect>
             <local:OpenProjectView x:Name="openProjectView"/>
-            <local:NewProjectView x:Name="newProjectView"/>
+            <local:NewProjectView x:Name="newProjectView" IsEnabled="False"/>
         </StackPanel>
     </Grid>
 </Window>

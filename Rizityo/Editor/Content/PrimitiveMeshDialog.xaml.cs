@@ -1,9 +1,12 @@
 ﻿using Editor.DLLWrapper;
 using Editor.Editors;
+using Editor.GameProject;
 using Editor.ToolAPIStructs;
 using Editor.Utility.Controls;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -133,6 +136,21 @@ namespace Editor.Content
             LoadTextures();
         }
 
-        
+        private void OnSaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new SaveFileDialog()
+            {
+                InitialDirectory = Project.Current.ContentPath,
+                Filter = "Asset file (*.rasset)|*.rasset"
+            };
+
+            if(dialog.ShowDialog() == true)
+            {
+                Debug.Assert(!string.IsNullOrEmpty(dialog.FileName));
+                var asset = (DataContext as IAssetEditor).Asset;
+                Debug.Assert(asset != null);
+                asset.Save(dialog.FileName);
+            }
+        }
     }
 }

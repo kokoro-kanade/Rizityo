@@ -136,7 +136,6 @@ namespace Rizityo::AssetTool
 			const float32 phiStep = TWO_PI / phiCount;
 			const float32 thetaStep = PI / thetaCount;
 			const uint32 numVertices = 2 + phiCount * (thetaCount - 1);
-			const uint32 numIndices = 2 * (3 * phiCount) + 2 * 3 * phiCount * (thetaCount - 2);
 			
 			Mesh mesh{};
 			mesh.Name = "UVSphere";
@@ -165,26 +164,27 @@ namespace Rizityo::AssetTool
 			assert(c == numVertices);
 
 			c = 0;
+			const uint32 numIndices = 2 * (3 * phiCount) + 2 * 3 * phiCount * (thetaCount - 2);
 			mesh.RawIndices.resize(numIndices);
 			Utility::Vector<Vector2> uvs{ numIndices };
-			const float32 invThetaCount = 1.f / thetaCount;
-			const float32 invPhiCount = 1.f / phiCount;
+			const float32 uvThetaStep = 1.f / thetaCount;
+			const float32 uvPhiStep = 1.f / phiCount;
 
 			for (uint32 i = 0; i < phiCount-1; i++)
 			{
-				uvs[c] = { (2 * i + 1) * 0.5f * invPhiCount, 1.f };
+				uvs[c] = { (2 * i + 1) * 0.5f * uvPhiStep, 1.f };
 				mesh.RawIndices[c++] = 0;
-				uvs[c] = { i * invPhiCount, 1.f - invThetaCount };
+				uvs[c] = { i * uvPhiStep, 1.f - uvThetaStep };
 				mesh.RawIndices[c++] = i+1;
-				uvs[c] = { (i + 1) * invPhiCount, 1.f - invThetaCount };
+				uvs[c] = { (i + 1) * uvPhiStep, 1.f - uvThetaStep };
 				mesh.RawIndices[c++] = i+2;
 			}
 
-			uvs[c] = { 1.f - 0.5f * invPhiCount, 1.f };
+			uvs[c] = { 1.f - 0.5f * uvPhiStep, 1.f };
 			mesh.RawIndices[c++] = 0;
-			uvs[c] = { 1.f - invPhiCount, 1.f - invThetaCount };
+			uvs[c] = { 1.f - uvPhiStep, 1.f - uvThetaStep };
 			mesh.RawIndices[c++] = phiCount;
-			uvs[c] = { 1.f, 1.f - invThetaCount };
+			uvs[c] = { 1.f, 1.f - uvThetaStep };
 			mesh.RawIndices[c++] = 1;
 
 			for (uint32 i = 0; i < thetaCount-2; i++)
@@ -199,18 +199,18 @@ namespace Rizityo::AssetTool
 						1 + (j + 1) + (i + 1) * phiCount	// ‰E‰º
 					};
 
-					uvs[c] = { j * invPhiCount, 1.f - (i + 1) * invThetaCount };
+					uvs[c] = { j * uvPhiStep, 1.f - (i + 1) * uvThetaStep };
 					mesh.RawIndices[c++] = index[0];
-					uvs[c] = { j * invPhiCount, 1.f - (i + 2) * invThetaCount };
+					uvs[c] = { j * uvPhiStep, 1.f - (i + 2) * uvThetaStep };
 					mesh.RawIndices[c++] = index[1];
-					uvs[c] = { (j + 1) * invPhiCount, 1.f - (i + 1) * invThetaCount };
+					uvs[c] = { (j + 1) * uvPhiStep, 1.f - (i + 1) * uvThetaStep };
 					mesh.RawIndices[c++] = index[2];
 
-					uvs[c] = { (j + 1) * invPhiCount, 1.f - (i + 1) * invThetaCount };
+					uvs[c] = { (j + 1) * uvPhiStep, 1.f - (i + 1) * uvThetaStep };
 					mesh.RawIndices[c++] = index[2];
-					uvs[c] = { j * invPhiCount, 1.f - (i + 2) * invThetaCount };
+					uvs[c] = { j * uvPhiStep, 1.f - (i + 2) * uvThetaStep };
 					mesh.RawIndices[c++] = index[1];
-					uvs[c] = { (j + 1) * invPhiCount, 1.f - (i + 2) * invThetaCount };
+					uvs[c] = { (j + 1) * uvPhiStep, 1.f - (i + 2) * uvThetaStep };
 					mesh.RawIndices[c++] = index[3];
 				}
 
@@ -222,18 +222,18 @@ namespace Rizityo::AssetTool
 					1 + (i + 1) * phiCount
 				};
 
-				uvs[c] = { 1.f - invPhiCount, 1.f - (i + 1) * invThetaCount };
+				uvs[c] = { 1.f - uvPhiStep, 1.f - (i + 1) * uvThetaStep };
 				mesh.RawIndices[c++] = index[0];
-				uvs[c] = { 1.f - invPhiCount, 1.f - (i + 2) * invThetaCount };
+				uvs[c] = { 1.f - uvPhiStep, 1.f - (i + 2) * uvThetaStep };
 				mesh.RawIndices[c++] = index[1];
-				uvs[c] = { 1.f, 1.f - (i + 1) * invThetaCount };
+				uvs[c] = { 1.f, 1.f - (i + 1) * uvThetaStep };
 				mesh.RawIndices[c++] = index[2];
 
-				uvs[c] = { 1.f, 1.f - (i + 1) * invThetaCount };
+				uvs[c] = { 1.f, 1.f - (i + 1) * uvThetaStep };
 				mesh.RawIndices[c++] = index[2];
-				uvs[c] = { 1.f - invPhiCount, 1.f - (i + 2) * invThetaCount };
+				uvs[c] = { 1.f - uvPhiStep, 1.f - (i + 2) * uvThetaStep };
 				mesh.RawIndices[c++] = index[1];
-				uvs[c] = { 1.f, 1.f - (i + 2) * invThetaCount };
+				uvs[c] = { 1.f, 1.f - (i + 2) * uvThetaStep };
 				mesh.RawIndices[c++] = index[3];
 
 			}
@@ -241,19 +241,19 @@ namespace Rizityo::AssetTool
 			const uint32 southPoleIndex = (uint32)mesh.Positions.size() - 1;
 			for (uint32 i = 0; i < phiCount-1; i++)
 			{
-				uvs[c] = { (2 * i + 1) * 0.5f * invPhiCount, 0.f };
+				uvs[c] = { (2 * i + 1) * 0.5f * uvPhiStep, 0.f };
 				mesh.RawIndices[c++] = southPoleIndex;
-				uvs[c] = { (i + 1) * invPhiCount, invThetaCount };
+				uvs[c] = { (i + 1) * uvPhiStep, uvThetaStep };
 				mesh.RawIndices[c++] = southPoleIndex - phiCount + i + 1;
-				uvs[c] = { i * invPhiCount, invThetaCount };
+				uvs[c] = { i * uvPhiStep, uvThetaStep };
 				mesh.RawIndices[c++] = southPoleIndex - phiCount + i;
 			}
 
-			uvs[c] = { 1.f - 0.5f * invPhiCount, 0.f };
+			uvs[c] = { 1.f - 0.5f * uvPhiStep, 0.f };
 			mesh.RawIndices[c++] = southPoleIndex;
-			uvs[c] = { 1.f, invThetaCount };
+			uvs[c] = { 1.f, uvThetaStep };
 			mesh.RawIndices[c++] = southPoleIndex - phiCount;
-			uvs[c] = { 1.f - invPhiCount, invThetaCount };
+			uvs[c] = { 1.f - uvPhiStep, uvThetaStep };
 			mesh.RawIndices[c++] = southPoleIndex - 1;
 
 			assert(c == numIndices);

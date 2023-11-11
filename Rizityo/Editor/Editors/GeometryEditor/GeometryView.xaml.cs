@@ -27,6 +27,11 @@ namespace Editor.Editors
         private bool _capturedLeft;
         private bool _capturedRight;
 
+        private static readonly GeometryView _geometryView = new()
+        {
+            Background = (Brush)Application.Current.FindResource("Editor.Window.GrayBrush4")
+        };
+
         public void SetGeometry(int index = -1)
         {
             if (!(DataContext is MeshRenderer vm))
@@ -156,6 +161,21 @@ namespace Editor.Editors
             _capturedRight = false;
             if (!_capturedLeft)
                 Mouse.Capture(null);
+        }
+
+        internal static BitmapSource RenderToBitmap(MeshRenderer meshRenderer, int width, int height)
+        {
+            var bmp = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Default);
+
+            _geometryView.DataContext = meshRenderer;
+            _geometryView.Width = width;
+            _geometryView.Height = height;
+            _geometryView.Measure(new Size(width, height));
+            _geometryView.Arrange(new Rect(0, 0, width, height));
+            _geometryView.UpdateLayout();
+
+            bmp.Render(_geometryView);
+            return bmp;
         }
     }
 }

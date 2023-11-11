@@ -7,6 +7,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Editor.Common;
 using Editor.Utility;
 
@@ -234,6 +237,16 @@ namespace Editor.Content
             ImportEmbededTextures = true;
             ImportAnimations = true;
         }
+
+        public void ToBinary(BinaryWriter writer)
+        {
+            writer.Write(SmoothingAngle);
+            writer.Write(CalculateNormals);
+            writer.Write(CalculateTangents);
+            writer.Write(ReverseHandedness);
+            writer.Write(ImportEmbededTextures);
+            writer.Write(ImportAnimations);
+        }
     }
 
     class Geometry : Asset
@@ -353,6 +366,108 @@ namespace Editor.Content
                 _lodGroups.Add(lodGroup);
             }
         }
+
+        private void LodToBinary(MeshLod lod, BinaryWriter writer, out byte[] hash)
+        {
+            writer.Write(lod.Name);
+            writer.Write(lod.LodThreshold);
+            writer.Write(lod.Meshes.Count);
+
+            var meshDataBegin = writer.BaseStream.Position;
+
+            foreach (var mesh in lod.Meshes)
+            {
+                writer.Write(mesh.VertexSize);
+                writer.Write(mesh.VertexCount);
+                writer.Write(mesh.IndexSize);
+                writer.Write(mesh.IndexCount);
+                writer.Write(mesh.Vertices);
+                writer.Write(mesh.Indices);
+            }
+
+            var meshDataSize = writer.BaseStream.Position - meshDataBegin;
+            Debug.Assert(meshDataSize > 0);
+
+            var data = (writer.BaseStream as MemoryStream).ToArray();
+            hash = ContentHelper.ComputeHash(data, (int)meshDataBegin, (int)meshDataSize);
+        }
+
+        private byte[] GenerateIcon(MeshLod meshLod)
+        {
+            var width = 90 * 4;
+            BitmapSource bmp = null;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                bmp = Editors.GeometryView.RenderToBitmap(new Editors.MeshRenderer(meshLod, null), width, width);
+                bmp = new TransformedBitmap(bmp, new ScaleTransform(0.25, 0.25, 0.5, 0.5));
+            });
+
+            using var memoryStream = new MemoryStream();
+            memoryStream.SetLength(0);
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bmp));
+            encoder.Save(memoryStream);
+
+            return memoryStream.ToArray();
+        }
+
+        public override IEnumerable<string> Save(string file)
+        {
+            Debug.Assert(_lodGroups.Any());
+            var savedFiles = new List<string>();
+            if (!_lodGroups.Any())
+                return savedFiles;
+
+            var path = Path.GetDirectoryName(file) + Path.DirectorySeparatorChar;
+            var filename = Path.GetFileNameWithoutExtension(file);
+
+            try
+            {
+                foreach (var lodGroup in _lodGroups)
+                {
+                    Debug.Assert(lodGroup.Lods.Any());
+                    var meshFilename = ContentHelper.SanitizeFileName(path + filename + "_" + lodGroup.Lods[0].Name + AssetFileExtension);
+                    // アセットファイルごとにGUIDを生成
+                    Guid = Guid.NewGuid();
+                    byte[] lodGroupData = null;
+                    using (var writer = new BinaryWriter(new MemoryStream()))
+                    {
+                        writer.Write(lodGroup.Name);
+                        writer.Write(lodGroup.Lods.Count);
+                        var hashes = new List<byte>();
+                        foreach (var lod in lodGroup.Lods)
+                        {
+                            LodToBinary(lod, writer, out var hash);
+                            hashes.AddRange(hash);
+                        }
+
+                        Hash = ContentHelper.ComputeHash(hashes.ToArray());
+                        lodGroupData = (writer.BaseStream as MemoryStream).ToArray();
+                        Icon = GenerateIcon(lodGroup.Lods[0]);
+                    }
+
+                    Debug.Assert(lodGroupData?.Length > 0);
+
+                    using (var writer = new BinaryWriter(File.Open(meshFilename, FileMode.Create, FileAccess.Write)))
+                    {
+                        WriteAssetFileHeader(writer);
+                        ImportSetting.ToBinary(writer);
+                        writer.Write(lodGroupData);
+                    }
+
+                    savedFiles.Add(meshFilename);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                Logger.Log(Verbosity.Error, $"{file}のセーブに失敗しました");
+            }
+
+            return savedFiles;
+        }
+
+        
 
         public Geometry() : base(AssetType.Mesh) { }
     }

@@ -32,6 +32,7 @@ namespace Editor.GameProject
         public string Path { get; private set; }
         public string ProjectFilePath => $@"{Path}{Name}{Extension}";
         public string SolutionFilePath => $@"{Path}{Name}.sln";
+        public string ContentPath => $@"{Path}Content\";
 
         public static Project Current => Application.Current.MainWindow.DataContext as Project;
 
