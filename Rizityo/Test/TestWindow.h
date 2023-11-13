@@ -31,7 +31,7 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_SYSCHAR:
 		if (wparam == VK_RETURN && (HIWORD(lparam) & KF_ALTDOWN))
 		{
-			Platform::Window window{ Platform::WindowId{(Id::IdType)GetWindowLongPtr(hwnd, GWLP_USERDATA)} };
+			Platform::Window window{ Platform::WindowID{(ID::IDType)GetWindowLongPtr(hwnd, GWLP_USERDATA)} };
 			window.SetFullScreen(!window.IsFullScreen());
 			return 0;
 		}
@@ -71,7 +71,7 @@ public:
 	{
 		for (uint32 i = 0; i < _countof(Windows); i++)
 		{
-			Platform::Remove_Window(Windows[i].GetId());
+			Platform::Remove_Window(Windows[i].ID());
 		}
 	}
 };

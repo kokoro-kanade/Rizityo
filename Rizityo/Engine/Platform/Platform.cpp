@@ -252,55 +252,55 @@ namespace Rizityo::Platform
 	void Window::SetFullScreen(bool isFullScreen) const
 {
 	assert(IsValid());
-	SetWindowFullScreen(ID, isFullScreen);
+	SetWindowFullScreen(_ID, isFullScreen);
 }
 	
 	bool Window::IsFullScreen() const
 {
 	assert(IsValid());
-	return IsWindowFullScreen(ID);
+	return IsWindowFullScreen(_ID);
 }
 	
-	void* Window::GetHandle() const
+	void* Window::Handle() const
 {
 	assert(IsValid());
-	return GetWindowHandle(ID);
+	return GetWindowHandle(_ID);
 }
 	
 	void Window::SetCaption(const wchar_t* caption) const
 {
 	assert(IsValid());
-	SetWindowCaption(ID, caption);
+	SetWindowCaption(_ID, caption);
 }
 	
-	Math::U32Vector4 Window::GetSize() const
+	Math::U32Vector4 Window::Size() const
 	{
 		assert(IsValid());
-		return GetWindowSize(ID);
+		return GetWindowSize(_ID);
 	}
 
 	void Window::Resize(uint32 width, uint32 height) const
 	{
 		assert(IsValid());
-		ResizeWindow(ID, width, height);
+		ResizeWindow(_ID, width, height);
 	}
 	
-	uint32 Window::GetWidth() const
+	uint32 Window::Width() const
 	{
-		Math::U32Vector4 size{ GetSize() };
+		Math::U32Vector4 size{ Size() };
 		return size.z - size.x;
 	}
 
-	uint32 Window::GetHeight() const
+	uint32 Window::Height() const
 	{
-		Math::U32Vector4 size{ GetSize() };
+		Math::U32Vector4 size{ Size() };
 		return size.w - size.y;
 	}
 	
 	bool Window::IsClosed() const
 	{
 		assert(IsValid());
-		return IsWindowClosed(ID);
+		return IsWindowClosed(_ID);
 	}
 
 } // Platform

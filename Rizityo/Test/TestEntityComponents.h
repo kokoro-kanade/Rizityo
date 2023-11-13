@@ -58,7 +58,7 @@ private:
 			GameEntity::Entity entity{ GameEntity::CreateGameEntity(entityInfo) };
 			assert(entity.IsValid());
 			Entities.push_back(entity);
-			assert(GameEntity::IsAlive(entity.GetId()));
+			assert(GameEntity::IsAlive(entity.GetID()));
 			count--;
 		}
 	}
@@ -72,11 +72,11 @@ private:
 		{
 			uint32 index = (uint32)rand() % (uint32)Entities.size();
 			GameEntity::Entity entity{ Entities[index] };
-			assert(entity.IsValid() && Id::IsValid(entity.GetId()));
+			assert(entity.IsValid() && ID::IsValid(entity.GetID()));
 			if (entity.IsValid())
 			{
-				GameEntity::RemoveGameEnity(entity.GetId());
-				assert(!GameEntity::IsAlive(entity.GetId()));
+				GameEntity::RemoveGameEnity(entity.GetID());
+				assert(!GameEntity::IsAlive(entity.GetID()));
 				Entities.erase(Entities.begin() + index);
 				RemovedNum++;
 			}

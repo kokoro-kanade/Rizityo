@@ -1,13 +1,13 @@
+#include "Test.h"
+
 #pragma comment(lib, "Engine.lib")
-
-
-#define TEST_ENTITY_COMPONENTS 0
-#define TEST_WINDOW 1
 
 #if TEST_ENTITY_COMPONENTS
 #include "TestEntityComponents.h"
 #elif TEST_WINDOW
 #include "TestWindow.h"
+#elif TEST_RENDERER
+#include "TestRenderer.h"
 #else
 #error どれか一つテストを有効にしてください
 #endif

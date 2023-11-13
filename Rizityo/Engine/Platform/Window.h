@@ -8,23 +8,23 @@ namespace Rizityo::Platform
 	class Window
 	{
 	public:
-		constexpr explicit Window(WindowID id) : ID{ id } {}
-		constexpr Window() : ID{ ID::INVALID_ID } {}
-		constexpr WindowID GetID() const { return ID; }
-		constexpr bool IsValid() const { return ID::IsValid(ID); }
+		constexpr explicit Window(WindowID id) : _ID{ id } {}
+		constexpr Window() : _ID{ ID::INVALID_ID } {}
+		constexpr WindowID ID() const { return _ID; }
+		constexpr bool IsValid() const { return ID::IsValid(_ID); }
 
 		void SetFullScreen(bool isFullScreen) const;
 		bool IsFullScreen() const;
-		void* GetHandle() const;
+		void* Handle() const;
 		void SetCaption(const wchar_t* caption) const;
-		Math::U32Vector4 GetSize() const;
+		Math::U32Vector4 Size() const;
 		void Resize(uint32 width, uint32 height) const;
-		uint32 GetWidth() const;
-		uint32 GetHeight() const;
+		uint32 Width() const;
+		uint32 Height() const;
 		bool IsClosed() const;
 
 	private:
 		
-		WindowID ID{ ID::INVALID_ID };
+		WindowID _ID{ ID::INVALID_ID };
 	};
 }
