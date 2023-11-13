@@ -1,6 +1,7 @@
 #pragma once
 
-#define USE_STL_VECTOR 1
+
+#define USE_STL_VECTOR 0
 #define USE_STL_DEQUE 1
 
 #if USE_STL_VECTOR
@@ -10,7 +11,6 @@ namespace Rizityo::Utility
 	template<typename T>
 	using Vector = std::vector<T>;
 
-	// Rename: –¼‘O‚©‚çáŠ±•ª‚©‚è‚Ã‚ç‚¢
 	// íœ‚·‚é—v‘f‚ğ––”ö‚Ì—v‘f‚ÆŒğŠ·‚µ‚Ä‹ó‚«‚ª‚È‚¢‚æ‚¤‚Éíœ
 	template<typename T>
 	void EraseUnordered(std::vector<T>& v, size_t index)
@@ -26,6 +26,16 @@ namespace Rizityo::Utility
 		}
 	}
 }
+#else
+#include "Container/Vector.h"
+namespace Rizityo::Utility
+{
+	template<typename T>
+	void EraseUnordered(Vector<T>& v, size_t index)
+	{
+		v.erase_unordered(index);
+	}
+}
 #endif // USE_STL_VECTOR
 
 #if USE_STL_DEQUE
@@ -37,3 +47,4 @@ namespace Rizityo::Utility
 }
 #endif // USE_STL_DEQUE
 
+#include "Container/FreeList.h"
