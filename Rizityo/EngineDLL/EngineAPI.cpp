@@ -77,7 +77,7 @@ EDITOR_INTERFACE
 void RemoveRenderSurface(uint32 id)
 {
 	assert(id < Surfaces.size());
-	Platform::Remove_Window(Surfaces[id].Window.GetId());
+	Platform::Remove_Window(Surfaces[id].Window.GetID());
 }
 
 EDITOR_INTERFACE

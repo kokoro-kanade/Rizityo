@@ -20,8 +20,8 @@ namespace Rizityo
 		};
 	
 		Entity CreateGameEntity(const EntityInfo& info); // TODO?: éQè∆ìnÇµÇ©ÇÁílìnÇµÇ…Ç∑ÇÈ
-		void RemoveGameEnity(EntityId id);
-		bool IsAlive(EntityId id);
+		void RemoveGameEnity(EntityID id);
+		bool IsAlive(EntityID id);
 	
 	}
 }

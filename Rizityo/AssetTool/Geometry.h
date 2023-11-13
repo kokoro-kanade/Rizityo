@@ -40,11 +40,11 @@ namespace Rizityo::AssetTool
 		// 出力データ
 		std::string Name;
 		Utility::Vector<PackedVertex::VertexStatic> PackedVerticesStatic;
-		float32 LodThreshold = { -1.f };
-		uint32 LodId = UINT32_INVALID_NUM;
+		float32 LODThreshold = { -1.f };
+		uint32 LOD_ID = UINT32_INVALID_NUM;
 	};
 
-	struct LodGroup
+	struct LODGroup
 	{
 		std::string Name;
 		Utility::Vector<Mesh> Meshes;
@@ -53,7 +53,7 @@ namespace Rizityo::AssetTool
 	struct Level
 	{
 		std::string Name;
-		Utility::Vector<LodGroup> LodGroups;
+		Utility::Vector<LODGroup> LODGroups;
 	};
 
 	struct GeometryImportSetting

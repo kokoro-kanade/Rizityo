@@ -118,10 +118,10 @@ namespace Rizityo::AssetTool
 
 		void CreatePlane(Level& level, const PrimitiveInitInfo& info)
 		{
-			LodGroup lod{};
+			LODGroup lod{};
 			lod.Name = "Plane";
 			lod.Meshes.emplace_back(CreatePlane(info));
-			level.LodGroups.emplace_back(lod);
+			level.LODGroups.emplace_back(lod);
 		}
 
 		void CreateCube(Level& level, const PrimitiveInitInfo& info)
@@ -265,10 +265,10 @@ namespace Rizityo::AssetTool
 
 		void CreateUVSphere(Level& level, const PrimitiveInitInfo& info)
 		{
-			LodGroup lod{};
+			LODGroup lod{};
 			lod.Name = "UVSphere";
 			lod.Meshes.emplace_back(CreateUVSphere(info));
-			level.LodGroups.emplace_back(lod);
+			level.LODGroups.emplace_back(lod);
 		}
 
 		void CreateIcoSphere(Level& level, const PrimitiveInitInfo& info)

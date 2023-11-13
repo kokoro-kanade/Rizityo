@@ -123,7 +123,7 @@ namespace Rizityo::Content
 	{
 		for (auto&& entity : entities)
 		{
-			GameEntity::RemoveGameEnity(entity.GetId());
+			GameEntity::RemoveGameEnity(entity.GetID());
 		}
 	}
 }

@@ -3,15 +3,15 @@
 
 namespace Rizityo::Platform
 {
-	DEFINE_ID_TYPE(WindowId);
+	DEFINE_ID_TYPE(WindowID);
 
 	class Window
 	{
 	public:
-		constexpr explicit Window(WindowId id) : Id{ id } {}
-		constexpr Window() : Id{ Id::INVALID_ID } {}
-		constexpr WindowId GetId() const { return Id; }
-		constexpr bool IsValid() const { return Id::IsValid(Id); }
+		constexpr explicit Window(WindowID id) : ID{ id } {}
+		constexpr Window() : ID{ ID::INVALID_ID } {}
+		constexpr WindowID GetID() const { return ID; }
+		constexpr bool IsValid() const { return ID::IsValid(ID); }
 
 		void SetFullScreen(bool isFullScreen) const;
 		bool IsFullScreen() const;
@@ -25,6 +25,6 @@ namespace Rizityo::Platform
 
 	private:
 		
-		WindowId Id{ Id::INVALID_ID };
+		WindowID ID{ ID::INVALID_ID };
 	};
 }

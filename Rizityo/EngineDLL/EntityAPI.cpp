@@ -49,14 +49,14 @@ namespace // エディタとエンジン間をつなぐ処理
 		ScriptComponent Script;
 	};
 
-	GameEntity::Entity EntityFromId(Id::IdType id)
+	GameEntity::Entity EntityFromId(ID::IDType id)
 	{
-		return GameEntity::Entity{ GameEntity::EntityId{id} };
+		return GameEntity::Entity{ GameEntity::EntityID{id} };
 	}
 }
 
 EDITOR_INTERFACE
-Id::IdType CreateGameEntity(GameEntityDescriptor* d)
+ID::IDType CreateGameEntity(GameEntityDescriptor* d)
 {
 	assert(d);
 	GameEntityDescriptor& desc{ *d };
@@ -66,12 +66,12 @@ Id::IdType CreateGameEntity(GameEntityDescriptor* d)
 		&transformInfo,
 		&scriptInfo
 	};
-	return GameEntity::CreateGameEntity(entityInfo).GetId();
+	return GameEntity::CreateGameEntity(entityInfo).GetID();
 }
 
 EDITOR_INTERFACE
-void RemoveGameEntity(Id::IdType id)
+void RemoveGameEntity(ID::IDType id)
 {
-	assert(Id::IsValid(id));
-	GameEntity::RemoveGameEnity(GameEntity::EntityId{ id });
+	assert(ID::IsValid(id));
+	GameEntity::RemoveGameEnity(GameEntity::EntityID{ id });
 }

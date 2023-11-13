@@ -10,7 +10,7 @@ namespace Rizityo::Platform
 		// TODO? PlatfromTypes.h‚ÉˆÚ“®
 		struct WindowInfo
 		{
-			HWND Hwnd{ nullptr };
+			HWND Hwnd = nullptr ;
 			RECT ClientArea{ 0, 0, 1920, 1080 };
 			RECT FullScreenArea{};
 			POINT TopLeft{ 0, 0 };
@@ -19,44 +19,20 @@ namespace Rizityo::Platform
 			bool IsClosed = false;
 		};
 
-		Utility::Vector<WindowInfo> Windows;
-		Utility::Vector<uint32> AvailableSlots;
+		Utility::Vector<int> v;
 
-		// Why: Id::IdType‚Å‚Í‚È‚­‚Äuint32
-		uint32 AddToWindows(WindowInfo info)
-		{
-			uint32 id = UINT32_INVALID_NUM;
-			if (AvailableSlots.empty())
-			{
-				id = (uint32)Windows.size();
-				Windows.emplace_back(info);
-			}
-			else
-			{
-				id = AvailableSlots.back();
-				AvailableSlots.pop_back();
-				assert(id != UINT32_INVALID_NUM);
-				Windows[id] = info;
-			}
-			return id;
-		}
+		Utility::FreeList<WindowInfo> Windows;
 
-		void RemoveFromWindows(uint32 id)
+		WindowInfo& GetWindowInfoFromId(WindowID id)
 		{
-			assert(id < Windows.size());
-			AvailableSlots.emplace_back(id);
-		}
-
-		WindowInfo& GetWindowInfoFromId(WindowId id)
-		{
-			assert(id < Windows.size());
+			assert(id < Windows.Size());
 			assert(Windows[id].Hwnd);
 			return Windows[id];
 		}
 
 		WindowInfo& GetWindowInfoFromHandle(WindowHandle handle)
 		{
-			const WindowId id{ (Id::IdType)GetWindowLongPtr(handle, GWLP_USERDATA) };
+			const WindowID id{ (ID::IDType)GetWindowLongPtr(handle, GWLP_USERDATA) };
 			return GetWindowInfoFromId(id);
 		}
 
@@ -107,7 +83,7 @@ namespace Rizityo::Platform
 			MoveWindow(info.Hwnd, info.TopLeft.x, info.TopLeft.y, width, height, true);
 		}
 
-		void ResizeWindow(WindowId id, uint32 width, uint32 height)
+		void ResizeWindow(WindowID id, uint32 width, uint32 height)
 		{
 			WindowInfo& info{ GetWindowInfoFromId(id) };
 
@@ -128,7 +104,7 @@ namespace Rizityo::Platform
 
 		}
 
-		void SetWindowFullScreen(WindowId id, bool isFullScreen)
+		void SetWindowFullScreen(WindowID id, bool isFullScreen)
 		{
 			WindowInfo& info{ GetWindowInfoFromId(id) };
 			if (info.IsFullScreen == isFullScreen)
@@ -156,30 +132,30 @@ namespace Rizityo::Platform
 			
 		}
 
-		bool IsWindowFullScreen(WindowId id)
+		bool IsWindowFullScreen(WindowID id)
 		{
 			return GetWindowInfoFromId(id).IsFullScreen;
 		}
 
-		WindowHandle GetWindowHandle(WindowId id)
+		WindowHandle GetWindowHandle(WindowID id)
 		{
 			return GetWindowInfoFromId(id).Hwnd;
 		}
 
-		void SetWindowCaption(WindowId id, const wchar_t* caption)
+		void SetWindowCaption(WindowID id, const wchar_t* caption)
 		{
 			WindowInfo& info{ GetWindowInfoFromId(id) };
 			SetWindowText(info.Hwnd, caption);
 		}
 
-		Math::U32Vector4 GetWindowSize(WindowId id)
+		Math::U32Vector4 GetWindowSize(WindowID id)
 		{
 			WindowInfo& info{ GetWindowInfoFromId(id) };
 			RECT& area{ info.IsFullScreen ? info.FullScreenArea : info.ClientArea };
 			return { (uint32)area.left, (uint32)area.top, (uint32)area.right, (uint32)area.bottom };
 		}
 
-		bool IsWindowClosed(WindowId id)
+		bool IsWindowClosed(WindowID id)
 		{
 			return GetWindowInfoFromId(id).IsClosed;
 		}
@@ -242,8 +218,8 @@ namespace Rizityo::Platform
 
 		if (info.Hwnd)
 		{
-			DEBUG_OP(SetLastError(0));
-			const WindowId id{ AddToWindows(info) };
+			DEBUG_ONLY(SetLastError(0));
+			const WindowID id{ Windows.Add(info) };
 			SetWindowLongPtr(info.Hwnd, GWLP_USERDATA, (LONG_PTR)id);
 
 			if (callback)
@@ -259,11 +235,11 @@ namespace Rizityo::Platform
 		
 	}
 
-	void Remove_Window(WindowId id)
+	void Remove_Window(WindowID id)
 	{
 		WindowInfo& info{ GetWindowInfoFromId(id) };
 		DestroyWindow(info.Hwnd);
-		RemoveFromWindows(id);
+		Windows.Remove(id);
 	}
 
 #elif LINUX
@@ -276,37 +252,37 @@ namespace Rizityo::Platform
 	void Window::SetFullScreen(bool isFullScreen) const
 {
 	assert(IsValid());
-	SetWindowFullScreen(Id, isFullScreen);
+	SetWindowFullScreen(ID, isFullScreen);
 }
 	
 	bool Window::IsFullScreen() const
 {
 	assert(IsValid());
-	return IsWindowFullScreen(Id);
+	return IsWindowFullScreen(ID);
 }
 	
 	void* Window::GetHandle() const
 {
 	assert(IsValid());
-	return GetWindowHandle(Id);
+	return GetWindowHandle(ID);
 }
 	
 	void Window::SetCaption(const wchar_t* caption) const
 {
 	assert(IsValid());
-	SetWindowCaption(Id, caption);
+	SetWindowCaption(ID, caption);
 }
 	
 	Math::U32Vector4 Window::GetSize() const
 	{
 		assert(IsValid());
-		return GetWindowSize(Id);
+		return GetWindowSize(ID);
 	}
 
 	void Window::Resize(uint32 width, uint32 height) const
 	{
 		assert(IsValid());
-		ResizeWindow(Id, width, height);
+		ResizeWindow(ID, width, height);
 	}
 	
 	uint32 Window::GetWidth() const
@@ -324,7 +300,7 @@ namespace Rizityo::Platform
 	bool Window::IsClosed() const
 	{
 		assert(IsValid());
-		return IsWindowClosed(Id);
+		return IsWindowClosed(ID);
 	}
 
 } // Platform

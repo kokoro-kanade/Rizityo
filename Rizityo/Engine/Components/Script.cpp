@@ -6,18 +6,18 @@ namespace Rizityo::Script
 	namespace
 	{
 		Utility::Vector<Internal::ScriptPtr> EntityScripts; // 連続領域に保存
-		Utility::Vector<Id::IdType> IdMapping; // Componentのindex -> EntityScriptsの場所
+		Utility::Vector<ID::IDType> IdMapping; // Componentのindex -> EntityScriptsの場所
 
-		Utility::Vector<Id::GENERATION_TYPE> Generations;
-		Utility::Deque<ScriptId> FreeIds;
+		Utility::Vector<ID::GENERATION_TYPE> Generations;
+		Utility::Deque<ScriptID> FreeIds;
 
 		// Why: EntityのIsAliveのようにヘッダーに関数宣言して定義すればよいのではないか？
-		bool Exists(ScriptId id)
+		bool Exists(ScriptID id)
 		{
-			assert(Id::IsValid(id));
-			const Id::IdType index{ Id::GetIndex(id) };
+			assert(ID::IsValid(id));
+			const ID::IDType index{ ID::GetIndex(id) };
 			assert(index < Generations.size() && IdMapping[index] < EntityScripts.size());
-			return (Generations[index] == Id::GetGeneration(id) && EntityScripts[IdMapping[index]] && EntityScripts[IdMapping[index]]->IsValid());
+			return (Generations[index] == ID::GetGeneration(id) && EntityScripts[IdMapping[index]] && EntityScripts[IdMapping[index]]->IsValid());
 		}
 
 		using ScriptRegister = std::unordered_map<size_t, Internal::ScriptCreateFunc>;
@@ -68,39 +68,39 @@ namespace Rizityo::Script
 		assert(entity.IsValid());
 		assert(info.CreateFunc);
 
-		ScriptId id;
-		if (FreeIds.size() > Id::MIN_DELETED_ELEMENTS) // FreeIdsが少ない状態で使いまわすとすぐにgenerationが一周してしまうので閾値を設ける
+		ScriptID id;
+		if (FreeIds.size() > ID::MIN_DELETED_ELEMENTS) // FreeIdsが少ない状態で使いまわすとすぐにgenerationが一周してしまうので閾値を設ける
 		{
 			id = FreeIds.front();
 			assert(!Exists(id));
 			FreeIds.pop_front();
-			id = ScriptId{ Id::IncrementGeneration(id) };
-			Generations[Id::GetIndex(id)]++;
+			id = ScriptID{ ID::IncrementGeneration(id) };
+			Generations[ID::GetIndex(id)]++;
 		}
 		else
 		{
-			id = ScriptId{ (Id::IdType)Generations.size() };
+			id = ScriptID{ (ID::IDType)Generations.size() };
 			Generations.push_back(0);
 			IdMapping.emplace_back();
 		}
 
-		assert(Id::IsValid(id));
+		assert(ID::IsValid(id));
 		EntityScripts.emplace_back(info.CreateFunc(entity));
-		assert(EntityScripts.back()->GetId() == entity.GetId());
-		const Id::IdType entityScriptIndex{ (Id::IdType)EntityScripts.size() - 1 };
-		IdMapping[Id::GetIndex(id)] = entityScriptIndex;
+		assert(EntityScripts.back()->GetID() == entity.GetID());
+		const ID::IDType entityScriptIndex{ (ID::IDType)EntityScripts.size() - 1 };
+		IdMapping[ID::GetIndex(id)] = entityScriptIndex;
 		return Component{ id };
 	}
 
 	void RemoveComponent(Script::Component component)
 	{
-		assert(component.IsValid() && Exists(component.GetId()));
-		const ScriptId id{ component.GetId() };
-		const Id::IdType scriptEntityIndex{ IdMapping[Id::GetIndex(id)] };
-		const ScriptId lastId{ (scriptEntityIndex != EntityScripts.size()-1) ? EntityScripts.back()->GetScriptComponent().GetId() : id };
+		assert(component.IsValid() && Exists(component.GetID()));
+		const ScriptID id{ component.GetID() };
+		const ID::IDType scriptEntityIndex{ IdMapping[ID::GetIndex(id)] };
+		const ScriptID lastId{ (scriptEntityIndex != EntityScripts.size()-1) ? EntityScripts.back()->GetScriptComponent().GetID() : id };
 		Utility::EraseUnordered(EntityScripts, scriptEntityIndex);
-		IdMapping[Id::GetIndex(lastId)] = scriptEntityIndex; 
-		IdMapping[Id::GetIndex(id)] = Id::INVALID_ID; // 要素が一つの時はid == lastIdなのでinvalid_idの代入が後
+		IdMapping[ID::GetIndex(lastId)] = scriptEntityIndex; 
+		IdMapping[ID::GetIndex(id)] = ID::INVALID_ID; // 要素が一つの時はid == lastIdなのでinvalid_idの代入が後
 	}
 
 	void Update(float dt)
@@ -119,7 +119,7 @@ namespace Rizityo::Script
 extern "C" __declspec(dllexport)
 LPSAFEARRAY GetScriptNames()
 {
-	const uint32 size = Rizityo::Script::ScriptNames().size();
+	const uint32 size = (uint32)Rizityo::Script::ScriptNames().size();
 	if (!size)
 		return nullptr;
 	CComSafeArray<BSTR> names(size);

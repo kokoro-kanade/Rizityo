@@ -204,7 +204,7 @@ namespace Rizityo::AssetTool
 				su32						 // LODの数
 			};
 
-			for (auto& lod : level.LodGroups)
+			for (auto& lod : level.LODGroups)
 			{
 				uint64 lodSize
 				{
@@ -235,7 +235,7 @@ namespace Rizityo::AssetTool
 			memcpy(&buffer[at], mesh.Name.c_str(), s); at += s;
 
 			// LOD id
-			s = mesh.LodId;
+			s = mesh.LOD_ID;
 			memcpy(&buffer[at], &s, su32); at += su32;
 
 			// 頂点サイズ
@@ -259,7 +259,7 @@ namespace Rizityo::AssetTool
 			memcpy(&buffer[at], &s, su32); at += su32;
 
 			// LOD threshold
-			memcpy(&buffer[at], &mesh.LodThreshold, sizeof(float32)); at += sizeof(float32);
+			memcpy(&buffer[at], &mesh.LODThreshold, sizeof(float32)); at += sizeof(float32);
 
 			// 頂点データ
 			s = vertexSize * numVertices;
@@ -286,7 +286,7 @@ namespace Rizityo::AssetTool
 
 	void ProcessLevel(Level& level, const GeometryImportSetting& setting)
 	{
-		for (auto& lod : level.LodGroups)
+		for (auto& lod : level.LODGroups)
 		{
 			for (auto& mesh : lod.Meshes)
 			{
@@ -314,11 +314,11 @@ namespace Rizityo::AssetTool
 		memcpy(&buffer[at], level.Name.c_str(), s); at += s;
 
 		// LODの数
-		s = (uint32)level.LodGroups.size();
+		s = (uint32)level.LODGroups.size();
 		memcpy(&buffer[at], &s, su32); at += su32;
 
 		// LODデータ
-		for (auto& lod : level.LodGroups)
+		for (auto& lod : level.LODGroups)
 		{
 			// LODの名前
 			s = (uint32)lod.Name.size();

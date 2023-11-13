@@ -59,7 +59,7 @@ void EngineUpdate()
 
 void EngineShutdown()
 {
-	Platform::Remove_Window(GameWindow.Window.GetId());
+	Platform::Remove_Window(GameWindow.Window.GetID());
 	Rizityo::Content::UnLoadGame();
 }
 
