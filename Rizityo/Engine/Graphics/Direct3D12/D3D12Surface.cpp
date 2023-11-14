@@ -17,7 +17,7 @@ namespace Rizityo::Graphics::D3D12
 
 	void D3D12Surface::Release()
 	{
-		for (uint32 i = 0; i < FrameBufferCount; i++)
+		for (uint32 i = 0; i < BufferCount; i++)
 		{
 			RenderTargetData& data{ _RenderTargetData[i] };
 			Core::Release(data.Resource);
@@ -29,13 +29,13 @@ namespace Rizityo::Graphics::D3D12
 
 	void D3D12Surface::Finalize()
 	{
-		for (uint32 i = 0; i < FrameBufferCount; i++)
+		for (uint32 i = 0; i < BufferCount; i++)
 		{
 			RenderTargetData& data{ _RenderTargetData[i] };
 			assert(!data.Resource);
 			DXCall(_SwapChain->GetBuffer(i, IID_PPV_ARGS(&data.Resource)));
 			D3D12_RENDER_TARGET_VIEW_DESC desc{};
-			desc.Format = Core::GetDefaultRenderTargetFormat();
+			desc.Format = _Format;
 			desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 			Core::GetMainDevice()->CreateRenderTargetView(data.Resource, &desc, data.RTV.CPU);
 		}
@@ -56,22 +56,23 @@ namespace Rizityo::Graphics::D3D12
 		_ScissorRect = { 0,0,(int32)width, (int32)height };
 	}
 
-	void D3D12Surface::CreateSwapChain(IDXGIFactory7* factory, ID3D12CommandQueue* cmdQueue, DXGI_FORMAT format)
+	void D3D12Surface::CreateSwapChain(IDXGIFactory7* factory, ID3D12CommandQueue* cmdQueue, DXGI_FORMAT format /* = DefaultBackBufferFormat */)
 	{
 		assert(factory && cmdQueue);
 		Release();
 
-		if (SUCCEEDED(factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &AllowTearing, sizeof(uint32))) && AllowTearing)
+		if (SUCCEEDED(factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &_AllowTearing, sizeof(uint32))) && _AllowTearing)
 		{
-			PresentFlags = DXGI_PRESENT_ALLOW_TEARING;
+			_PresentFlags = DXGI_PRESENT_ALLOW_TEARING;
 		}
 
+		_Format = format;
 
 		DXGI_SWAP_CHAIN_DESC1 desc{};
 		desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-		desc.BufferCount = FrameBufferCount;
+		desc.BufferCount = BufferCount;
 		desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		desc.Flags = AllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+		desc.Flags = _AllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 		desc.Format = ToNonSRGB(format);
 		desc.Height = _Window.Height();
 		desc.Width = _Window.Width();
@@ -88,9 +89,9 @@ namespace Rizityo::Graphics::D3D12
 		DXCall(swapChain->QueryInterface(IID_PPV_ARGS(&_SwapChain)));
 		Core::Release(swapChain);
 
-		CurrentBackBufferIndex = _SwapChain->GetCurrentBackBufferIndex();
+		_CurrentBackBufferIndex = _SwapChain->GetCurrentBackBufferIndex();
 
-		for (uint32 i = 0; i < FrameBufferCount; i++)
+		for (uint32 i = 0; i < BufferCount; i++)
 		{
 			_RenderTargetData[i].RTV = Core::GetRTVHeap().Allocate();
 		}
@@ -101,8 +102,8 @@ namespace Rizityo::Graphics::D3D12
 	void D3D12Surface::Present() const
 	{
 		assert(_SwapChain);
-		DXCall(_SwapChain->Present(0, PresentFlags));
-		CurrentBackBufferIndex = _SwapChain->GetCurrentBackBufferIndex();
+		DXCall(_SwapChain->Present(0, _PresentFlags));
+		_CurrentBackBufferIndex = _SwapChain->GetCurrentBackBufferIndex();
 	}
 
 	void D3D12Surface::Resize()

@@ -1,6 +1,7 @@
 #include "D3D12Core.h"
 #include "D3D12Resource.h"
 #include "D3D12Surface.h"
+#include "D3D12Helper.h"
 
 using namespace Microsoft::WRL;
 
@@ -14,7 +15,7 @@ namespace Rizityo::Graphics::D3D12::Core
 			D3D12Command() = default;
 			DISABLE_COPY_AND_MOVE(D3D12Command);
 
-			explicit D3D12Command(ID3D12Device6* const device, D3D12_COMMAND_LIST_TYPE type)
+			explicit D3D12Command(ID3D12Device* const device, D3D12_COMMAND_LIST_TYPE type)
 			{
 				HRESULT hr{ S_OK };
 
@@ -125,7 +126,7 @@ namespace Rizityo::Graphics::D3D12::Core
 			}
 
 			constexpr ID3D12CommandQueue* const CommandQueue() const { return _CmdQueue; }
-			constexpr ID3D12GraphicsCommandList5* const CommandList() const { return _CmdList; }
+			constexpr ID3D12GraphicsCommandList* const CommandList() const { return _CmdList; }
 			constexpr uint32 FrameIndex() const { return _FrameIndex; }
 
 		private:
@@ -153,7 +154,7 @@ namespace Rizityo::Graphics::D3D12::Core
 			};
 
 			ID3D12CommandQueue* _CmdQueue{ nullptr };
-			ID3D12GraphicsCommandList5* _CmdList{ nullptr };
+			ID3D12GraphicsCommandList* _CmdList{ nullptr };
 			ID3D12Fence1* _Fence{ nullptr };
 			uint64 _FenceValue = 0;
 			HANDLE _FenceEvent{ nullptr };
@@ -162,7 +163,7 @@ namespace Rizityo::Graphics::D3D12::Core
 
 		};
 
-		ID3D12Device6* MainDevice{ nullptr };
+		ID3D12Device* MainDevice{ nullptr };
 		IDXGIFactory7* DxgiFactory{ nullptr };
 		D3D12Command gfxCommand;
 		Utility::FreeList<D3D12Surface> Surfaces;
@@ -321,10 +322,10 @@ namespace Rizityo::Graphics::D3D12::Core
 		result &= UAVDescHeap.Initialize(512, false);
 		result &= SRVDescHeap.Initialize(4096, true);
 
-		SET_NAME_D3D12_OBJECT(RTVDescHeap.GetHeap(), L"RTV Descriptor Heap");
-		SET_NAME_D3D12_OBJECT(DSVDescHeap.GetHeap(), L"DSV Descriptor Heap");
-		SET_NAME_D3D12_OBJECT(UAVDescHeap.GetHeap(), L"UAV Descriptor Heap");
-		SET_NAME_D3D12_OBJECT(SRVDescHeap.GetHeap(), L"SRV Descriptor Heap");
+		SET_NAME_D3D12_OBJECT(RTVDescHeap.Heap(), L"RTV Descriptor Heap");
+		SET_NAME_D3D12_OBJECT(DSVDescHeap.Heap(), L"DSV Descriptor Heap");
+		SET_NAME_D3D12_OBJECT(UAVDescHeap.Heap(), L"UAV Descriptor Heap");
+		SET_NAME_D3D12_OBJECT(SRVDescHeap.Heap(), L"SRV Descriptor Heap");
 
 		new(&gfxCommand) D3D12Command(MainDevice, D3D12_COMMAND_LIST_TYPE_DIRECT);
 		if (!gfxCommand.CommandQueue())
@@ -332,7 +333,6 @@ namespace Rizityo::Graphics::D3D12::Core
 
 		SET_NAME_D3D12_OBJECT(MainDevice, L"Main D3D12 Device");
 		
-
 		return true;
 	}
 
@@ -399,11 +399,6 @@ namespace Rizityo::Graphics::D3D12::Core
 		return SRVDescHeap;		
 	}
 
-	DXGI_FORMAT GetDefaultRenderTargetFormat()
-	{
-		return RenderTargetFormat;
-	}
-
 	uint32 GetCurrentFrameIndex()
 	{
 		return gfxCommand.FrameIndex();
@@ -446,7 +441,7 @@ namespace Rizityo::Graphics::D3D12::Core
 	void RenderSurface(SurfaceID id)
 	{
 		gfxCommand.BeginFrame();
-		ID3D12GraphicsCommandList5* cmdList{ gfxCommand.CommandList() };
+		ID3D12GraphicsCommandList* cmdList{ gfxCommand.CommandList() };
 
 		const uint32 frameIndex = GetCurrentFrameIndex();
 		if (DeferredReleasesFlag[frameIndex])

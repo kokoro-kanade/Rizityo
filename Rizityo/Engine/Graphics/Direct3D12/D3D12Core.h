@@ -41,7 +41,6 @@ namespace Rizityo::Graphics::D3D12::Core
 	DescriptorHeap& GetDSVHeap();
 	DescriptorHeap& GetUAVHeap();
 	DescriptorHeap& GetSRVHeap();
-	DXGI_FORMAT GetDefaultRenderTargetFormat();
 	uint32 GetCurrentFrameIndex();
 	void SetDeferredReleasesFlag();
 
@@ -51,4 +50,6 @@ namespace Rizityo::Graphics::D3D12::Core
 	uint32 GetSurfaceWidth(SurfaceID id);
 	uint32 GetSurfaceHeight(SurfaceID id);
 	void RenderSurface(SurfaceID id);
+	void CreateARootSignature();
+	void CreateAPipelineStateObject();
 }

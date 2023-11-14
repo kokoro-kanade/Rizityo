@@ -13,6 +13,8 @@
 namespace Rizityo::Graphics::D3D12
 {
 	constexpr uint32 FrameBufferCount = 3;
+	using ID3D12Device = ID3D12Device9;
+	using ID3D12GraphicsCommandList = ID3D12GraphicsCommandList6;
 }
 
 // Rename: DXCall
