@@ -162,7 +162,7 @@ namespace Rizityo::Platform
 
 	} // –³–¼‹óŠÔ
 
-	Window Create_Window(const WindowInitInfo* const initInfo/* = nullptr */)
+	Window CreateMyWindow(const WindowInitInfo* const initInfo/* = nullptr */)
 	{
 		WindowProc callback{ initInfo ? initInfo->Callback : nullptr };
 		WindowHandle parent{ initInfo ? initInfo->Parent : nullptr };
@@ -235,7 +235,7 @@ namespace Rizityo::Platform
 		
 	}
 
-	void Remove_Window(WindowID id)
+	void RemoveMyWindow(WindowID id)
 	{
 		WindowInfo& info{ GetWindowInfoFromId(id) };
 		DestroyWindow(info.Hwnd);

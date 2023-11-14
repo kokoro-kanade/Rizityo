@@ -25,7 +25,10 @@ namespace Rizityo::Content
 		// infoはポインタを持つので関数のローカル変数ではなくてここで定義した変数を渡す
 		Transform::InitInfo TransformInfo{};
 		Script::InitInfo ScriptInfo{};
+	}
 
+	namespace
+	{
 		bool ReadTransform(const uint8*& data, GameEntity::EntityInfo& info)
 		{
 			using namespace DirectX;
@@ -70,39 +73,56 @@ namespace Rizityo::Content
 			ReadTransform,
 			ReadScript
 		};
+
 		static_assert(_countof(componentReaders) == ComponentType::Count);
+
+		bool ReadFile(std::filesystem::path path, std::unique_ptr<uint8[]>& data, uint64& size)
+		{
+			if (!std::filesystem::exists(path))
+				return false;
+
+			size = std::filesystem::file_size(path);
+			assert(size);
+			if (!size)
+				return false;
+
+			data = std::make_unique<uint8[]>(size);
+			std::ifstream file{ path, std::ios::in | std::ios::binary };
+			if (!file || !file.read((char*)data.get(), size))
+			{
+				file.close();
+				return false;
+			}
+
+			file.close();
+			return true;
+		}
 
 	} // 無名空間
 
 	bool LoadGame()
 	{
-		// ワーキングディレクトリを実行ファイルのパスに変更
-		wchar_t path[MAX_PATH];
-		const uint32 length = GetModuleFileName(0, &path[0], MAX_PATH);
-		if (!length || GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-			return false;
-		std::filesystem::path p{ path };
-		SetCurrentDirectory(p.parent_path().wstring().c_str());
-
 		// バイナリファイルを読み込んでエンティティを作成
-		std::ifstream game("game.bin", std::ios::in | std::ios::binary);
-		Utility::Vector<uint8> buffer(std::istreambuf_iterator<char>(game), {});
-		assert(buffer.size());
-		const uint8* at = buffer.data();
-		constexpr uint32 shift = sizeof(uint32);
-		const uint32 numEntities = *at; at += shift;
+		std::unique_ptr<uint8[]> gameData{};
+		uint64 size = 0;
+		if (!ReadFile("game.bin", gameData, size))
+			return false;
+		assert(gameData.get());
+		const uint8* at = gameData.get();
+		constexpr uint32 su32 = sizeof(uint32);
+		const uint32 numEntities = *at; at += su32;
 		if (!numEntities)
 			return false;
 		for (uint32 entityIndex = 0; entityIndex < numEntities; entityIndex++)
 		{
 			GameEntity::EntityInfo info{};
-			const uint32 entityType = *at; at += shift;
-			const uint32 numComponents = *at; at += shift;
+			const uint32 entityType = *at; at += su32;
+			const uint32 numComponents = *at; at += su32;
 			if (!numComponents)
 				return false;
 			for (uint32 componentIndex = 0; componentIndex < numComponents; componentIndex++)
 			{
-				const uint32 componentType = *at; at += shift;
+				const uint32 componentType = *at; at += su32;
 				assert(componentType < ComponentType::Count);
 				if (!componentReaders[componentType](at, info))
 					return false;
@@ -115,7 +135,7 @@ namespace Rizityo::Content
 			entities.emplace_back(entity);
 		}
 
-		assert(at == buffer.data() + buffer.size());
+		assert(at == gameData.get() + size);
 		return true;
 	}
 	

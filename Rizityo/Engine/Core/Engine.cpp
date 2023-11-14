@@ -44,7 +44,7 @@ bool EngineInitialize()
 		return false;
 	
 	Platform::WindowInitInfo info{ &WinProc, nullptr, L"Rizityo Game" };
-	GameWindow.Window = Platform::Create_Window(&info);
+	GameWindow.Window = Platform::CreateMyWindow(&info);
 	if (!GameWindow.Window.IsValid())
 		return false;
 
@@ -59,7 +59,7 @@ void EngineUpdate()
 
 void EngineShutdown()
 {
-	Platform::Remove_Window(GameWindow.Window.GetID());
+	Platform::RemoveMyWindow(GameWindow.Window.ID());
 	Rizityo::Content::UnLoadGame();
 }
 

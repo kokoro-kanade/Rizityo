@@ -57,7 +57,7 @@ public:
 
 		for (uint32 i = 0; i < _countof(Windows); i++)
 		{
-			Windows[i] = Platform::Create_Window(&info[i]);
+			Windows[i] = Platform::CreateMyWindow(&info[i]);
 		}
 		return true;
 	}
@@ -71,7 +71,7 @@ public:
 	{
 		for (uint32 i = 0; i < _countof(Windows); i++)
 		{
-			Platform::Remove_Window(Windows[i].ID());
+			Platform::RemoveMyWindow(Windows[i].ID());
 		}
 	}
 };

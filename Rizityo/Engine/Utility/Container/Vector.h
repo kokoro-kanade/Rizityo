@@ -20,15 +20,6 @@ namespace Rizityo::Utility
 			resize(size, value);
 		}
 
-		template<typename Iter, typename = std::enable_if_t<std::_Is_iterator_v<Iter>>>
-		constexpr explicit Vector(Iter first, Iter last)
-		{
-			for (; first != last; first++)
-			{
-				emplace_back(*first);
-			}
-		}
-
 		~Vector()
 		{
 			Destroy();
@@ -46,6 +37,7 @@ namespace Rizityo::Utility
 
 		constexpr Vector& operator=(const Vector& other)
 		{
+			// 型Tがアドレス演算子を書き換えているかもしれないのでaddressof()を使う
 			assert(this != std::addressof(other));
 			if (this != std::addressof(other))
 			{
@@ -92,9 +84,9 @@ namespace Rizityo::Utility
 			}
 			assert(_Size < _Capacity);
 
-			new (std::addressof(_Data[_Size])) T(std::forward<Params>(params)...);
+			T* const item = new (std::addressof(_Data[_Size])) T(std::forward<Params>(params)...);
 			_Size++;
-			return _Data[_Size - 1];
+			return *item;
 		}
 
 		constexpr T* const erase(uint64 index)
@@ -105,7 +97,7 @@ namespace Rizityo::Utility
 
 		constexpr T* const erase(T* const item)
 		{
-			assert(_Data && item >= std::addressof(_Data[0]) && item < std::addressof(_Data[size]));
+			assert(_Data && item >= std::addressof(_Data[0]) && item < std::addressof(_Data[_Size]));
 			if constexpr (Destruct)
 			{
 				item->~T();
@@ -122,7 +114,7 @@ namespace Rizityo::Utility
 		constexpr T* const erase_unordered(uint64 index)
 		{
 			assert(_Data && index < _Size);
-			return erase_unordered(std::addressof(_Data[_Size]));
+			return erase_unordered(std::addressof(_Data[index]));
 		}
 
 		constexpr T* const erase_unordered(T* const item)
@@ -153,7 +145,7 @@ namespace Rizityo::Utility
 		// リサイズして新しく追加した要素をデフォルト値で初期化
 		constexpr void resize(uint64 newSize)
 		{
-			static_assert(std::is_default_constructible_v<T>, "型はデフォルトコンストラクタを持っていなければいけません");
+			static_assert(std::is_default_constructible<T>::value, "型はデフォルトコンストラクタを持っていなければいけません");
 			if (newSize > _Size)
 			{
 				reserve(newSize);
@@ -168,6 +160,8 @@ namespace Rizityo::Utility
 				{
 					DestructRange(newSize, _Size);
 				}
+
+				_Size = newSize;
 			}
 			assert(newSize == _Size);
 		}
@@ -175,7 +169,7 @@ namespace Rizityo::Utility
 		// リサイズして新しく追加した要素を引数で初期化
 		constexpr void resize(uint64 newSize, const T& value)
 		{
-			static_assert(std::is_copy_constructible_v<T>, "型はコピーコンストラクタを持っていなければいけません");
+			static_assert(std::is_copy_constructible<T>::value, "型はコピーコンストラクタを持っていなければいけません");
 			if (newSize > _Size)
 			{
 				reserve(newSize);
@@ -190,6 +184,8 @@ namespace Rizityo::Utility
 				{
 					DestructRange(newSize, _Size);
 				}
+
+				_Size = newSize;
 			}
 			assert(newSize == _Size);
 		}
@@ -213,9 +209,9 @@ namespace Rizityo::Utility
 		{
 			if (this != std::addressof(other))
 			{
-				auto tmp(tmp);
-				other = *this;
-				*this = tmp;
+				auto tmp(std::move(other));
+				other.Move(*this);
+				Move(tmp);
 			}
 		}
 

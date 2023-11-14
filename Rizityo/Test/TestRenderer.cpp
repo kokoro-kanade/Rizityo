@@ -61,7 +61,7 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 void CreateRenderSurface(Graphics::RenderSurface& renderSurface, Platform::WindowInitInfo info)
 {
-	renderSurface.Window = Platform::Create_Window(&info);
+	renderSurface.Window = Platform::CreateMyWindow(&info);
 	renderSurface.Surface = Graphics::CreateSurface(renderSurface.Window);
 }
 
@@ -75,7 +75,7 @@ void DestroyRenderSurface(Graphics::RenderSurface& renderSurface)
 	}
 	if (tmp.Window.IsValid())
 	{
-		Platform::Remove_Window(tmp.Window.ID());
+		Platform::RemoveMyWindow(tmp.Window.ID());
 	}
 }
 

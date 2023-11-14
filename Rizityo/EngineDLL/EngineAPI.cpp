@@ -67,7 +67,7 @@ uint32 CreateRenderSurface(HWND host, int32 width, int32 height)
 {
 	assert(host);
 	Platform::WindowInitInfo info{ nullptr, host, nullptr, 0, 0, width, height };
-	Graphics::RenderSurface surface{ Platform::Create_Window(&info), {} };
+	Graphics::RenderSurface surface{ Platform::CreateMyWindow(&info), {} };
 	assert(surface.Window.IsValid());
 	Surfaces.emplace_back(surface);
 	return (uint32)Surfaces.size() - 1;
@@ -77,14 +77,14 @@ EDITOR_INTERFACE
 void RemoveRenderSurface(uint32 id)
 {
 	assert(id < Surfaces.size());
-	Platform::Remove_Window(Surfaces[id].Window.GetID());
+	Platform::RemoveMyWindow(Surfaces[id].Window.ID());
 }
 
 EDITOR_INTERFACE
 HWND GetWindowHandle(uint32 id)
 {
 	assert(id < Surfaces.size());
-	return (HWND)Surfaces[id].Window.GetHandle();
+	return (HWND)Surfaces[id].Window.Handle();
 }
 
 EDITOR_INTERFACE
