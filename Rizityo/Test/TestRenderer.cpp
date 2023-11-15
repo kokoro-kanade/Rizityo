@@ -2,6 +2,7 @@
 #include "../Platform/PlatformTypes.h"
 #include "../Platform/Platform.h"
 #include "../Graphics/Renderer.h"
+#include "ShaderCompile.h"
 
 #if TEST_RENDERER
 
@@ -81,9 +82,14 @@ void DestroyRenderSurface(Graphics::RenderSurface& renderSurface)
 
 bool EngineTest::Initialize()
 {
-	bool result = Graphics::Initialize(Graphics::GraphicsPlatform::Direct3D12);
-	if (!result)
-		return result;
+	while (!CompileShaders())
+	{
+		if (MessageBox(nullptr, L"エンジンシェーダーをコンパイルできませんでした", L"Shader Compile Error", MB_RETRYCANCEL) != IDRETRY)
+			return false;
+	}
+
+	if (!Graphics::Initialize(Graphics::GraphicsPlatform::Direct3D12))
+		return false;
 
 	Platform::WindowInitInfo info[]
 	{

@@ -1,7 +1,8 @@
 #include "ContentLoader.h"
-#include "../Components/Entity.h"
-#include "../Components/Transform.h"
-#include "../Components/Script.h"
+#include "Components/Entity.h"
+#include "Components/Transform.h"
+#include "Components/Script.h"
+#include "Graphics/Renderer.h"
 
 #if !defined(SHIPPING)
 
@@ -76,7 +77,7 @@ namespace Rizityo::Content
 
 		static_assert(_countof(componentReaders) == ComponentType::Count);
 
-		bool ReadFile(std::filesystem::path path, std::unique_ptr<uint8[]>& data, uint64& size)
+		bool ReadFile(std::filesystem::path path, OUT std::unique_ptr<uint8[]>& data, OUT uint64& size)
 		{
 			if (!std::filesystem::exists(path))
 				return false;
@@ -145,6 +146,12 @@ namespace Rizityo::Content
 		{
 			GameEntity::RemoveGameEnity(entity.GetID());
 		}
+	}
+
+	bool LoadEngineShaders(std::unique_ptr<uint8[]>& shaders, uint64& size)
+	{
+		auto path = Graphics::GetEngineShadersPath();
+		return ReadFile(path, shaders, size);
 	}
 }
 

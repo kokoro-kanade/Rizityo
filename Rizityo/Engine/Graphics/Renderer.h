@@ -44,4 +44,7 @@ namespace Rizityo::Graphics
 	// TODO?: •Ê‚Ìƒwƒbƒ_[‚É‘‚­‚©‚Ç‚¤‚©
 	Surface CreateSurface(Platform::Window window);
 	void RemoveSurface(SurfaceID id);
+
+	const char* GetEngineShadersPath();
+	const char* GetEngineShadersPath(GraphicsPlatform platform);
 }

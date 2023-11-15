@@ -1,3 +1,5 @@
+#include <d3d12shader.h>
+#include <dxcapi.h>
 #include "Renderer.h"
 #include "GraphicsInterface.h"
 #include "Direct3D12/D3D12Interface.h"
@@ -6,6 +8,12 @@ namespace Rizityo::Graphics
 {
 	namespace
 	{
+		constexpr const char* EngineShadersPaths[]
+		{
+			".\\Shaders\\D3D12\\Shaders.bin",
+			/*".\\Shaders\\Vulkan\\Shaders.bin"*/
+		};
+
 		GraphicsInterface graphicsInterface{};
 
 		bool SetPlatformInterface(GraphicsPlatform platform)
@@ -22,6 +30,8 @@ namespace Rizityo::Graphics
 			default:
 				return false;
 			}
+
+			assert(graphicsInterface.Platform == platform);
 
 			return true;
 		}
@@ -47,6 +57,17 @@ namespace Rizityo::Graphics
 	{
 		assert(ID::IsValid(id));
 		graphicsInterface.Surface.Remove(id);
+	}
+
+	const char* GetEngineShadersPath()
+	{
+		
+		return EngineShadersPaths[(uint32)graphicsInterface.Platform];
+	}
+
+	const char* GetEngineShadersPath(GraphicsPlatform platform)
+	{
+		return EngineShadersPaths[(uint32)platform];
 	}
 
 	void Surface::Resize(uint32 width, uint32 height) const
