@@ -10,7 +10,7 @@ namespace Rizityo::Platform
 		// TODO? PlatfromTypes.hÇ…à⁄ìÆ
 		struct WindowInfo
 		{
-			HWND Hwnd = nullptr ;
+			HWND Hwnd = nullptr;
 			RECT ClientArea{ 0, 0, 1920, 1080 };
 			RECT FullScreenArea{};
 			POINT TopLeft{ 0, 0 };
@@ -22,10 +22,12 @@ namespace Rizityo::Platform
 		Utility::Vector<int> v;
 
 		Utility::FreeList<WindowInfo> Windows;
+	} // ïœêî
 
+	namespace
+	{
 		WindowInfo& GetWindowInfoFromId(WindowID id)
 		{
-			assert(id < Windows.Size());
 			assert(Windows[id].Hwnd);
 			return Windows[id];
 		}
@@ -160,7 +162,7 @@ namespace Rizityo::Platform
 			return GetWindowInfoFromId(id).IsClosed;
 		}
 
-	} // ñ≥ñºãÛä‘
+	} // ä÷êî
 
 	Window CreateMyWindow(const WindowInitInfo* const initInfo/* = nullptr */)
 	{

@@ -18,5 +18,7 @@ namespace Rizityo::Graphics
 			uint32(*Height)(SurfaceID);
 			void(*Render)(SurfaceID);
 		} Surface;
+
+		GraphicsPlatform Platform = (GraphicsPlatform)-1;
 	};
 }

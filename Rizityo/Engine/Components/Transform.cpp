@@ -27,11 +27,10 @@ namespace Rizityo::Transform
 			scales.emplace_back(info.Scale);
 		}
 
-		// Why: なぜ毎回最後のインデックスを返しているのか
-		return Component{ TransformID{(ID::IDType)positions.size() - 1} };
+		return Component{ TransformID{entity.GetID()} };
 	}
 
-	void RemoveComponent(Transform::Component component)
+	void RemoveComponent([[maybe_unused]] Transform::Component component)
 	{
 		assert(component.IsValid());
 	}

@@ -16,5 +16,7 @@ namespace Rizityo::Graphics::D3D12
 		graphicsInterface.Surface.Width = Core::GetSurfaceWidth;
 		graphicsInterface.Surface.Height = Core::GetSurfaceHeight;
 		graphicsInterface.Surface.Render = Core::RenderSurface;
+
+		graphicsInterface.Platform = GraphicsPlatform::Direct3D12;
 	}
 }

@@ -20,6 +20,10 @@
 #define DEBUG_ONLY(x)
 #endif // _DEBUG
 
+#ifndef OUT
+#define OUT
+#endif // OUT
+
 // ã§í ÉwÉbÉ_Å[
 #include "PrimitiveTypes.h"
 #include "Id.h"
