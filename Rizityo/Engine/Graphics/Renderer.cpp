@@ -45,7 +45,8 @@ namespace Rizityo::Graphics
 
 	void Shutdown()
 	{
-		graphicsInterface.Shutdown();
+		if (graphicsInterface.Platform != (GraphicsPlatform)-1)
+			graphicsInterface.Shutdown();
 	}
 
 	Surface CreateSurface(Platform::Window window)

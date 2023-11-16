@@ -1,6 +1,5 @@
 #include "D3D12Resource.h"
 #include "D3D12Core.h"
-#include "D3D12Helper.h"
 
 namespace Rizityo::Graphics::D3D12
 {
@@ -89,8 +88,8 @@ namespace Rizityo::Graphics::D3D12
 			handle.GPU.ptr = _GPUStart.ptr + offset;
 		}
 
+		handle.Index = index;
 		DEBUG_ONLY(handle._Container = this);
-		DEBUG_ONLY(handle._Index = index);
 
 		return handle;
 	}
@@ -105,9 +104,9 @@ namespace Rizityo::Graphics::D3D12
 		assert(handle._Container == this);
 		assert(handle.CPU.ptr >= _CPUStart.ptr);
 		assert((handle.CPU.ptr - _CPUStart.ptr) % _DescriptorSize == 0);
-		assert(handle._Index < _Capacity);
+		assert(handle.Index < _Capacity);
 		const uint32 index = (uint32)(handle.CPU.ptr - _CPUStart.ptr) / _DescriptorSize;
-		assert(handle._Index == index);
+		assert(handle.Index == index);
 
 		const uint32 frameIndex = Core::GetCurrentFrameIndex();
 		_DeferredFreeIndices[frameIndex].push_back(index);
@@ -132,6 +131,7 @@ namespace Rizityo::Graphics::D3D12
 
 		if (info.Resource)
 		{
+			assert(!info.Heap);
 			_Resource = info.Resource;
 		}
 		else if (info.Heap && info.Desc)
@@ -147,7 +147,7 @@ namespace Rizityo::Graphics::D3D12
 		{
 			assert(!info.Resource && !info.Heap);
 			DXCall(device->CreateCommittedResource(
-				&D3DX::HeapProperties.DefaultHeap, D3D12_HEAP_FLAG_NONE,
+				&Helper::HeapProperties.DefaultHeap, D3D12_HEAP_FLAG_NONE,
 				info.Desc, info.InitialState,
 				clearValue, IID_PPV_ARGS(&_Resource))
 			);

@@ -22,6 +22,8 @@ namespace Rizityo::Platform
 		Utility::Vector<int> v;
 
 		Utility::FreeList<WindowInfo> Windows;
+
+		bool Resized = false;
 	} // 変数
 
 	namespace
@@ -40,36 +42,33 @@ namespace Rizityo::Platform
 
 		LRESULT CALLBACK InternalWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
-			WindowInfo* info{ nullptr };
-			
 			switch (msg)
 			{
+			case WM_NCCREATE:
+			{
+				// windowIDをユーザデータ領域に格納
+				DEBUG_ONLY(SetLastError(0));
+				const WindowID id{ Windows.Add() };
+				Windows[id].Hwnd = hwnd;
+				SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)id);
+				assert(GetLastError() == 0);
+			}
 			case WM_DESTROY:
 				GetWindowInfoFromHandle(hwnd).IsClosed = true;
 				break;
-			case WM_EXITSIZEMOVE:
-				info = &GetWindowInfoFromHandle(hwnd);
-				break;
 			case WM_SIZE:
-				if (wparam == SIZE_MAXIMIZED)
-				{
-					info = &GetWindowInfoFromHandle(hwnd);
-				}
-				break;
-			case WM_SYSCOMMAND:
-				if (wparam == SC_RESTORE)
-				{
-					info = &GetWindowInfoFromHandle(hwnd);
-				}
+				Resized = (wparam != SIZE_MINIMIZED);
 				break;
 			default:
 				break;
 			}
 
-			if (info)
+			if (Resized && GetAsyncKeyState(VK_LBUTTON) >= 0)
 			{
-				assert(info->Hwnd);
-				GetClientRect(info->Hwnd, info->IsFullScreen ? &info->FullScreenArea : &info->ClientArea);
+				WindowInfo& info{ GetWindowInfoFromHandle(hwnd) };
+				assert(info.Hwnd);
+				GetClientRect(info.Hwnd, info.IsFullScreen ? &info.FullScreenArea : &info.ClientArea);
+				Resized = false;
 			}
 
 			LONG_PTR longPtr{ GetWindowLongPtr(hwnd, 0) };
@@ -220,16 +219,17 @@ namespace Rizityo::Platform
 
 		if (info.Hwnd)
 		{
+			// windowメッセージを処理するコールバック関数の設定
 			DEBUG_ONLY(SetLastError(0));
-			const WindowID id{ Windows.Add(info) };
-			SetWindowLongPtr(info.Hwnd, GWLP_USERDATA, (LONG_PTR)id);
-
 			if (callback)
 				SetWindowLongPtr(info.Hwnd, 0, (LONG_PTR)callback);
 			assert(GetLastError() == 0);
 
 			ShowWindow(info.Hwnd, SW_SHOWNORMAL);
 			UpdateWindow(info.Hwnd);
+
+			WindowID id{ (ID::IDType)GetWindowLongPtr(info.Hwnd, GWLP_USERDATA) };
+			Windows[id] = info;
 			return Window{ id };
 		}
 

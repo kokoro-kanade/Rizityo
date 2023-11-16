@@ -108,7 +108,19 @@ namespace Rizityo::Graphics::D3D12
 
 	void D3D12Surface::Resize()
 	{
+		assert(_SwapChain);
+		for (uint32 i = 0; i < BufferCount; i++)
+		{
+			Core::Release(_RenderTargetData[i].Resource);
+		}
 
+		const uint32 flags = _AllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0ul;
+		DXCall(_SwapChain->ResizeBuffers(BufferCount, 0, 0, DXGI_FORMAT_UNKNOWN, flags));
+		_CurrentBackBufferIndex = _SwapChain->GetCurrentBackBufferIndex();
+
+		Finalize();
+
+		DEBUG_ONLY(OutputDebugString(L"::D3D12サーフェスがリサイズされました\n"));
 	}
 	
 }

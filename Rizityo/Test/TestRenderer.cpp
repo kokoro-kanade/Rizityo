@@ -10,10 +10,18 @@ using namespace Rizityo;
 
 Graphics::RenderSurface Surfaces[4];
 
+bool Resized = false;
+bool IsRestarting = false;
+
+bool TestInitialize();
+void TestShutdown();
+
 void DestroyRenderSurface(Graphics::RenderSurface& renderSurface);
 
 LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
+	bool toggleFullscreen = false;
+
 	switch (msg)
 	{
 	case WM_DESTROY:
@@ -34,26 +42,53 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			}
 			
 		}
-		if (allClosed)
+		if (allClosed && !IsRestarting)
 		{
 			PostQuitMessage(0);
 			return 0;
 		}
 	}
 	break;
+	case WM_SIZE:
+		Resized = (wparam != SIZE_MINIMIZED);
+		break;
 	case WM_SYSCHAR:
-		if (wparam == VK_RETURN && (HIWORD(lparam) & KF_ALTDOWN))
-		{
-			Platform::Window window{ Platform::WindowID{(ID::IDType)GetWindowLongPtr(hwnd, GWLP_USERDATA)} };
-			window.SetFullScreen(!window.IsFullScreen());
-			return 0;
-		}
+		toggleFullscreen = (wparam == VK_RETURN && (HIWORD(lparam) & KF_ALTDOWN));
 		break;
 	case WM_KEYDOWN:
 		if (wparam == VK_ESCAPE)
 		{
 			PostMessage(hwnd, WM_CLOSE, 0, 0);
 			return 0;
+		}
+		else if (wparam == VK_F11)
+		{
+			IsRestarting = true;
+			TestShutdown();
+			TestInitialize();
+		}
+	}
+
+	if ((Resized && GetAsyncKeyState(VK_LBUTTON) >= 0) || toggleFullscreen)
+	{
+		Platform::Window win{ Platform::WindowID{(ID::IDType)GetWindowLongPtr(hwnd,GWLP_USERDATA)} };
+		for (uint32 i = 0; i < _countof(Surfaces); i++)
+		{
+			if (win.ID() == Surfaces[i].Window.ID())
+			{
+				if (toggleFullscreen)
+				{
+					win.SetFullScreen(!win.IsFullScreen());
+					return 0;
+				}
+				else
+				{
+					Surfaces[i].Surface.Resize(win.Width(), win.Height());
+					Resized = false;
+				}
+				break;
+			}
+
 		}
 	}
 
@@ -80,7 +115,7 @@ void DestroyRenderSurface(Graphics::RenderSurface& renderSurface)
 	}
 }
 
-bool EngineTest::Initialize()
+bool TestInitialize()
 {
 	while (!CompileShaders())
 	{
@@ -104,7 +139,14 @@ bool EngineTest::Initialize()
 	{
 		CreateRenderSurface(Surfaces[i], info[i]);
 	}
+
+	IsRestarting = false;
 	return true;
+}
+
+bool EngineTest::Initialize()
+{
+	return TestInitialize();
 }
 
 void EngineTest::Run()
@@ -119,13 +161,18 @@ void EngineTest::Run()
 	}
 }
 
-void EngineTest::Shutdown()
+void TestShutdown()
 {
 	for (uint32 i = 0; i < _countof(Surfaces); i++)
 	{
 		DestroyRenderSurface(Surfaces[i]);
 	}
 	Graphics::Shutdown();
+}
+
+void EngineTest::Shutdown()
+{
+	TestShutdown();
 }
 
 #endif // TEST_RENDERER

@@ -1,6 +1,5 @@
 #pragma once
 #include "D3D12CommonHeaders.h"
-#include "D3D12Resource.h"
 
 namespace Rizityo::Graphics::D3D12
 {

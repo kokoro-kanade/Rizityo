@@ -24,6 +24,7 @@ namespace Rizityo::Graphics::D3D12::Shader
 		{
 			FullScreenTriangleVS = 0,
 			FillColorPS = 1,
+			PostProcessPS = 2,
 			Count
 		};
 	};

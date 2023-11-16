@@ -3,7 +3,11 @@
 
 namespace Rizityo::Graphics::D3D12
 {
-	class DescriptorHeap;
+	struct D3D12FrameInfo
+	{
+		uint32 SurfaceWidth{};
+		uint32 SurfaceHeight{};
+	};
 }
 
 namespace Rizityo::Graphics::D3D12::Core
@@ -50,6 +54,4 @@ namespace Rizityo::Graphics::D3D12::Core
 	uint32 GetSurfaceWidth(SurfaceID id);
 	uint32 GetSurfaceHeight(SurfaceID id);
 	void RenderSurface(SurfaceID id);
-	void CreateARootSignature();
-	void CreateAPipelineStateObject();
 }

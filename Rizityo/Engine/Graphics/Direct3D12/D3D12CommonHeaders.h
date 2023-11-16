@@ -2,6 +2,12 @@
 #include "CommonHeaders.h"
 #include "Graphics/Renderer.h"
 
+// windows.hÇÃmin/maxÉ}ÉNÉçÇñ≥å¯âª
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif // !NOMINMAX
+
+
 #include <dxgi1_6.h>
 #include <d3d12.h>
 #include <wrl.h>
@@ -62,3 +68,6 @@ OutputDebugString(L"\n");
 #define SET_NAME_D3D12_OBJECT(obj, name)
 #define SET_NAME_D3D12_OBJECT_INDEXED(obj, index, name)
 #endif // _DEBUG
+
+#include "D3D12Helper.h"
+#include "D3D12Resource.h"

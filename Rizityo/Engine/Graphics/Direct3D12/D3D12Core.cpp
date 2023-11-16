@@ -1,7 +1,8 @@
 #include "D3D12Core.h"
-#include "D3D12Resource.h"
 #include "D3D12Surface.h"
-#include "D3D12Helper.h"
+#include "D3D12Shader.h"
+#include "D3D12GeometryPass.h"
+#include "D3D12PostProcess.h"
 
 using namespace Microsoft::WRL;
 
@@ -28,8 +29,8 @@ namespace Rizityo::Graphics::D3D12::Core
 				if (FAILED(hr))
 					goto _error;
 
-				SET_NAME_D3D12_OBJECT(_CmdQueue, 
-					type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command Queue" : 
+				SET_NAME_D3D12_OBJECT(_CmdQueue,
+					type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command Queue" :
 					type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Queue" : L"Command Queue");
 
 				for (uint32 i = 0; i < FrameBufferCount; i++)
@@ -40,11 +41,11 @@ namespace Rizityo::Graphics::D3D12::Core
 						goto _error;
 
 					SET_NAME_D3D12_OBJECT_INDEXED(frame.CmdAllocator, i,
-						type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command Allocator" : 
+						type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command Allocator" :
 						type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Allocator" : L"Command Allocator");
 				}
 
-				DXCall(device->CreateCommandList(0, type, _CmdFrames[0].CmdAllocator , nullptr, IID_PPV_ARGS(&_CmdList)));
+				DXCall(device->CreateCommandList(0, type, _CmdFrames[0].CmdAllocator, nullptr, IID_PPV_ARGS(&_CmdList)));
 				if (FAILED(hr))
 					goto _error;
 
@@ -62,7 +63,7 @@ namespace Rizityo::Graphics::D3D12::Core
 				_FenceEvent = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
 				assert(_FenceEvent);
 
-				return;				
+				return;
 
 			_error:
 				Release();
@@ -83,11 +84,13 @@ namespace Rizityo::Graphics::D3D12::Core
 			}
 
 			// 新しいfence値を伝える
-			void EndFrame()
+			void EndFrame(const D3D12Surface& surface)
 			{
 				DXCall(_CmdList->Close());
 				ID3D12CommandList* const cmdLists[]{ _CmdList };
 				_CmdQueue->ExecuteCommandLists(_countof(cmdLists), &cmdLists[0]);
+
+				surface.Present();
 
 				uint64& fenceValue = _FenceValue;
 				fenceValue++;
@@ -167,6 +170,7 @@ namespace Rizityo::Graphics::D3D12::Core
 		IDXGIFactory7* DxgiFactory{ nullptr };
 		D3D12Command gfxCommand;
 		Utility::FreeList<D3D12Surface> Surfaces;
+		Helper::D3D12ResourceBarrier ResourceBarriers{};
 
 		DescriptorHeap RTVDescHeap{ D3D12_DESCRIPTOR_HEAP_TYPE_RTV };
 		DescriptorHeap DSVDescHeap{ D3D12_DESCRIPTOR_HEAP_TYPE_DSV };
@@ -178,7 +182,6 @@ namespace Rizityo::Graphics::D3D12::Core
 		std::mutex DeferredReleasesMutex{};
 
 		constexpr D3D_FEATURE_LEVEL MinFeatureLevel{ D3D_FEATURE_LEVEL_11_0 };
-		constexpr DXGI_FORMAT RenderTargetFormat{ DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };
 
 	} // 変数
 
@@ -277,6 +280,10 @@ namespace Rizityo::Graphics::D3D12::Core
 			if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugInterface))))
 			{
 				DebugInterface->EnableDebugLayer();
+#if 0
+#pragma message("WARNING: GPU based validationが有効になっています。すごく遅くなる可能性があります")
+				DebugInterface->SetEnableGPUBasedValidation(1);
+#endif
 			}
 			else
 			{
@@ -331,6 +338,10 @@ namespace Rizityo::Graphics::D3D12::Core
 		if (!gfxCommand.CommandQueue())
 			return FailedInit();
 
+		// モジュールの初期化
+		if (!(Shader::Initialize() && GPass::Initialize() && Post::Initialize()))
+			return FailedInit();
+
 		SET_NAME_D3D12_OBJECT(MainDevice, L"Main D3D12 Device");
 		
 		return true;
@@ -345,7 +356,17 @@ namespace Rizityo::Graphics::D3D12::Core
 			ProcessDeferredReleases(i);
 		}
 
+		// モジュールのシャットダウン
+		Post::Shutdown();
+		GPass::Shutdown();
+		Shader::Shutdown();
+
 		Release(DxgiFactory);
+
+		RTVDescHeap.ProcessDeferredFree(0);
+		DSVDescHeap.ProcessDeferredFree(0);
+		UAVDescHeap.ProcessDeferredFree(0);
+		SRVDescHeap.ProcessDeferredFree(0);
 
 		RTVDescHeap.Release();
 		DSVDescHeap.Release();
@@ -412,7 +433,7 @@ namespace Rizityo::Graphics::D3D12::Core
 	Surface CreateSurface(Platform::Window window)
 	{
 		SurfaceID id{ Surfaces.Add(window) };
-		Surfaces[id].CreateSwapChain(DxgiFactory, gfxCommand.CommandQueue(), RenderTargetFormat);
+		Surfaces[id].CreateSwapChain(DxgiFactory, gfxCommand.CommandQueue());
 		return Surface{ id };
 	}
 
@@ -450,8 +471,56 @@ namespace Rizityo::Graphics::D3D12::Core
 		}
 
 		const D3D12Surface& surface{ Surfaces[id] };
-		surface.Present();
+		ID3D12Resource* const currentBackBuffer{ surface.BackBuffer() };
+		D3D12FrameInfo frameInfo{ surface.Width(), surface.Height() };
 
-		gfxCommand.EndFrame();
+		GPass::SetSize({ frameInfo.SurfaceWidth, frameInfo.SurfaceHeight });
+
+		Helper::D3D12ResourceBarrier& barriers{ ResourceBarriers };
+
+		// コマンドの記録
+		ID3D12DescriptorHeap* const heaps[]{ SRVDescHeap.Heap() };
+		cmdList->SetDescriptorHeaps(1, &heaps[0]);
+
+		cmdList->RSSetViewports(1, &surface.Viewport());
+		cmdList->RSSetScissorRects(1, &surface.ScissorRect());
+
+		// デプスプリパス
+		/*barriers.Add(currentBackBuffer,
+					 D3D12_RESOURCE_STATE_PRESENT,
+					 D3D12_RESOURCE_STATE_RENDER_TARGET,
+					 D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY);*/
+		GPass::AddTransitionsForDepthPrepass(barriers);
+		barriers.Apply(cmdList);
+		GPass::SetRenderTargetsForDepthPrepass(cmdList);
+		GPass::DepthPrepass(cmdList, frameInfo);
+
+		// ジオメトリ・ライティングパス
+		GPass::AddTransitionsForGPass(barriers);
+		barriers.Apply(cmdList);
+		GPass::SetRenderTargetsForGPass(cmdList);
+		GPass::Render(cmdList, frameInfo);
+
+		Helper::TransitionResource(cmdList, currentBackBuffer,
+								   D3D12_RESOURCE_STATE_PRESENT,
+								   D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+		// ポストプロセス
+		/*barriers.Add(currentBackBuffer,
+					 D3D12_RESOURCE_STATE_PRESENT,
+					 D3D12_RESOURCE_STATE_RENDER_TARGET,
+					 D3D12_RESOURCE_BARRIER_FLAG_END_ONLY);*/
+		GPass::AddTransitionsForPostProcess(barriers);
+		barriers.Apply(cmdList);
+
+		Post::PostProcess(cmdList, surface.RTV());
+
+		// ポストプロセス後
+		Helper::TransitionResource(cmdList, currentBackBuffer,
+								   D3D12_RESOURCE_STATE_RENDER_TARGET,
+								   D3D12_RESOURCE_STATE_PRESENT);
+
+		// コマンド実行・次フレームのためにフェンス値のインクリメント
+		gfxCommand.EndFrame(surface);
 	}
 }

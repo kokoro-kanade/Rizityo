@@ -1,18 +1,175 @@
 #pragma once
 #include "D3D12CommonHeaders.h"
 
-namespace Rizityo::Graphics::D3D12::D3DX
+namespace Rizityo::Graphics::D3D12::Helper
 {
-	constexpr struct {
+	constexpr struct 
+	{
 		const D3D12_HEAP_PROPERTIES DefaultHeap
 		{
-			D3D12_HEAP_TYPE_DEFAULT,
-			D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
-			D3D12_MEMORY_POOL_UNKNOWN,
-			0,
-			0
+			D3D12_HEAP_TYPE_DEFAULT,						// Type
+			D3D12_CPU_PAGE_PROPERTY_UNKNOWN,				// CPUPageProperty
+			D3D12_MEMORY_POOL_UNKNOWN,						// MemoryPoolPreference
+			0,												// CreationNodeMask
+			0												// VisibleNodeMask
 		};
 	} HeapProperties ;
+
+	constexpr struct
+	{
+		const D3D12_RASTERIZER_DESC NoCull
+		{
+			D3D12_FILL_MODE_SOLID,							// FillMode 
+			D3D12_CULL_MODE_NONE,							// CullMode
+			0,												// FrontCounterClockwise
+			0,												// DepthBias
+			0,												// DepthBiasClamp
+			0,												// SlopeScaledDepthBias
+			1,												// DepthClipEnable
+			1,												// MultisampleEnable
+			0,												// AntialiasedLineEnable
+			0,												// ForcedSampleCount
+			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF		// ConservativeRaster
+		};
+
+		const D3D12_RASTERIZER_DESC BackfaceCull
+		{
+			D3D12_FILL_MODE_SOLID,							// FillMode 
+			D3D12_CULL_MODE_BACK,							// CullMode
+			0,												// FrontCounterClockwise
+			0,												// DepthBias
+			0,												// DepthBiasClamp
+			0,												// SlopeScaledDepthBias
+			1,												// DepthClipEnable
+			1,												// MultisampleEnable
+			0,												// AntialiasedLineEnable
+			0,												// ForcedSampleCount
+			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF		// ConservativeRaster
+		};
+
+		const D3D12_RASTERIZER_DESC FrontfaceCull
+		{
+			D3D12_FILL_MODE_SOLID,							// FillMode 
+			D3D12_CULL_MODE_FRONT,							// CullMode
+			0,												// FrontCounterClockwise
+			0,												// DepthBias
+			0,												// DepthBiasClamp
+			0,												// SlopeScaledDepthBias
+			1,												// DepthClipEnable
+			1,												// MultisampleEnable
+			0,												// AntialiasedLineEnable
+			0,												// ForcedSampleCount
+			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF		// ConservativeRaster
+		};
+
+		const D3D12_RASTERIZER_DESC WireFrame
+		{
+			D3D12_FILL_MODE_WIREFRAME,						// FillMode 
+			D3D12_CULL_MODE_FRONT,							// CullMode
+			0,												// FrontCounterClockwise
+			0,												// DepthBias
+			0,												// DepthBiasClamp
+			0,												// SlopeScaledDepthBias
+			1,												// DepthClipEnable
+			1,												// MultisampleEnable
+			0,												// AntialiasedLineEnable
+			0,												// ForcedSampleCount
+			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF		// ConservativeRaster
+		};
+
+
+	} RasterizerState ;
+
+	constexpr struct
+	{
+		const D3D12_DEPTH_STENCIL_DESC1 Disabled
+		{
+			0,												// DepthEnable
+			D3D12_DEPTH_WRITE_MASK_ZERO,					// DepthWriteMask
+			D3D12_COMPARISON_FUNC_LESS_EQUAL,				// DepthFunc
+			0,												// StencilEnable
+			0,												// StencilReadMask
+			0,												// StencilWriteMask
+			{},												// FrontFace
+			{},												// BackFace
+			0												// DepthBoundsTestEnable
+		};
+
+	} DepthState ;
+
+	class D3D12ResourceBarrier
+	{
+	public:
+		constexpr static uint32 MaxResourceBarriers = 32;
+
+		// Transitionバリアの追加
+		constexpr void Add(ID3D12Resource* resource,
+						   D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after,
+						   D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
+						   uint32 subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES)
+		{
+			assert(resource);
+			assert(_NumBarriers < MaxResourceBarriers);
+
+			D3D12_RESOURCE_BARRIER& barrier{ _Barriers[_NumBarriers] };
+			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			barrier.Flags = flags;
+			barrier.Transition.pResource = resource;
+			barrier.Transition.StateBefore = before;
+			barrier.Transition.StateAfter = after;
+			barrier.Transition.Subresource = subresource;
+
+			_NumBarriers++;
+		}
+
+		// UAVバリアの追加
+		constexpr void Add(ID3D12Resource* resource,
+						   D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE)
+		{
+			assert(resource);
+			assert(_NumBarriers < MaxResourceBarriers);
+
+			D3D12_RESOURCE_BARRIER& barrier{ _Barriers[_NumBarriers] };
+			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+			barrier.Flags = flags;
+			barrier.UAV.pResource = resource;
+
+			_NumBarriers++;
+		}
+
+		// Aliasingバリアの追加
+		constexpr void Add(ID3D12Resource* resourceBefore, ID3D12Resource* resourceAfter,
+						   D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE)
+		{
+			assert(resourceBefore && resourceAfter);
+			assert(_NumBarriers < MaxResourceBarriers);
+
+			D3D12_RESOURCE_BARRIER& barrier{ _Barriers[_NumBarriers] };
+			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
+			barrier.Flags = flags;
+			barrier.Aliasing.pResourceBefore = resourceBefore;
+			barrier.Aliasing.pResourceAfter = resourceAfter;
+
+			_NumBarriers++;
+		}
+
+		void Apply(ID3D12GraphicsCommandList* cmdList)
+		{
+			assert(_NumBarriers);
+			cmdList->ResourceBarrier(_NumBarriers, _Barriers);
+			_NumBarriers = 0;
+		}
+
+	private:
+		D3D12_RESOURCE_BARRIER _Barriers[MaxResourceBarriers]{};
+		uint32 _NumBarriers = 0;
+	};
+
+	void TransitionResource(ID3D12GraphicsCommandList* cmdList,
+							ID3D12Resource* resource,
+							D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after,
+							D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE,
+							uint32 subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
 	struct D3D12DescriptorRange : public D3D12_DESCRIPTOR_RANGE1
 	{
@@ -97,6 +254,8 @@ namespace Rizityo::Graphics::D3D12::D3DX
 		}
 	};
 
+#pragma warning(push)
+#pragma warning(disable : 4324) // パディングの警告を無効化
 	template<D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type, typename T>
 	class alignas(void*) D3D12PipelineStateSubobject
 	{
@@ -116,6 +275,7 @@ namespace Rizityo::Graphics::D3D12::D3DX
 		const D3D12_PIPELINE_STATE_SUBOBJECT_TYPE _Type{ type };
 		T _Subobject{};
 	};
+#pragma warning(pop)
 
 #define PSS(name, ...) using D3D12PipelineStateSubobject##name = D3D12PipelineStateSubobject<__VA_ARGS__>;
 
@@ -130,12 +290,12 @@ namespace Rizityo::Graphics::D3D12::D3DX
 	PSS(Blend, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_BLEND, D3D12_BLEND_DESC);
 	PSS(SampleMask, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_SAMPLE_MASK, uint32);
 	PSS(Rasterizer, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_RASTERIZER, D3D12_RASTERIZER_DESC);
-	PSS(DepthStencil, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DEPTH_STENCIL, D3D12_DEPTH_STENCILOP_DESC);
+	PSS(DepthStencil, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DEPTH_STENCIL, D3D12_DEPTH_STENCIL_DESC);
 	PSS(InputLayout, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_INPUT_LAYOUT, D3D12_INPUT_LAYOUT_DESC);
 	PSS(IbStripCutValue, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_IB_STRIP_CUT_VALUE, D3D12_INDEX_BUFFER_STRIP_CUT_VALUE);
 	PSS(PrimitiveTopology, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_PRIMITIVE_TOPOLOGY, D3D12_PRIMITIVE_TOPOLOGY_TYPE);
 	PSS(RenderTargetFormats, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_RENDER_TARGET_FORMATS, D3D12_RT_FORMAT_ARRAY);
-	PSS(DepthStencilForma, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DEPTH_STENCIL_FORMAT, DXGI_FORMAT);
+	PSS(DepthStencilFormat, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DEPTH_STENCIL_FORMAT, DXGI_FORMAT);
 	PSS(SampleDesc, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_SAMPLE_DESC, DXGI_SAMPLE_DESC);
 	PSS(NodeMask, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_NODE_MASK, uint32);
 	PSS(CachedPso, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_CACHED_PSO, D3D12_CACHED_PIPELINE_STATE);

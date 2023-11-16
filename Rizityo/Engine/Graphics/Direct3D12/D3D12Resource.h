@@ -13,11 +13,12 @@ namespace Rizityo::Graphics::D3D12
 		constexpr bool IsValid() { return CPU.ptr != 0; }
 		constexpr bool IsShaderVisible() { return GPU.ptr != 0; }
 
+		uint32 Index = UINT32_INVALID_NUM;
+
 #ifdef _DEBUG
 	private:
 		friend class DescriptorHeap;
 		DescriptorHeap* _Container{ nullptr };
-		uint32 _Index = UINT32_INVALID_NUM;
 #endif // _DEBUG
 
 	};
@@ -36,14 +37,14 @@ namespace Rizityo::Graphics::D3D12
 		[[nodiscard]] DescriptorHandle Allocate();
 		void Free(DescriptorHandle& handle);
 
-		constexpr D3D12_DESCRIPTOR_HEAP_TYPE Type() const { return _Type; }
-		constexpr ID3D12DescriptorHeap* const Heap() const { return _Heap; }
-		constexpr D3D12_CPU_DESCRIPTOR_HANDLE CPUStart() const { return _CPUStart; }
-		constexpr D3D12_GPU_DESCRIPTOR_HANDLE GPUStart() const { return _GPUStart; }
-		constexpr uint32 Capacity() const { return _Capacity; }
-		constexpr uint32 Size() const { return _Size; }
-		constexpr uint32 DescriptorSize() const { return _DescriptorSize; }
-		constexpr bool IsShaderVisible() const { return _GPUStart.ptr != 0; }
+		[[nodiscard]] constexpr D3D12_DESCRIPTOR_HEAP_TYPE Type() const { return _Type; }
+		[[nodiscard]] constexpr ID3D12DescriptorHeap* const Heap() const { return _Heap; }
+		[[nodiscard]] constexpr D3D12_CPU_DESCRIPTOR_HANDLE CPUStart() const { return _CPUStart; }
+		[[nodiscard]] constexpr D3D12_GPU_DESCRIPTOR_HANDLE GPUStart() const { return _GPUStart; }
+		[[nodiscard]] constexpr uint32 Capacity() const { return _Capacity; }
+		[[nodiscard]] constexpr uint32 Size() const { return _Size; }
+		[[nodiscard]] constexpr uint32 DescriptorSize() const { return _DescriptorSize; }
+		[[nodiscard]] constexpr bool IsShaderVisible() const { return _GPUStart.ptr != 0; }
 
 	private:
 		const D3D12_DESCRIPTOR_HEAP_TYPE _Type;
@@ -103,8 +104,8 @@ namespace Rizityo::Graphics::D3D12
 
 		void Release();
 
-		constexpr ID3D12Resource* const Resource() const { return _Resource; }
-		constexpr DescriptorHandle SRV() const { return _SRV; }
+		[[nodiscard]] constexpr ID3D12Resource* const Resource() const { return _Resource; }
+		[[nodiscard]] constexpr DescriptorHandle SRV() const { return _SRV; }
 
 	private:
 		ID3D12Resource* _Resource = nullptr;
@@ -161,14 +162,14 @@ namespace Rizityo::Graphics::D3D12
 
 		void Release();
 
-		constexpr uint32 MipCount() const { return _MipCount; }
-		constexpr D3D12_CPU_DESCRIPTOR_HANDLE RTV(uint32 mipIndex) const
+		[[nodiscard]] constexpr uint32 MipCount() const { return _MipCount; }
+		[[nodiscard]] constexpr D3D12_CPU_DESCRIPTOR_HANDLE RTV(uint32 mipIndex) const
 		{
 			assert(mipIndex < _MipCount);
 			return _RTV[mipIndex].CPU;
 		}
-		constexpr DescriptorHandle SRV() const { return _Texture.SRV(); }
-		constexpr ID3D12Resource* const Resource() const { return _Texture.Resource(); }
+		[[nodiscard]] constexpr DescriptorHandle SRV() const { return _Texture.SRV(); }
+		[[nodiscard]] constexpr ID3D12Resource* const Resource() const { return _Texture.Resource(); }
 
 	private:
 		D3D12Texture _Texture{};
@@ -199,6 +200,7 @@ namespace Rizityo::Graphics::D3D12
 
 	class D3D12DepthBuffer
 	{
+	public:
 		D3D12DepthBuffer() = default;
 
 		explicit D3D12DepthBuffer(D3D12TextureInitInfo info);
@@ -225,9 +227,9 @@ namespace Rizityo::Graphics::D3D12
 
 		void Release();
 
-		constexpr D3D12_CPU_DESCRIPTOR_HANDLE DSV() const { return _DSV.CPU; }
-		constexpr DescriptorHandle SRV() const { return _Texture.SRV(); }
-		constexpr ID3D12Resource* const Resource() const { return _Texture.Resource(); }
+		[[nodiscard]] constexpr D3D12_CPU_DESCRIPTOR_HANDLE DSV() const { return _DSV.CPU; }
+		[[nodiscard]] constexpr DescriptorHandle SRV() const { return _Texture.SRV(); }
+		[[nodiscard]] constexpr ID3D12Resource* const Resource() const { return _Texture.Resource(); }
 
 	private:
 		D3D12Texture _Texture{};
