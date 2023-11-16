@@ -6,13 +6,31 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Threading;
+using System.Windows.Markup;
 
 namespace Editor.GameDev
 {
+    enum BuildConfigutation
+    {
+        Debug,
+        DebugEditor,
+        Release,
+        ReleaseEditor
+    }
+
     static class VisualStudio
     {
         private static EnvDTE80.DTE2 _vsInstance = null;
         private static readonly string _progId = "VisualStudio.DTE.16.0";
+
+        private static readonly ManualResetEventSlim _resetEvent = new ManualResetEventSlim(false);
+        private static readonly object _lock = new object();
+
+        private static readonly string[] _buildConfigurationNames
+            = new string[] { "Debug", "DebugEditor", "Release", "ReleaseEditor" };
+
+        public static string GetConfigurationName(BuildConfigutation config) => _buildConfigurationNames[(int)config];
 
         public static bool BuildSucceeded { get; private set; } = true;
         public static bool BuildDone { get; private set; } = true;
@@ -23,7 +41,32 @@ namespace Editor.GameDev
         [DllImport("ole32.dll")]
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
 
-        public static void OpenVisualStudio(string solutionPath)
+        private static void CallOnSTAThread(Action action)
+        {
+            Debug.Assert(action != null);
+            var thread = new Thread(() =>
+            {
+                MessageFilter.Register();
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(Verbosity.Warning, ex.Message);
+                }
+                finally
+                {
+                    MessageFilter.Revoke();
+                }
+            });
+
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+        }
+
+        private static void OpenVisualStudio_Internal(string solutionPath)
         {
             IRunningObjectTable rot = null;
             IEnumMoniker monikerTable = null;
@@ -54,8 +97,15 @@ namespace Editor.GameDev
                             hResult = rot.GetObject(currentMoniker[0], out object obj);
                             if (hResult < 0 || obj == null)
                                 throw new COMException($"Running Object TableのGetObject関数がHRESULT: {hResult:X8}を返しました");
+
                             EnvDTE80.DTE2 dte = obj as EnvDTE80.DTE2;
-                            var solutionName = dte.Solution.FullName;
+
+                            var solutionName = string.Empty;
+                            CallOnSTAThread(() =>
+                            {
+                                solutionName = dte.Solution.FullName;
+                            });
+
                             if (solutionName == solutionPath)
                             {
                                 _vsInstance = dte;
@@ -88,47 +138,70 @@ namespace Editor.GameDev
             }
         }
 
-        public static void CloseVisualStudio()
+        public static void OpenVisualStudio(string solutionPath)
         {
-            if (_vsInstance?.Solution.IsOpen == true)
+            lock (_lock)
             {
-                _vsInstance.ExecuteCommand("File.SaveAll");
-                _vsInstance.Solution.Close(true);
+                OpenVisualStudio_Internal(solutionPath);
             }
-            _vsInstance?.Quit();
         }
 
-        public static bool AddFilesToSolution(string solutionFilePath, string projectName, string[] files)
+        private static void CloseVisualStudio_Internal()
+        {
+            CallOnSTAThread(() =>
+            {
+                if (_vsInstance?.Solution.IsOpen == true)
+                {
+                    _vsInstance.ExecuteCommand("File.SaveAll");
+                    _vsInstance.Solution.Close(true);
+                }
+                _vsInstance?.Quit();
+                _vsInstance = null;
+            });
+        }
+
+        public static void CloseVisualStudio()
+        {
+            lock (_lock)
+            {
+                CloseVisualStudio_Internal();
+            }
+        }
+
+        private static bool AddFilesToSolution_Internal(string solutionFilePath, string projectName, string[] files)
         {
             Debug.Assert(files?.Length > 0);
-            OpenVisualStudio(solutionFilePath);
+            OpenVisualStudio_Internal(solutionFilePath);
             try
             {
-                if(_vsInstance != null)
+                if (_vsInstance != null)
                 {
-                    if (!_vsInstance.Solution.IsOpen)
-                        _vsInstance.Solution.Open(solutionFilePath);
-                    else
-                        _vsInstance.ExecuteCommand("File.SaveAll");
-
-                    foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
+                    CallOnSTAThread(() =>
                     {
-                        if (project.UniqueName.Contains(projectName))
+                        if (!_vsInstance.Solution.IsOpen)
+                            _vsInstance.Solution.Open(solutionFilePath);
+                        else
+                            _vsInstance.ExecuteCommand("File.SaveAll");
+
+                        foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
                         {
-                            foreach (var file in files)
+                            if (project.UniqueName.Contains(projectName))
                             {
-                                project.ProjectItems.AddFromFile(file);
+                                foreach (var file in files)
+                                {
+                                    project.ProjectItems.AddFromFile(file);
+                                }
                             }
                         }
-                    }
 
-                    var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
-                    if (!string.IsNullOrEmpty(cpp))
-                    {
-                        _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible = true;
-                    }
-                    _vsInstance.MainWindow.Activate();
-                    _vsInstance.MainWindow.Visible = true;
+                        var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
+                        if (!string.IsNullOrEmpty(cpp))
+                        {
+                            _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible = true;
+                        }
+                        _vsInstance.MainWindow.Activate();
+                        _vsInstance.MainWindow.Visible = true;
+                    });
                 }
 
                 return true;
@@ -142,32 +215,40 @@ namespace Editor.GameDev
             }
         }
 
-        public static bool IsDebugging()
+        public static bool AddFilesToSolution(string solutionFilePath, string projectName, string[] files)
+        {
+            lock (_lock)
+            {
+                return AddFilesToSolution_Internal(solutionFilePath, projectName, files);
+            }
+        }
+
+        private static bool IsDebugging_Internal()
         {
             bool result = false;
-            for (int i = 0; i < 3; i++)
+            CallOnSTAThread(() =>
             {
-                try
-                {
-                    result = _vsInstance != null &&
-                        (_vsInstance.Debugger.CurrentProgram != null ||
-                        _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
-                    break;
+                result = _vsInstance != null &&
+                    (_vsInstance.Debugger.CurrentProgram != null ||
+                    _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
+            });
 
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                    // おそらくVSが忙しくて対応できていないので待つ
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-            }
             return result;
+        }
+
+        public static bool IsDebugging()
+        {
+            lock (_lock)
+            {
+                return IsDebugging_Internal();
+            }
         }
 
         private static void OnBulidSolutionBegin(string project, string projectConfig, string platform, string solutionConfig)
         {
+            if (BuildDone)
+                return;
+
             Logger.Log(Verbosity.Display, $"ビルド開始{project}, {projectConfig}, {platform}, {solutionConfig}");
         }
 
@@ -183,71 +264,166 @@ namespace Editor.GameDev
 
             BuildDone = true;
             BuildSucceeded = success;
+            _resetEvent.Set();
         }
 
-        public static void BuildSolution(Project project, string configName, bool showVSWindow = true)
+        private static void BuildSolution_Internal(Project project, BuildConfigutation buildConfigutation, bool showVSWindow = true)
         {
-            if (IsDebugging())
+            if (IsDebugging_Internal())
             {
                 Logger.Log(Verbosity.Error, "Visual Studioは現在プロセスを実行中です");
                 return;
             }
 
-            OpenVisualStudio(project.SolutionFilePath);
+            OpenVisualStudio_Internal(project.SolutionFilePath);
             BuildSucceeded = BuildDone = false;
 
-            for (int i = 0; i < 3 && !BuildDone; i++)
+            CallOnSTAThread(() =>
             {
-                try
+                if (!_vsInstance.Solution.IsOpen)
+                    _vsInstance.Solution.Open(project.SolutionFilePath);
+                _vsInstance.MainWindow.Visible = showVSWindow;
+
+                _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBulidSolutionBegin;
+                _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBulidSolutionDone;
+            });
+
+            var configName = GetConfigurationName(buildConfigutation);
+            try
+            {
+                // 参照しているpdbファイルは削除しようとすると例外を投げるので消されない
+                foreach (var pdbFile in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{configName}"), "*.pdb"))
                 {
-                    if (!_vsInstance.Solution.IsOpen)
-                        _vsInstance.Solution.Open(project.SolutionFilePath);
-                    _vsInstance.MainWindow.Visible = showVSWindow;
-
-                    _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBulidSolutionBegin;
-                    _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBulidSolutionDone;
-
-                    try
-                    {
-                        // 参照しているpdbファイルは削除しようとすると例外を投げるので消されない
-                        foreach (var pdbFile in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{configName}"), "*.pdb"))
-                        {
-                            File.Delete(pdbFile);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(ex.Message);
-                    }
-
-                    _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(configName).Activate();
-                    _vsInstance.ExecuteCommand("Build.BuildSolution");
-                    
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                    Debug.WriteLine($"{i}回目: {project.Name}のビルドに失敗");
-                    System.Threading.Thread.Sleep(1000);
+                    File.Delete(pdbFile);
                 }
             }
-            
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+
+            CallOnSTAThread(() =>
+            {
+                _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(configName).Activate();
+                _vsInstance.ExecuteCommand("Build.BuildSolution");
+                _resetEvent.Wait();
+                _resetEvent.Reset();
+            });
+
+
         }
 
-        public static void Run(Project project, string configName, bool debug)
+        public static void BuildSolution(Project project, BuildConfigutation buildConfigutation, bool showVSWindow = true)
         {
-            if (_vsInstance != null && !IsDebugging() && BuildDone && BuildSucceeded)
+            lock (_lock)
             {
-                _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
+                BuildSolution_Internal(project, buildConfigutation, showVSWindow);
             }
+        }
+
+        private static void Run_Internal(Project project, BuildConfigutation buildConfigutation, bool debug)
+        {
+            CallOnSTAThread(() =>
+            {
+                if (_vsInstance != null && !IsDebugging_Internal() && BuildSucceeded)
+                {
+                    _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
+                }
+            });
+        }
+
+        public static void Run(Project project, BuildConfigutation buildConfigutation, bool debug)
+        {
+            lock (_lock)
+            {
+                Run_Internal(project, buildConfigutation, debug);
+            }
+        }
+
+        private static void Stop_Internal()
+        {
+            CallOnSTAThread(() =>
+            {
+                if (_vsInstance != null && IsDebugging_Internal())
+                {
+                    _vsInstance.ExecuteCommand("Debug.StopDebugging");
+                }
+            });
         }
 
         public static void Stop()
         {
-            if (_vsInstance != null && IsDebugging())
+            lock (_lock)
             {
-                _vsInstance.ExecuteCommand("Debug.StopDebugging");
+                Stop_Internal();
             }
         }
+    }
+
+    [ComImport(), Guid("00000016-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IOleMessageFilter
+    {
+
+        [PreserveSig]
+        int HandleInComingCall(int dwCallType, IntPtr hTaskCaller, int dwTickCount, IntPtr lpInterfaceInfo);
+
+
+        [PreserveSig]
+        int RetryRejectedCall(IntPtr hTaskCallee, int dwTickCount, int dwRejectType);
+
+
+        [PreserveSig]
+        int MessagePending(IntPtr hTaskCallee, int dwTickCount, int dwPendingType);
+    }
+
+    public class MessageFilter : IOleMessageFilter
+    {
+        private const int SERVERCALL_ISHANDLED = 0;
+        private const int PENDINGMSG_WAITDEFPROCESS = 2;
+        private const int SERVERCALL_RETRYLATER = 2;
+
+        // implement IOleMessageFilter interface. 
+        [DllImport("Ole32.dll")]
+        private static extern int CoRegisterMessageFilter(IOleMessageFilter newFilter, out IOleMessageFilter oldFilter);
+
+        public static void Register()
+        {
+            IOleMessageFilter newFilter = new MessageFilter();
+            int hr = CoRegisterMessageFilter(newFilter, out var oldFilter);
+            Debug.Assert(hr >= 0, "COM IMessageFileterの登録に失敗しました");
+        }
+
+        public static void Revoke()
+        {
+            int hr = CoRegisterMessageFilter(null, out var oldFilter);
+            Debug.Assert(hr >= 0, "COM IMessageFileterの登録解除に失敗しました");
+        }
+
+
+        int IOleMessageFilter.HandleInComingCall(int dwCallType, System.IntPtr hTaskCaller, int dwTickCount, System.IntPtr lpInterfaceInfo)
+        {
+            //returns the flag SERVERCALL_ISHANDLED. 
+            return SERVERCALL_ISHANDLED;
+        }
+
+
+        int IOleMessageFilter.RetryRejectedCall(System.IntPtr hTaskCallee, int dwTickCount, int dwRejectType)
+        {
+            // Thread call was refused, try again. 
+            if (dwRejectType == SERVERCALL_RETRYLATER)
+            {
+                Debug.WriteLine("COM serverは忙しいです。再度EnvDTEインターフェースにコールしてください");
+                // retry thread call at once, if return value >=0 & <100. 
+                return 500;
+            }
+            return -1;
+        }
+
+
+        int IOleMessageFilter.MessagePending(System.IntPtr hTaskCallee, int dwTickCount, int dwPendingType)
+        {
+            return PENDINGMSG_WAITDEFPROCESS;
+        }
+
     }
 }

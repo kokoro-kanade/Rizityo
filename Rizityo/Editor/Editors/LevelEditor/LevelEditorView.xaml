@@ -15,6 +15,11 @@
         <sys:Boolean x:Key="True">True</sys:Boolean>
         <sys:Boolean x:Key="False">False</sys:Boolean>
     </UserControl.Resources>
+    <UserControl.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.New" Executed="OnNewProject"/>
+        <CommandBinding Command="ApplicationCommands.Open" Executed="OnOpenProject"/>
+        <CommandBinding Command="ApplicationCommands.Close" Executed="OnCloseEditor"/>
+    </UserControl.CommandBindings>
     <UserControl.InputBindings>
         <KeyBinding Command="{Binding UndoCommand}" Key="Z" Modifiers="Ctrl"/>
         <KeyBinding Command="{Binding RedoCommand}" Key="Z" Modifiers="Ctrl+Shift"/>
@@ -26,10 +31,25 @@
     </UserControl.InputBindings>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="32"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal">
+        <Menu Grid.Row="0">
+            <MenuItem Header="ファイル">
+                <MenuItem Header="新規プロジェクト" Command="ApplicationCommands.New"/>
+                <MenuItem Header="プロジェクトを開く" Command="ApplicationCommands.Open"/>
+                <Separator/>
+                <MenuItem Header="保存" Command="{Binding SaveCommand}"/>
+                <Separator/>
+                <MenuItem Header="終了" Command="ApplicationCommands.Close"/>
+            </MenuItem>
+            <MenuItem Header="設定"></MenuItem>
+            <MenuItem Header="ビュー"></MenuItem>
+            <MenuItem Header="作成" IsEnabled="False"></MenuItem>
+            <MenuItem Header="ウィンドウ"></MenuItem>
+        </Menu>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="20,10">
             <Button Content="Undo" Command="{Binding UndoCommand}"/>
             <Button Content="Redo" Command="{Binding RedoCommand}" Margin="5,0"/>
             <Button Content="新規スクリプト" Click="OnNewScriptButton_Click" Margin="5,0"
@@ -43,7 +63,7 @@
             </ComboBox>
             <Button Content="プリミティブメッシュ" Click="OnCreatePrimitiveMeshButton_Click" Margin="10,0"/>
         </StackPanel>
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition Width="Auto"/>

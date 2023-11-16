@@ -10,6 +10,7 @@ using Editor.GameProject;
 using System.Windows.Media;
 using System.Diagnostics;
 using Editor.Utility;
+using System.Text.RegularExpressions;
 
 namespace Editor.GameDev
 {
@@ -55,8 +56,11 @@ namespace {1}
 
         private static string GetNamespaceFromProjectName()
         {
-            var projectName = Project.Current.Name;
-            projectName = projectName.Replace(' ', '_');
+            var projectName = Project.Current.Name.Trim();
+            if (string.IsNullOrEmpty(projectName))
+                return string.Empty;
+
+            projectName = Regex.Replace(projectName, @"[^A-Za-z0-9_]", "");
             return projectName;
         }
 
@@ -72,16 +76,14 @@ namespace {1}
             bool isValid = false;
             var fileName = fileTextBox.Text.Trim();
             var folderPath = folderTextBox.Text.Trim();
-            if (!Path.EndsInDirectorySeparator(folderPath))
-            {
-                folderPath += @"\";
-            }
             string errorMsg = string.Empty;
+            var nameRegex = new Regex(@"^[A-Za-z_][A-Za-z0-9_]*$");
+
             if (string.IsNullOrEmpty(fileName))
             {
                 errorMsg = "ファイル名を入力してください";
             }
-            else if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+            else if (!nameRegex.IsMatch(fileName))
             {
                 errorMsg = "ファイル名に不正な文字が使われています";
             }

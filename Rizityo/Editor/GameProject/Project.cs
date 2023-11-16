@@ -14,18 +14,10 @@ using System.Windows.Input;
 
 namespace Editor.GameProject
 {
-    enum BuildConfigutation
-    {
-        Debug,
-        DebugEditor,
-        Release,
-        ReleaseEditor
-    }
-
     [DataContract(Name = "Game")]
     class Project : ViewModelBase
     {
-        public static string Extension { get; } = ".rproject";
+        public static string Extension => ".rproject";
         [DataMember]
         public string Name { get; private set; }
         [DataMember]
@@ -34,12 +26,11 @@ namespace Editor.GameProject
         public string SolutionFilePath => $@"{Path}{Name}.sln";
         public string ContentPath => $@"{Path}Content\";
 
-        public static Project Current => Application.Current.MainWindow.DataContext as Project;
-
+        public static Project Current => Application.Current.MainWindow?.DataContext as Project;
 
         // レベル
-        [DataMember(Name = "Levels")]
-        private ObservableCollection<Level> _levels = new ObservableCollection<Level>();
+        [DataMember(Name = nameof(Levels))]
+        private readonly ObservableCollection<Level> _levels = new ObservableCollection<Level>();
         public ReadOnlyObservableCollection<Level> Levels { get; private set; }
 
         private Level _activeLevel;
@@ -95,19 +86,20 @@ namespace Editor.GameProject
         }
         public void Unload()
         {
-            UnLoadGameCodeDll();
+            UnLoadGameCodeDLL();
             VisualStudio.CloseVisualStudio();
             UndoRedo.Reset();
+            Logger.Clear();
         }
         public ICommand SaveCommand { get; private set; }
-        public static void Save(Project project)
+        private static void Save(Project project)
         {
             Serializer.ToFile(project, project.ProjectFilePath);
             Logger.Log(Verbosity.Display, $"Project saved to {project.ProjectFilePath}");
         }
         private void SaveToBinary()
         {
-            var configName = GetConfigurationName(ApplicationBuildConfig);
+            var configName = VisualStudio.GetConfigurationName(ApplicationBuildConfig);
             var bin = $@"{Path}x64\{configName}\game.bin";
 
             using (var bw = new BinaryWriter(File.Open(bin, FileMode.Create, FileAccess.Write)))
@@ -142,21 +134,18 @@ namespace Editor.GameProject
             }
         }
         public BuildConfigutation ApplicationBuildConfig => BuildConfig == 0 ? BuildConfigutation.Debug : BuildConfigutation.Release;
-        public BuildConfigutation DllBuildConfig => BuildConfig == 0 ? BuildConfigutation.DebugEditor : BuildConfigutation.ReleaseEditor;
+        public BuildConfigutation DLLBuildConfig => BuildConfig == 0 ? BuildConfigutation.DebugEditor : BuildConfigutation.ReleaseEditor;
 
-        private static readonly string[] _buildConfigurationNames
-            = new string[] { "Debug", "DebugEditor", "Release", "ReleaseEditor" };
-        private static string GetConfigurationName(BuildConfigutation config) => _buildConfigurationNames[(int)config];
         public ICommand BuildCommand { get; private set; }
-        private async Task BuildGameCodeDll(bool showVSWindow)
+        private async Task BuildGameCodeDLL(bool showVSWindow)
         {
             try
             {
-                UnLoadGameCodeDll();
-                await Task.Run(() => VisualStudio.BuildSolution(this, GetConfigurationName(DllBuildConfig), showVSWindow));
+                UnLoadGameCodeDLL();
+                await Task.Run(() => VisualStudio.BuildSolution(this, DLLBuildConfig, showVSWindow));
                 if (VisualStudio.BuildSucceeded)
                 {
-                    LoadGameCodeDll();
+                    LoadGameCodeDLL();
                 }
             }
             catch (Exception ex)
@@ -165,9 +154,9 @@ namespace Editor.GameProject
                 throw;
             }
         }
-        private void LoadGameCodeDll()
+        private void LoadGameCodeDLL()
         {
-            var configName = GetConfigurationName(DllBuildConfig);
+            var configName = VisualStudio.GetConfigurationName(DLLBuildConfig);
             var dllPath = $@"{Path}x64\{configName}\{Name}.dll";
             if(File.Exists(dllPath) && EngineAPI.LoadGameCodeDll(dllPath) != 0)
             {
@@ -180,7 +169,7 @@ namespace Editor.GameProject
                 Logger.Log(Verbosity.Warning, "ゲームコードのDLLのロードに失敗しました。まずプロジェクトのビルドを試してください");
             }
         }
-        private void UnLoadGameCodeDll()
+        private void UnLoadGameCodeDLL()
         {
             ActiveLevel.GameEntities.Where(e => e.GetComponent<Script>() != null).ToList().ForEach(e => e.IsActive = false);
             if(EngineAPI.UnLoadGameCodeDll() != 0)
@@ -195,12 +184,11 @@ namespace Editor.GameProject
         public ICommand DebugStopCommand { get; private set; }
         private async Task RunGame(bool debug)
         {
-            var configName = GetConfigurationName(ApplicationBuildConfig);
-            await Task.Run(() => VisualStudio.BuildSolution(this, configName, debug));
+            await Task.Run(() => VisualStudio.BuildSolution(this, ApplicationBuildConfig, debug));
             if (VisualStudio.BuildSucceeded)
             {
                 SaveToBinary();
-                await Task.Run(() => VisualStudio.Run(this, configName, debug));
+                await Task.Run(() => VisualStudio.Run(this, ApplicationBuildConfig, debug));
             }
         }
         private async Task StopGame() => await Task.Run(() => VisualStudio.Stop());
@@ -231,7 +219,7 @@ namespace Editor.GameProject
             UndoCommand = new RelayCommand<object>(x => UndoRedo.Undo(), x => UndoRedo.UndoList.Any());
             RedoCommand = new RelayCommand<object>(x => UndoRedo.Redo(), x => UndoRedo.RedoList.Any());
             SaveCommand = new RelayCommand<object>(x => Save(this));
-            BuildCommand = new RelayCommand<bool>(async x => await BuildGameCodeDll(x), x => !(VisualStudio.IsDebugging() && VisualStudio.BuildDone));
+            BuildCommand = new RelayCommand<bool>(async x => await BuildGameCodeDLL(x), x => !(VisualStudio.IsDebugging() && VisualStudio.BuildDone));
             DebugStartCommand = new RelayCommand<object>(async x => await RunGame(true), x => !(VisualStudio.IsDebugging() && VisualStudio.BuildDone));
             DebugStartWithoutDebuggingCommand = new RelayCommand<object>(async x => await RunGame(false), x => !(VisualStudio.IsDebugging() && VisualStudio.BuildDone));
             DebugStopCommand = new RelayCommand<object>(async x => await StopGame(), x => VisualStudio.IsDebugging());
@@ -259,7 +247,7 @@ namespace Editor.GameProject
             }
             ActiveLevel = Levels.FirstOrDefault(x => x.IsActive);
 
-            await BuildGameCodeDll(false);
+            await BuildGameCodeDLL(false);
 
             SetCommands();
         }
@@ -269,7 +257,7 @@ namespace Editor.GameProject
             Name = name;
             Path = path;
 
-
+            Debug.Assert(File.Exists((Path + Name + Extension).ToLower()));
             OnDeserialized(new StreamingContext());
         }
 

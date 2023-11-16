@@ -26,15 +26,23 @@ namespace Editor.GameProject
             Loaded += OnProjectBroswerDialogLoaded;
         }
 
+        public static bool MoveNewProjectTab { get; set; }
+
         private void OnProjectBroswerDialogLoaded(object sender, RoutedEventArgs e)
         {
             Loaded -= OnProjectBroswerDialogLoaded;
-            if (!OpenProject.Projects.Any())
+            if (!OpenProject.Projects.Any() || MoveNewProjectTab)
             {
-                openProjectButton.IsEnabled = false;
-                openProjectView.Visibility = Visibility.Hidden;
+                if (!MoveNewProjectTab)
+                {
+                    openProjectButton.IsEnabled = false;
+                    openProjectView.Visibility = Visibility.Hidden;
+                }
+                
                 OnToggleButton_Click(createProjectButton, new RoutedEventArgs());
             }
+
+            MoveNewProjectTab = false;
         }
 
         //private void AnimateToCreateProject()

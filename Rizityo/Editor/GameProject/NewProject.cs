@@ -9,6 +9,7 @@ using System.Linq;
 using System.Printing;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Editor.GameProject
@@ -30,7 +31,7 @@ namespace Editor.GameProject
 
     class NewProject : ViewModelBase
     {
-        // TODO: インストール場所からのパスを取得する
+        // インストール場所からのパスを取得する
         private readonly string _projectTemplatesFolderPath = @"..\..\Editor\ProjectTemplates";
 
         private string _projectName = "NewProject"; //デフォルト
@@ -91,7 +92,7 @@ namespace Editor.GameProject
             }
         }
 
-        private ObservableCollection<ProjectTemplate> _projectTemplates = new ObservableCollection<ProjectTemplate>();
+        private readonly ObservableCollection<ProjectTemplate> _projectTemplates = new ObservableCollection<ProjectTemplate>();
         public ReadOnlyObservableCollection<ProjectTemplate> ProjectTemplates { get; }
 
         public NewProject()
@@ -129,13 +130,14 @@ namespace Editor.GameProject
                 path += @"\";
             }
             path += $@"{ProjectName}\";
+            var nameRegex = new Regex(@"^[A-Za-z_][A-Za-z0-9_]*$");
 
             IsValid = false;
             if (string.IsNullOrWhiteSpace(ProjectName.Trim()))
             {
                 ErrorMsg = "プロジェクト名を入力してください";
             }
-            else if (ProjectName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+            else if (!nameRegex.IsMatch(ProjectName))
             {
                 ErrorMsg = "プロジェクト名に不正な文字が使われています";
             }
@@ -209,13 +211,13 @@ namespace Editor.GameProject
             Debug.Assert(File.Exists(templateSolutionFilePath));
             Debug.Assert(File.Exists(templateProjectFilePath));
 
-            var engineAPIFolderPath = Path.Combine(MainWindow.RizityoFolderPath, @"Engine\EngineAPI\");
+            var engineAPIFolderPath = @"$(RIZITYO_ENGINE)Engine\EngineAPI\";
             Debug.Assert(Directory.Exists(engineAPIFolderPath));
 
             var _0 = ProjectName;
             var _1 = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
             var _2 = engineAPIFolderPath;
-            var _3 = MainWindow.RizityoFolderPath;
+            var _3 = "$(RIZITYO_ENGINE)";
 
             var solution = File.ReadAllText(templateSolutionFilePath);
             solution = string.Format(solution, _0, _1, "{" + Guid.NewGuid().ToString().ToUpper() + "}");
