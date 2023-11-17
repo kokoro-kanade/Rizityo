@@ -3,7 +3,7 @@
 
 namespace Rizityo::AssetTool
 {
-	enum PrimitiveMeshType : uint32
+	enum class PrimitiveMeshType : uint32
 	{
 		Plane,
 		Cube,

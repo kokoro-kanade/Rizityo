@@ -278,25 +278,23 @@ namespace Rizityo::Utility
 
 		[[nodiscard]] constexpr T* begin()
 		{
-			assert(_Data);
 			return std::addressof(_Data[0]);
 		}
 
 		[[nodiscard]] constexpr const T* begin() const
 		{
-			assert(_Data);
 			return std::addressof(_Data[0]);
 		}
 
 		[[nodiscard]] constexpr T* end()
 		{
-			assert(_Data);
+			assert(!(_Data == nullptr && _Size > 0));
 			return std::addressof(_Data[_Size]);
 		}
 
 		[[nodiscard]] constexpr const T* end() const
 		{
-			assert(_Data);
+			assert(!(_Data == nullptr && _Size > 0));
 			return std::addressof(_Data[_Size]);
 		}
 
@@ -317,6 +315,7 @@ namespace Rizityo::Utility
 			_Capacity = other._Capacity;
 			_Size = other._Size;
 			_Data = other._Data;
+			other.Reset();
 		}
 
 		constexpr void Destroy()

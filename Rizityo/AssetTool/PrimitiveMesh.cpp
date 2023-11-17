@@ -26,7 +26,7 @@ namespace Rizityo::AssetTool
 			CreateCapsule
 		};
 
-		static_assert(_countof(CreateFuncs) == PrimitiveMeshType::Count);
+		static_assert(_countof(CreateFuncs) == (uint32)PrimitiveMeshType::Count);
 
 		struct Axis
 		{
@@ -292,9 +292,9 @@ namespace Rizityo::AssetTool
 	void CreatePrimitiveMesh(LevelData* data, PrimitiveInitInfo* info)
 	{
 		assert(data && info);
-		assert(info->Type < PrimitiveMeshType::Count);
+		assert(static_cast<uint32>(info->Type) < static_cast<uint32>(PrimitiveMeshType::Count));
 		Level level{};
-		CreateFuncs[info->Type](level, *info);
+		CreateFuncs[static_cast<uint32>(info->Type)](level, *info);
 
 		data->Setting.CalculateNormals = 1;
 		ProcessLevel(level, data->Setting);
