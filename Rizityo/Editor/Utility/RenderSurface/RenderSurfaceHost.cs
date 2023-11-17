@@ -24,7 +24,7 @@ namespace Editor.Utility
         [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int vKey);
 
-        public int SurfaceId { get; private set; } = Id.INVALID_ID;
+        public int SurfaceId { get; private set; } = ID.INVALID_ID;
 
         private void Resize(object sender, DelayEventTimerArgs e)
         {
@@ -38,7 +38,7 @@ namespace Editor.Utility
         protected override HandleRef BuildWindowCore(HandleRef hwndParent)
         {
             SurfaceId = EngineAPI.CreateRenderSurface(hwndParent.Handle, _width, _height);
-            Debug.Assert(Id.IsValid(SurfaceId));
+            Debug.Assert(ID.IsValid(SurfaceId));
             _renderWindowHandle = EngineAPI.GetWindowHandle(SurfaceId);
             Debug.Assert(_renderWindowHandle != IntPtr.Zero);
 
@@ -48,7 +48,7 @@ namespace Editor.Utility
         protected override void DestroyWindowCore(HandleRef hwnd)
         {
             EngineAPI.RemoveRenderSurface(SurfaceId);
-            SurfaceId = Id.INVALID_ID;
+            SurfaceId = ID.INVALID_ID;
             _renderWindowHandle = IntPtr.Zero;
         }
 
@@ -57,7 +57,7 @@ namespace Editor.Utility
             _width = (int)width;
             _height = (int)height;
             _resizeTimer = new DelayEventTimer(TimeSpan.FromMilliseconds(250.0));
-            _resizeTimer.Triggerd += Resize;
+            _resizeTimer.Triggered += Resize;
             SizeChanged += (s, e) => _resizeTimer.Trigger();
         }
     }

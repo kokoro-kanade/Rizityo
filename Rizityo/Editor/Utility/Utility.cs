@@ -7,7 +7,7 @@ using System.Windows.Threading;
 
 namespace Editor.Utility
 {
-    public static class Id
+    public static class ID
     {
         public static int INVALID_ID => -1;
         public static bool IsValid(int id) => id != INVALID_ID;
@@ -33,8 +33,8 @@ namespace Editor.Utility
     class DelayEventTimerArgs : EventArgs
     {
         public bool RepeatEvent { get; set; }
-        public object Data { get; set; }
-        public DelayEventTimerArgs(object data)
+        public IEnumerable<object> Data { get; set; }
+        public DelayEventTimerArgs(IEnumerable<object> data)
         {
             Data = data;
         }
@@ -45,15 +45,18 @@ namespace Editor.Utility
         private readonly DispatcherTimer _timer;
         private readonly TimeSpan _delay;
         private DateTime _lastEventTime = DateTime.Now;
-        private object _data;
+        private List<object> _data = new List<object>();
 
         // タイマー経過後に行う処理
-        public event EventHandler<DelayEventTimerArgs> Triggerd;
+        public event EventHandler<DelayEventTimerArgs> Triggered;
 
         // タイマースタート
         public void Trigger(object data = null)
         {
-            _data = data;
+            if(data != null)
+            {
+                _data.Add(data);
+            }
             _lastEventTime = DateTime.Now;
             _timer.IsEnabled = true;
         }
@@ -68,7 +71,11 @@ namespace Editor.Utility
             if ((DateTime.Now - _lastEventTime) < _delay)
                 return;
             var eventArgs = new DelayEventTimerArgs(_data);
-            Triggerd?.Invoke(this, eventArgs);
+            Triggered?.Invoke(this, eventArgs);
+            if(!eventArgs.RepeatEvent)
+            {
+                _data.Clear();
+            }
             _timer.IsEnabled = eventArgs.RepeatEvent;
         }
 

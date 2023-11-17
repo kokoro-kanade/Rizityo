@@ -19,7 +19,7 @@ namespace Editor.Components
 
     class GameEntity : ViewModelBase // Rename: -> Entity (c++と対応させるため)
     {
-        private int _entityId = Id.INVALID_ID;
+        private int _entityId = ID.INVALID_ID;
         public int EntityId
         {
             get => _entityId;
@@ -45,12 +45,12 @@ namespace Editor.Components
                     if (_isActive)
                     {
                         EntityId = EngineAPI.EntityAPI.CreateGameEntity(this);
-                        Debug.Assert(Id.IsValid(EntityId));
+                        Debug.Assert(ID.IsValid(EntityId));
                     }
-                    else if(Id.IsValid(EntityId))
+                    else if(ID.IsValid(EntityId))
                     {
                         EngineAPI.EntityAPI.RemoveGameEntity(this);
-                        EntityId = Id.INVALID_ID;
+                        EntityId = ID.INVALID_ID;
                     }
                     OnPropertyChanged(nameof(IsActive));
                 }

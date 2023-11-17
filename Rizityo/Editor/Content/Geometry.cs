@@ -295,7 +295,7 @@ namespace Editor.Content
 
             // 同じLODidのものをまとめる
             MeshLod lod;
-            if (Id.IsValid(lodId) && lodIds.Contains(lodId))
+            if (ID.IsValid(lodId) && lodIds.Contains(lodId))
             {
                 lod = lodList[lodIds.IndexOf(lodId)];
                 Debug.Assert(lod != null);
@@ -419,14 +419,16 @@ namespace Editor.Content
                 return savedFiles;
 
             var path = Path.GetDirectoryName(file) + Path.DirectorySeparatorChar;
-            var filename = Path.GetFileNameWithoutExtension(file);
+            var fileName = Path.GetFileNameWithoutExtension(file);
 
             try
             {
                 foreach (var lodGroup in _lodGroups)
                 {
                     Debug.Assert(lodGroup.Lods.Any());
-                    var meshFilename = ContentHelper.SanitizeFileName(path + filename + "_" + lodGroup.Lods[0].Name + AssetFileExtension);
+                    var meshFilename = ContentHelper.SanitizeFileName(_lodGroups.Count > 1 ?
+                        path + fileName + "_" + lodGroup.Lods[0].Name + AssetFileExtension :
+                        path + fileName + AssetFileExtension);
                     // アセットファイルごとにGUIDを生成
                     Guid = Guid.NewGuid();
                     byte[] lodGroupData = null;

@@ -60,7 +60,6 @@ namespace {1}
             if (string.IsNullOrEmpty(projectName))
                 return string.Empty;
 
-            projectName = Regex.Replace(projectName, @"[^A-Za-z0-9_]", "");
             return projectName;
         }
 
@@ -169,7 +168,7 @@ namespace {1}
             var cppPath = Path.GetFullPath(Path.Combine(folderPath, $"{fileName}.cpp"));
             var headerPath = Path.GetFullPath(Path.Combine(folderPath, $"{fileName}.h"));
 
-            using(var sw = File.CreateText(cppPath))
+            using (var sw = File.CreateText(cppPath))
             {
                 sw.Write(string.Format(_cppCode, fileName, _namespace));
             }
@@ -179,14 +178,8 @@ namespace {1}
             }
 
             string[] files = new string[] { cppPath, headerPath };
-            for (int i = 0; i < 3; i++)
-            {
-                // 失敗したら時間を待ってトライ
-                if (!VisualStudio.AddFilesToSolution(solutionFilePath, projectName, files))
-                    System.Threading.Thread.Sleep(1000);
-                else
-                    break;
-            }
+
+            VisualStudio.AddFilesToSolution(solutionFilePath, projectName, files);
         }
     }
 }

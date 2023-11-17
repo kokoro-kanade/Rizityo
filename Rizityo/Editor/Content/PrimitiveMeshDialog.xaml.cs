@@ -109,8 +109,10 @@ namespace Editor.Content
         {
             var uris = new List<Uri>
             {
-                new Uri("pack://application:,,,/Resources/PrimitiveMeshView/gandam.png"),
-                new Uri("pack://application:,,,/Resources/PrimitiveMeshView/gandam.png"),
+                new Uri("pack://application:,,,/Resources/PrimitiveMeshView/UVTest.png"),
+                new Uri("pack://application:,,,/Resources/PrimitiveMeshView/UVTest.png"),
+                new Uri("pack://application:,,,/Resources/PrimitiveMeshView/UVTest.png"),
+                new Uri("pack://application:,,,/Resources/PrimitiveMeshView/UVTest.png"),
                 new Uri("pack://application:,,,/Resources/PrimitiveMeshView/UVTest.png"),
                 new Uri("pack://application:,,,/Resources/PrimitiveMeshView/UVTest.png"),
             };
@@ -138,18 +140,13 @@ namespace Editor.Content
 
         private void OnSaveButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new SaveFileDialog()
-            {
-                InitialDirectory = Project.Current.ContentPath,
-                Filter = "Asset file (*.rasset)|*.rasset"
-            };
-
+            var dialog = new SaveDialog();
             if(dialog.ShowDialog() == true)
             {
-                Debug.Assert(!string.IsNullOrEmpty(dialog.FileName));
+                Debug.Assert(!string.IsNullOrEmpty(dialog.SaveFilePath));
                 var asset = (DataContext as IAssetEditor).Asset;
                 Debug.Assert(asset != null);
-                asset.Save(dialog.FileName);
+                asset.Save(dialog.SaveFilePath);
             }
         }
     }
