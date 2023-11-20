@@ -29,7 +29,7 @@ namespace Editor.ToolAPIStructs
             CalculateNormals = ToByte(setting.CalculateNormals);
             CalculateTangents = ToByte(setting.CalculateTangents);
             ReverseHandedness = ToByte(setting.ReverseHandedness);
-            ImportEmbededTextures = ToByte(setting.ImportEmbededTextures);
+            ImportEmbededTextures = ToByte(setting.ImportEmbeddedTextures);
             ImportAnimations = ToByte(setting.ImportAnimations);
         }
     }
@@ -74,16 +74,14 @@ namespace Editor.DLLWrapper
     {
         private const string _toolDLL = "AssetTool.dll";
 
-        [DllImport(_toolDLL)]
-        private static extern void CreatePrimitiveMesh([In, Out] LevelData data, PrimitiveInitInfo info);
-        public static void CreatePrimitiveMesh(Content.Geometry geometry, PrimitiveInitInfo info)
+        private static void GeometryFromLevelData(Content.Geometry geometry, Action<LevelData> levelDataGenerator, string failureMsg)
         {
             Debug.Assert(geometry != null);
             using var levelData = new LevelData();
             try
             {
                 levelData.ImportSetting.FromContentSetting(geometry.ImportSetting);
-                CreatePrimitiveMesh(levelData, info);
+                levelDataGenerator(levelData);
                 Debug.Assert(levelData.Data != IntPtr.Zero && levelData.DataSize > 0);
                 var data = new byte[levelData.DataSize];
                 Marshal.Copy(levelData.Data, data, 0, levelData.DataSize);
@@ -91,9 +89,23 @@ namespace Editor.DLLWrapper
             }
             catch (Exception ex)
             {
-                Logger.Log(Verbosity.Error, $"{info.Type}メッシュの作成に失敗しました");
+                Logger.Log(Verbosity.Error, failureMsg);
                 Debug.WriteLine(ex.Message);
             }
+        }
+
+        [DllImport(_toolDLL)]
+        private static extern void CreatePrimitiveMesh([In, Out] LevelData data, PrimitiveInitInfo info);
+        public static void CreatePrimitiveMesh(Content.Geometry geometry, PrimitiveInitInfo info)
+        {
+            GeometryFromLevelData(geometry, (levelData) => CreatePrimitiveMesh(levelData, info), $"{info.Type}メッシュの作成に失敗しました");
+        }
+
+        [DllImport(_toolDLL)]
+        private static extern void ImportFBX(string filePath, [In, Out] LevelData data);
+        public static void ImportFBX(string filePath, Content.Geometry geometry)
+        {
+            GeometryFromLevelData(geometry, (levelData) => ImportFBX(filePath, levelData), $"FBXファイル{filePath}のインポートに失敗しました");
         }
     }
 }

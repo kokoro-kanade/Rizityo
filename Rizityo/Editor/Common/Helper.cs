@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Editor.Content;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -91,6 +92,82 @@ namespace Editor.Common
         public static bool IsDirectory(this FileInfo info) => info.Attributes.HasFlag(FileAttributes.Directory);
 
         public static bool IsOlder(this DateTime date, DateTime other) => date < other;
+
+        private static void Import(Asset asset, string name, string filePath, string dstFolderPath)
+        {
+            Debug.Assert(asset != null);
+
+            asset.FullPath = dstFolderPath + name + Asset.AssetFileExtension;
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                asset.Import(filePath);
+            }
+
+            asset.Save(asset.FullPath);
+            return;
+        }
+
+        private static void Import(string filePath, string dstFolderPath)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(filePath));
+            if (IsDirectory(filePath))
+                return;
+
+            if(!dstFolderPath.EndsWith(Path.DirectorySeparatorChar))
+            {
+                dstFolderPath += Path.DirectorySeparatorChar;
+            }
+
+            var name = Path.GetFileNameWithoutExtension(filePath).ToLower();
+            var extension = Path.GetExtension(filePath).ToLower();
+
+            Asset asset = null;
+
+            switch (extension)
+            {
+                case ".fbx":
+                    asset = new Content.Geometry();
+                    break;
+                case ".bmp": break;
+                case ".png": break;
+                case ".jpg": break;
+                case ".jpeg": break;
+                case ".tiff": break;
+                case ".tif": break;
+                case ".tga": break;
+                case ".wav": break;
+                case ".ogg": break;
+                default:
+                    break;
+            }
+
+            if (asset != null)
+            {
+                Import(asset, name, filePath, dstFolderPath);
+            }
+        }
+
+        public static async Task ImportFilesAsync(string[] filePaths, string dstFolderPath)
+        {
+            try
+            {
+                Debug.Assert(!string.IsNullOrEmpty(dstFolderPath));
+                ContentWatcher.EnableFileWatcher(false);
+                var tasks = filePaths.Select(async filePath => await Task.Run(() => { Import(filePath, dstFolderPath); }));
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"{dstFolderPath}へのファイルのインポートに失敗しました");
+                Debug.WriteLine(ex.Message);
+            }
+            finally
+            {
+                ContentWatcher.EnableFileWatcher(true);
+            }
+        }
+
+        
     }
 
 }

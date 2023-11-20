@@ -32,11 +32,12 @@ namespace Editor.Editors
             Background = (Brush)Application.Current.FindResource("Editor.Window.GrayBrush4")
         };
 
-        public void SetGeometry(int index = -1)
+        public void SetGeometry(int index = -1) // indexが-1なら全て描画
         {
             if (!(DataContext is MeshRenderer vm))
-                    return;
-            if(vm.Meshes.Any() && viewport.Children.Count == 2)
+                return;
+
+            if (vm.Meshes.Any() && viewport.Children.Count == 2)
             {
                 viewport.Children.RemoveAt(1);
             }

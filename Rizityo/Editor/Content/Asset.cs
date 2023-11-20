@@ -49,7 +49,6 @@ namespace Editor.Content
             }
         }
         public string FileName => Path.GetFileNameWithoutExtension(FullPath);
-
         public string SourcePath { get; protected set; }
         public Guid Guid { get; protected set; } = Guid.NewGuid();
         public DateTime ImportDate { get; protected set; }
@@ -57,7 +56,10 @@ namespace Editor.Content
 
         public static string AssetFileExtension => ".rasset";
 
-        public abstract IEnumerable<string> Save(string file);
+        public abstract void Import(string filePath);
+
+        public abstract void Load(string filePath);
+        public abstract IEnumerable<string> Save(string filePath);
 
         private static AssetInfo GetAssetInfo(BinaryReader reader)
         {
@@ -73,21 +75,20 @@ namespace Editor.Content
             {
                 info.Hash = reader.ReadBytes(hashSize);
             }
-            info.SourcePath = reader.ReadString();
             var iconSize = reader.ReadInt32();
             info.Icon = reader.ReadBytes(iconSize);
 
             return info;
         }
 
-        public static AssetInfo GetAssetInfo(string file)
+        public static AssetInfo GetAssetInfo(string filePath)
         {
-            Debug.Assert(File.Exists(file) && Path.GetExtension(file) == AssetFileExtension);
+            Debug.Assert(File.Exists(filePath) && Path.GetExtension(filePath) == AssetFileExtension);
             try
             {
-                using var reader = new BinaryReader(File.Open(file, FileMode.Open, FileAccess.Read));
+                using var reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read));
                 var info = GetAssetInfo(reader);
-                info.FullPath = file;
+                info.FullPath = filePath;
                 return info;
             }
             catch (Exception ex)
@@ -98,6 +99,9 @@ namespace Editor.Content
             return null;
         }
 
+        public static AssetInfo TryGetAssetInfo(string filePath) =>
+            (File.Exists(filePath) && Path.GetExtension(filePath) == AssetFileExtension) ? AssetRegistry.GetAssetInfo(filePath) ?? GetAssetInfo(filePath) : null;
+
         protected void ReadAssetFileHeader(BinaryReader reader)
         {
             var info = GetAssetInfo(reader);
@@ -106,7 +110,6 @@ namespace Editor.Content
             Guid = info.Guid;
             ImportDate = info.ImportDate;
             Hash = info.Hash;
-            SourcePath = info.SourcePath;
             Icon = info.Icon;
         }
 
@@ -132,8 +135,6 @@ namespace Editor.Content
             {
                 writer.Write(0);
             }
-
-            writer.Write(SourcePath ?? "");
 
             writer.Write(Icon.Length);
             writer.Write(Icon);

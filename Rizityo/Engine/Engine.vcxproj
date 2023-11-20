@@ -45,6 +45,7 @@
     <ClInclude Include="Platform\PlatformTypes.h" />
     <ClInclude Include="Platform\Window.h" />
     <ClInclude Include="Utility\Container\FreeList.h" />
+    <ClInclude Include="Utility\IOStream.h" />
     <ClInclude Include="Utility\Math.h" />
     <ClInclude Include="Utility\MathType.h" />
     <ClInclude Include="Utility\Utility.h" />

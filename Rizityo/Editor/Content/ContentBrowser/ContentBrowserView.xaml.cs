@@ -1,4 +1,6 @@
-﻿using Editor.GameProject;
+﻿using Editor.Common;
+using Editor.Editors;
+using Editor.GameProject;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -105,8 +107,6 @@ namespace Editor.Content
         public static readonly DependencyProperty SelectionModeProperty =
             DependencyProperty.Register("SelectionMode", typeof(SelectionMode), typeof(ContentBrowserView), new PropertyMetadata(SelectionMode.Extended));
 
-
-
         public FileAccess FileAccess
         {
             get { return (FileAccess)GetValue(FileAccessProperty); }
@@ -115,7 +115,6 @@ namespace Editor.Content
 
         public static readonly DependencyProperty FileAccessProperty =
             DependencyProperty.Register("FileAccess", typeof(FileAccess), typeof(ContentBrowserView), new PropertyMetadata(FileAccess.ReadWrite));
-
 
         internal ContentInfo SelectedItem
         {
@@ -126,13 +125,12 @@ namespace Editor.Content
         public static readonly DependencyProperty SelectedInfoProperty =
             DependencyProperty.Register("SelectedInfo", typeof(ContentInfo), typeof(ContentBrowserView), new PropertyMetadata(null));
 
-
-
         public ContentBrowserView()
         {
             DataContext = null;
             InitializeComponent();
             Loaded += OnContentBrowserLoaded;
+            AllowDrop = true;
         }
 
         private void OnContentBrowserLoaded(object sender, RoutedEventArgs e)
@@ -244,6 +242,64 @@ namespace Editor.Content
             folderListView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
         }
 
+        private IAssetEditor OpenEditorPanel<T>(AssetInfo info, Guid guid, string title)
+            where T : FrameworkElement, new()
+        {
+            // すでにこのアセットを開いていれば前面に表示
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window.Content is FrameworkElement content &&
+                    content.DataContext is IAssetEditor editor &&
+                    editor.Asset.Guid == info.Guid)
+                {
+                    window.Activate();
+                    return editor;
+                }
+            }
+
+            // 新しいウィンドウを作ってロード
+            var newEditor = new T();
+            Debug.Assert(newEditor.DataContext is IAssetEditor);
+            (newEditor.DataContext as IAssetEditor).SetAsset(info);
+
+            var win = new Window()
+            {
+                Content = newEditor,
+                Title = title,
+                Owner = Application.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Style = Application.Current.FindResource("WindowStyle") as Style
+            };
+
+            win.Show();
+            return newEditor.DataContext as IAssetEditor;
+        }
+
+        private IAssetEditor OpenAssetEditor(AssetInfo info)
+        {
+            IAssetEditor editor = null;
+            try
+            {
+                switch (info.Type)
+                {
+                    case AssetType.Animation: break;
+                    case AssetType.Audio: break;
+                    case AssetType.Material: break;
+                    case AssetType.Mesh:
+                        editor = OpenEditorPanel<GeometryEditorView>(info, info.Guid, "GeometryEditor");
+                        break;
+                    case AssetType.Skeleton: break;
+                    case AssetType.Texture: break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+
+            return editor;
+        }
+
         private void ExecuteSelection(ContentInfo info)
         {
             if (info == null)
@@ -253,6 +309,14 @@ namespace Editor.Content
             {
                 var vm = DataContext as ContentBrowser;
                 vm.SelectedFolderPath = info.FullPath;
+            }
+            else if (FileAccess.HasFlag(FileAccess.Read))
+            {
+                var assetInfo = Asset.GetAssetInfo(info.FullPath);
+                if (assetInfo != null)
+                {
+                    OpenAssetEditor(assetInfo);
+                }
             }
         }
 
@@ -292,6 +356,20 @@ namespace Editor.Content
 
             (DataContext as ContentBrowser)?.Dispose();
             DataContext = null;
+        }
+
+        private void OnFolderContent_ListView_Drop(object sender, DragEventArgs e)
+        {
+            var vm = DataContext as ContentBrowser;
+            if (vm.SelectedFolderPath != null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files?.Length > 0 && Directory.Exists(vm.SelectedFolderPath))
+                {
+                    _ = ContentHelper.ImportFilesAsync(files, vm.SelectedFolderPath);
+                    e.Handled = true;
+                }
+            }
         }
     }
 }

@@ -13,7 +13,7 @@
             <Setter.Value>
                 <ItemsPanelTemplate>
                     <WrapPanel Width="{Binding (FrameworkElement.ActualWidth), RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}"
-                               MinWidth="{Binding FrameworkElement.MinWidth, RelativeSource={RelativeSource AncestorType=ListView}}"/>
+                               MinWidth="{Binding FrameworkElement.MinWidth, RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}"/>
                 </ItemsPanelTemplate>
             </Setter.Value>
         </Setter>

@@ -25,7 +25,7 @@ namespace Editor.GameProject
         public string ProjectFilePath => $@"{Path}{Name}{Extension}";
         public string SolutionFilePath => $@"{Path}{Name}.sln";
         public string ContentFolderPath => $@"{Path}Content\";
-
+        public string TmpFolder => $@"{Path}.Rizityo\Tmp\";
         public static Project Current => Application.Current.MainWindow?.DataContext as Project;
 
         // レベル
@@ -84,13 +84,24 @@ namespace Editor.GameProject
             Debug.Assert(File.Exists(projectFile));
             return Serializer.FromFile<Project>(projectFile);
         }
+
+        private void DeleteTmpFolder()
+        {
+            if(Directory.Exists(TmpFolder))
+            {
+                Directory.Delete(TmpFolder, true);
+            }
+        }
+
         public void Unload()
         {
             UnLoadGameCodeDLL();
             VisualStudio.CloseVisualStudio();
             UndoRedo.Reset();
             Logger.Clear();
+            DeleteTmpFolder();
         }
+
         public ICommand SaveCommand { get; private set; }
         private static void Save(Project project)
         {
