@@ -66,7 +66,7 @@ ID::IDType CreateGameEntity(GameEntityDescriptor* d)
 		&transformInfo,
 		&scriptInfo
 	};
-	return GameEntity::CreateGameEntity(entityInfo).GetID();
+	return GameEntity::CreateGameEntity(entityInfo).ID();
 }
 
 EDITOR_INTERFACE

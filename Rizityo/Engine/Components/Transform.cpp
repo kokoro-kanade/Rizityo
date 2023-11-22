@@ -4,30 +4,44 @@ namespace Rizityo::Transform
 {
 	namespace
 	{
-		Utility::Vector<Math::Vector3> positions;
-		Utility::Vector<Math::Vector4> rotations;
-		Utility::Vector<Math::Vector3> scales;
-	}
+		Utility::Vector<Math::Vector3> Positions;
+		Utility::Vector<Math::Vector4> Rotations;
+		Utility::Vector<Math::Vector3> Orientations;
+		Utility::Vector<Math::Vector3> Scales;
+
+		Math::Vector3 CalculateOrientation(Math::Vector4 rotation)
+		{
+			using namespace DirectX;
+			XMVECTOR rotationQuat{ XMLoadFloat4(&rotation) };
+			XMVECTOR front{ XMVectorSet(0.f, 0.f, 1.f, 0.f) };
+			Math::Vector3 orientation;
+			XMStoreFloat3(&orientation, XMVector3Rotate(front, rotationQuat));
+			return orientation;
+		}
+	} // –³–¼‹óŠÔ
 
 	Transform::Component CreateComponent(const InitInfo& info, GameEntity::Entity entity)
 	{
 		assert(entity.IsValid());
-		const ID::IDType index = ID::GetIndex(entity.GetID());
-		if (positions.size() > index)
+		const ID::IDType index = ID::GetIndex(entity.ID());
+		if (Positions.size() > index)
 		{
-			positions[index] = Math::Vector3(info.Position);
-			rotations[index] = Math::Vector4(info.Rotation);
-			scales[index] = Math::Vector3(info.Scale);
+			Math::Vector4 rotation{ info.Rotation };
+			Positions[index] = Math::Vector3{ info.Position };
+			Rotations[index] =rotation;
+			Orientations[index] = CalculateOrientation(rotation);
+			Scales[index] = Math::Vector3{info.Scale};
 		}
 		else
 		{
-			assert(positions.size() == index);
-			positions.emplace_back(info.Position);
-			rotations.emplace_back(info.Rotation);
-			scales.emplace_back(info.Scale);
+			assert(Positions.size() == index);
+			Positions.emplace_back(info.Position);
+			Rotations.emplace_back(info.Rotation);
+			Orientations.emplace_back(CalculateOrientation(Math::Vector4{ info.Rotation }));
+			Scales.emplace_back(info.Scale);
 		}
 
-		return Component{ TransformID{entity.GetID()} };
+		return Component{ TransformID{entity.ID()} };
 	}
 
 	void RemoveComponent([[maybe_unused]] Transform::Component component)
@@ -35,21 +49,27 @@ namespace Rizityo::Transform
 		assert(component.IsValid());
 	}
 
-	Math::Vector3 Component::GetPosition() const
+	Math::Vector3 Component::Position() const
 	{
 		assert(IsValid());
-		return positions[ID::GetIndex(ID)];
+		return Positions[ID::GetIndex(_ID)];
 	}
 
-	Math::Vector4 Component::GetRotation() const
+	Math::Vector4 Component::Rotation() const
 	{
 		assert(IsValid());
-		return rotations[ID::GetIndex(ID)];
+		return Rotations[ID::GetIndex(_ID)];
 	}
 
-	Math::Vector3 Component::GetScale() const
+	Math::Vector3 Component::Orientation() const
 	{
 		assert(IsValid());
-		return scales[ID::GetIndex(ID)];
+		return Orientations[ID::GetIndex(_ID)];
+	}
+
+	Math::Vector3 Component::Scale() const
+	{
+		assert(IsValid());
+		return Scales[ID::GetIndex(_ID)];
 	}
 }

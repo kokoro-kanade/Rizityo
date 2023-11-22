@@ -1,9 +1,11 @@
 #include "TestRenderer.h"
-#include "../Platform/PlatformTypes.h"
-#include "../Platform/Platform.h"
-#include "../Graphics/Renderer.h"
-#include "../Graphics/Direct3D12/D3D12Core.h"
-#include "../Content/ContentToEngine.h"
+#include "Platform/PlatformTypes.h"
+#include "Platform/Platform.h"
+#include "Graphics/Renderer.h"
+#include "Graphics/Direct3D12/D3D12Core.h"
+#include "Content/ContentToEngine.h"
+#include "Components/Entity.h"
+#include "Components/Transform.h"
 #include "ShaderCompile.h"
 #include <filesystem>
 #include <fstream>
@@ -12,7 +14,7 @@
 
 using namespace Rizityo;
 
-#define ENABLE_TEST_WORKERS 1
+#define ENABLE_TEST_WORKERS 0
 
 constexpr uint32 NumThreads = 4;
 bool Shutdown = false;
@@ -56,6 +58,9 @@ void JointTestWorkers()
 ID::IDType ModelID{ ID::INVALID_ID };
 
 Graphics::RenderSurface Surfaces[4];
+
+GameEntity::Entity TestEntity{};
+Graphics::Camera TestCamera{};
 
 bool Resized = false;
 bool IsRestarting = false;
@@ -142,6 +147,22 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
+GameEntity::Entity CreateOneGameEntity()
+{
+	Transform::InitInfo transformInfo{};
+	Math::Vector3a rot{ 0, 3.14f, 0 };
+	DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3A(&rot)) };
+	Math::Vector4a rotQuat;
+	DirectX::XMStoreFloat4A(&rotQuat, quat);
+	memcpy(&transformInfo.Rotation[0], &rotQuat.x, sizeof(transformInfo.Rotation));
+
+	GameEntity::EntityInfo entityInfo{};
+	entityInfo.Transform = &transformInfo;
+	GameEntity::Entity entity{ GameEntity::CreateGameEntity(entityInfo) };
+	assert(entity.IsValid());
+	return entity;
+}
+
 bool ReadFile(std::filesystem::path path, OUT std::unique_ptr<uint8[]>& data, OUT uint64& size)
 {
 	if (!std::filesystem::exists(path))
@@ -221,6 +242,10 @@ bool TestInitialize()
 
 	InitTestWorkers(BufferTestWorker);
 
+	TestEntity = CreateOneGameEntity();
+	TestCamera = Graphics::CreateCamera(Graphics::PerspectiveCameraInitInfo(TestEntity.ID()));
+	assert(TestCamera.IsValid());
+
 	IsRestarting = false;
 	return true;
 }
@@ -244,6 +269,16 @@ void EngineTest::Run()
 
 void TestShutdown()
 {
+	if (TestCamera.IsValid())
+	{
+		Graphics::RemoveCamera(TestCamera.ID());
+	}
+
+	if (TestEntity.IsValid())
+	{
+		GameEntity::RemoveGameEnity(TestEntity.ID());
+	}
+
 	JointTestWorkers();
 
 	if (ID::IsValid(ModelID))

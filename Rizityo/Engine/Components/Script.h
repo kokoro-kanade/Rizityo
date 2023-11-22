@@ -8,7 +8,7 @@ namespace Rizityo::Script
 		Internal::ScriptCreateFunc CreateFunc;
 	};
 
-	Script::Component CreateComponent(const InitInfo& info, GameEntity::Entity entity); // TODO?: éQè∆ìnÇµÇ©ÇÁílìnÇµÇ…Ç∑ÇÈ
+	Script::Component CreateComponent(const InitInfo& info, GameEntity::Entity entity);
 	void RemoveComponent(Script::Component component);
 	void Update(float dt);
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "CommonHeaders.h"
-#include "../Platform/Window.h"
+#include "Platform/Window.h"
+#include "EngineAPI/Camera.h"
 
 namespace Rizityo::Graphics
 {
@@ -49,4 +50,78 @@ namespace Rizityo::Graphics
 
 	const char* GetEngineShadersPath();
 	const char* GetEngineShadersPath(GraphicsPlatform platform);
+
+    struct CameraParameter
+    {
+        enum Parameter : uint32 
+        {
+            UpVector,
+            FieldOfView,
+            AspectRatio,
+            ViewWidth,
+            ViewHeight,
+            NearZ,
+            FarZ,
+            View,
+            Projection,
+            InverseProjection,
+            ViewProjection,
+            InverseViewProjection,
+            Type,
+            EntityID,
+            Count
+        };
+    };
+
+    struct CameraInitInfo
+    {
+        ID::IDType EntityID{ ID::INVALID_ID };
+        Camera::Type Type{};
+        Math::Vector3 UpVector;
+        union 
+        {
+            float32 FieldOfView;
+            float32 ViewWidth;
+        };
+        union 
+        {
+            float32 AspectRatio;
+            float32 ViewHeight;
+        };
+        float32 NearZ;
+        float32 FarZ;
+    };
+
+    struct PerspectiveCameraInitInfo : public CameraInitInfo
+    {
+        explicit PerspectiveCameraInitInfo(ID::IDType entityID)
+        {
+            assert(ID::IsValid(entityID));
+            EntityID = entityID;
+            Type = Camera::Type::Perspective;
+            UpVector = { 0.f, 1.f, 0.f };
+            FieldOfView = 0.25f;
+            AspectRatio = 16.f / 10.f;
+            NearZ = 0.001f;
+            FarZ = 10000.f;
+        }
+    };
+
+    struct OrthographicCameraInitInfo : public CameraInitInfo
+    {
+        explicit OrthographicCameraInitInfo(ID::IDType entityID)
+        {
+            assert(ID::IsValid(entityID));
+            EntityID = entityID;
+            Type = Camera::Type::Orthographic;
+            UpVector = { 0.f, 1.f, 0.f };
+            ViewWidth = 1920;
+            ViewHeight = 1080;
+            NearZ = 0.001f;
+            FarZ = 10000.f;
+        }
+    };
+
+    Camera CreateCamera(CameraInitInfo info);
+    void RemoveCamera(CameraID id);
 }

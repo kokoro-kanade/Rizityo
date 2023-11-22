@@ -85,15 +85,15 @@ namespace Rizityo::GameEntity
 
 	Transform::Component Entity::GetTransformComponent() const
 	{
-		assert(IsAlive(ID));
-		const ID::IDType index{ ID::GetIndex(ID) };
+		assert(IsAlive(_ID));
+		const ID::IDType index{ ID::GetIndex(_ID) };
 		return TransformComponents[index];
 	}
 
 	Script::Component Entity::GetScriptComponent() const
 	{
-		assert(IsAlive(ID));
-		const ID::IDType index{ ID::GetIndex(ID) };
+		assert(IsAlive(_ID));
+		const ID::IDType index{ ID::GetIndex(_ID) };
 		return ScriptComponents[index];
 	}
 }

@@ -8,13 +8,13 @@ namespace Rizityo::Script
 	class Component final
 	{
 	public:
-		constexpr explicit Component(ScriptID id) : ID{ id } {}
-		constexpr Component() : ID{ ID::INVALID_ID } {}
-		constexpr ScriptID GetID() const { return ID; }
-		constexpr bool IsValid() const { return ID::IsValid(ID); }
+		constexpr explicit Component(ScriptID id) : _ID{ id } {}
+		constexpr Component() : _ID{ ID::INVALID_ID } {}
+		constexpr ScriptID ID() const { return _ID; }
+		constexpr bool IsValid() const { return ID::IsValid(_ID); }
 
 	private:
-		ScriptID ID;
+		ScriptID _ID;
 	};
 
 

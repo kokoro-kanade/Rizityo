@@ -109,7 +109,7 @@ namespace Rizityo::Content
             assert(lodCount);
 
             GeometryHierarchyStream stream{ hierarchyBuffer, lodCount };
-            uint16 submeshIndex = 0;
+            uint32 submeshIndex = 0;
             ID::IDType* const gpuIDs = stream.GPU_IDs();
 
             for (uint32 lodIndex = 0; lodIndex < lodCount; lodIndex++)
@@ -118,7 +118,7 @@ namespace Rizityo::Content
                 const uint32 idCount = reader.Read<uint32>();
                 assert(idCount < (1 << 16));
 
-                stream.LOD_Offsets()[lodIndex] = { submeshIndex, (uint16)idCount };
+                stream.LOD_Offsets()[lodIndex] = { (uint16)submeshIndex, (uint16)idCount };
                 reader.Skip(sizeof(uint32)); // SizeOfSubmeshes‚Í–³Ž‹
                 for (uint32 idIndex = 0; idIndex < idCount; ++idIndex)
                 {

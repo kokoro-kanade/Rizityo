@@ -8,17 +8,18 @@ namespace Rizityo::Transform
 	class Component final
 	{
 	public:
-		constexpr explicit Component(TransformID id) : ID{ id } {}
-		constexpr Component() : ID{ ID::INVALID_ID } {}
-		constexpr TransformID GetID() const { return ID; }
-		constexpr bool IsValid() const { return ID::IsValid(ID); }
+		constexpr explicit Component(TransformID id) : _ID{ id } {}
+		constexpr Component() : _ID{ ID::INVALID_ID } {}
+		constexpr TransformID ID() const { return _ID; }
+		constexpr bool IsValid() const { return ID::IsValid(_ID); }
 
-		Math::Vector3 GetPosition() const;
-		Math::Vector4 GetRotation() const;
-		Math::Vector3 GetScale() const;
+		Math::Vector3 Position() const;
+		Math::Vector4 Rotation() const;
+		Math::Vector3 Orientation() const;
+		Math::Vector3 Scale() const;
 
 	private:
-		TransformID ID;
+		TransformID _ID;
 	};
 
 

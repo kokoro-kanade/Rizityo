@@ -86,7 +86,7 @@ namespace Rizityo::Script
 
 		assert(ID::IsValid(id));
 		EntityScripts.emplace_back(info.CreateFunc(entity));
-		assert(EntityScripts.back()->GetID() == entity.GetID());
+		assert(EntityScripts.back()->ID() == entity.ID());
 		const ID::IDType entityScriptIndex{ (ID::IDType)EntityScripts.size() - 1 };
 		IdMapping[ID::GetIndex(id)] = entityScriptIndex;
 		return Component{ id };
@@ -94,10 +94,10 @@ namespace Rizityo::Script
 
 	void RemoveComponent(Script::Component component)
 	{
-		assert(component.IsValid() && Exists(component.GetID()));
-		const ScriptID id{ component.GetID() };
+		assert(component.IsValid() && Exists(component.ID()));
+		const ScriptID id{ component.ID() };
 		const ID::IDType scriptEntityIndex{ IdMapping[ID::GetIndex(id)] };
-		const ScriptID lastId{ (scriptEntityIndex != EntityScripts.size()-1) ? EntityScripts.back()->GetScriptComponent().GetID() : id };
+		const ScriptID lastId{ (scriptEntityIndex != EntityScripts.size()-1) ? EntityScripts.back()->GetScriptComponent().ID() : id };
 		Utility::EraseUnordered(EntityScripts, scriptEntityIndex);
 		IdMapping[ID::GetIndex(lastId)] = scriptEntityIndex; 
 		IdMapping[ID::GetIndex(id)] = ID::INVALID_ID; // —v‘f‚ªˆê‚Â‚ÌŽž‚Íid == lastId‚È‚Ì‚Åinvalid_id‚Ì‘ã“ü‚ªŒã

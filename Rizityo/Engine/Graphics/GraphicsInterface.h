@@ -1,7 +1,6 @@
 #pragma once
 #include "CommonHeaders.h"
 #include "Renderer.h"
-#include "Platform/Window.h"
 
 namespace Rizityo::Graphics
 {
@@ -10,7 +9,8 @@ namespace Rizityo::Graphics
 		bool(*Initialize)(void);
 		void(*Shutdown)(void);
 
-		struct {
+		struct
+		{
 			Surface(*Create)(Platform::Window);
 			void(*Remove)(SurfaceID);
 			void(*Resize)(SurfaceID, uint32, uint32);
@@ -19,10 +19,19 @@ namespace Rizityo::Graphics
 			void(*Render)(SurfaceID);
 		} Surface;
 
-		struct {
+		struct
+		{
 			ID::IDType(*AddSubmesh)(const uint8*&);
 			void (*RemoveSubmesh)(ID::IDType);
 		} Resources;
+
+		struct
+		{
+			Camera(*Create)(CameraInitInfo);
+			void(*Remove)(CameraID);
+			void(*SetParameter)(CameraID, CameraParameter::Parameter, const void* const, uint32);
+			void(*GetParameter)(CameraID, CameraParameter::Parameter, OUT void* const, uint32);
+		} Camera;
 
 		GraphicsPlatform Platform = (GraphicsPlatform)-1;
 	};

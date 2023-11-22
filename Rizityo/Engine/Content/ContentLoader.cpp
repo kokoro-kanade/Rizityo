@@ -144,7 +144,7 @@ namespace Rizityo::Content
 	{
 		for (auto&& entity : entities)
 		{
-			GameEntity::RemoveGameEnity(entity.GetID());
+			GameEntity::RemoveGameEnity(entity.ID());
 		}
 	}
 

@@ -2,6 +2,7 @@
 #include "D3D12Interface.h"
 #include "D3D12Core.h"
 #include "D3D12Content.h"
+#include "D3D12Camera.h"
 #include "Graphics/GraphicsInterface.h"
 
 namespace Rizityo::Graphics::D3D12
@@ -20,6 +21,11 @@ namespace Rizityo::Graphics::D3D12
 
 		graphicsInterface.Resources.AddSubmesh = Content::Submesh::Add;
 		graphicsInterface.Resources.RemoveSubmesh = Content::Submesh::Remove;
+
+		graphicsInterface.Camera.Create = Camera::CreateCamera;
+		graphicsInterface.Camera.Remove = Camera::RemoveCamera;
+		graphicsInterface.Camera.SetParameter = Camera::SetParameter;
+		graphicsInterface.Camera.GetParameter = Camera::GetParameter;
 
 		graphicsInterface.Platform = GraphicsPlatform::Direct3D12;
 	}
