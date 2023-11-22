@@ -35,6 +35,15 @@ namespace Editor.Content
         Colors = 0x08
     }
 
+    enum PrimitveTopology
+    {
+        PointList = 1,
+        LineList,
+        LineStrip,
+        TriangleList,
+        TriangleStrip,
+    }
+
     class Mesh : ViewModelBase
     {
         private string _name;
@@ -109,6 +118,7 @@ namespace Editor.Content
             }
         }
         public ElementsType ElementsType { get; set; }
+        public PrimitveTopology PrimitveTopology { get; set; }
         public byte[] Positions { get; set; }
         public byte[] Elements { get; set; }
         public byte[] Indices { get; set; }
@@ -323,6 +333,7 @@ namespace Editor.Content
             var lodId = reader.ReadInt32();
             mesh.ElementSize = reader.ReadInt32();
             mesh.ElementsType = (ElementsType)reader.ReadInt32();
+            mesh.PrimitveTopology = PrimitveTopology.TriangleList; // 今のところAssetToolがサポートするのはTriangle Listのみ
             mesh.VertexCount = reader.ReadInt32();
             mesh.IndexSize = reader.ReadInt32();
             mesh.IndexCount = reader.ReadInt32();
@@ -430,6 +441,7 @@ namespace Editor.Content
                 writer.Write(mesh.Name);
                 writer.Write(mesh.ElementSize);
                 writer.Write((int)mesh.ElementsType);
+                writer.Write((int)mesh.PrimitveTopology);
                 writer.Write(mesh.VertexCount);
                 writer.Write(mesh.IndexSize);
                 writer.Write(mesh.IndexCount);
@@ -459,6 +471,7 @@ namespace Editor.Content
                     Name = reader.ReadString(),
                     ElementSize = reader.ReadInt32(),
                     ElementsType = (ElementsType)reader.ReadInt32(),
+                    PrimitveTopology = (PrimitveTopology)reader.ReadInt32(),
                     VertexCount = reader.ReadInt32(),
                     IndexSize = reader.ReadInt32(),
                     IndexCount = reader.ReadInt32()
@@ -573,6 +586,9 @@ namespace Editor.Content
                     _lodGroups.Add(lodGroup);
                 }
 
+                // テスト用
+                // PackForEngine();
+
             }
             catch (Exception ex)
             {
@@ -640,6 +656,78 @@ namespace Editor.Content
             }
 
             return savedFiles;
+        }
+
+        /// <summary>
+        /// ジオメトリをエンジンで使えるようにバイト列にパック
+        /// </summary>
+        /// <returns>
+        /// 以下のバイト列
+        /// struct{
+        ///     uint32 LODCount,
+        ///     struct {
+        ///         f32 LODThreshold,
+        ///         uint32 SubmeshCount,
+        ///         uint32 SizeOfSubmeshes,
+        ///         struct {
+        ///             uint32 ElementSize, uint32 VertexCount,
+        ///             uint32 IndexCount, uint32 ElementsType, uint32 PrimitiveTopology
+        ///             uint8 Positions[sizeof(float32) * 3 * VertexCount],     // sizeof(Positions)は4バイトの倍数(必要ならパディング)
+        ///             uint8 Elements[sizeof(ElementSize) * VertexCount], // sizeof(Elements)は4バイトの倍数(必要ならパディング)
+        ///             uint8 Indices[IndexSize * IndexCount]
+        ///         } Submeshes[SubmeshCount]
+        ///     } MeshLODs[LODCount]
+        /// } Geometry;
+        /// </returns>
+        public override byte[] PackForEngine()
+        {
+            using var writer = new BinaryWriter(new MemoryStream());
+
+            writer.Write(GetLODGroup().LODs.Count);
+            foreach (var lod in GetLODGroup().LODs)
+            {
+                writer.Write(lod.LODThreshold);
+                writer.Write(lod.Meshes.Count);
+                var sizeOfSubmeshesPosition = writer.BaseStream.Position;
+                writer.Write(0);
+                foreach (var mesh in lod.Meshes)
+                {
+                    writer.Write(mesh.ElementSize);
+                    writer.Write(mesh.VertexCount);
+                    writer.Write(mesh.IndexCount);
+                    writer.Write((int)mesh.ElementsType);
+                    writer.Write((int)mesh.PrimitveTopology);
+
+                    var alignedPositionBuffer = new byte[MathUtil.AlignSizeUp(mesh.Positions.Length, 4)];
+                    Array.Copy(mesh.Positions, alignedPositionBuffer, mesh.Positions.Length);
+                    var alignedElementBuffer = new byte[MathUtil.AlignSizeUp(mesh.Elements.Length, 4)];
+                    Array.Copy(mesh.Elements, alignedElementBuffer, mesh.Elements.Length);
+
+                    writer.Write(alignedPositionBuffer);
+                    writer.Write(alignedElementBuffer);
+                    writer.Write(mesh.Indices); // アラインメントする必要はない
+                }
+
+                var endOfSubmeshes = writer.BaseStream.Position;
+                var sizeOfSubmeshes = (int)(endOfSubmeshes - sizeOfSubmeshesPosition - sizeof(int));
+
+                writer.BaseStream.Position = sizeOfSubmeshesPosition;
+                writer.Write(sizeOfSubmeshes);
+                writer.BaseStream.Position = endOfSubmeshes;
+            }
+
+            writer.Flush();
+            var data = (writer.BaseStream as MemoryStream)?.ToArray();
+            Debug.Assert(data?.Length > 0);
+
+            // For Testing. Remove later!
+            using (var fs = new FileStream(@"..\..\Test\test.model", FileMode.Create))
+            {
+                fs.Write(data, 0, data.Length);
+            }
+            // For Testing. Remove later!
+
+            return data;
         }
 
         public Geometry() : base(AssetType.Mesh) { }

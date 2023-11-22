@@ -57,9 +57,9 @@ namespace Editor.Content
         public static string AssetFileExtension => ".rasset";
 
         public abstract void Import(string filePath);
-
         public abstract void Load(string filePath);
         public abstract IEnumerable<string> Save(string filePath);
+        public abstract byte[] PackForEngine();
 
         private static AssetInfo GetAssetInfo(BinaryReader reader)
         {

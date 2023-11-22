@@ -19,6 +19,7 @@ namespace Rizityo::Utility {
         template<typename T>
         [[nodiscard]] T Read()
         {
+            static_assert(std::is_arithmetic_v<T>, "Template argument should be a primitve type.");
             T value{ *((T*)_Position) };
             _Position += sizeof(T);
             return value;
@@ -31,14 +32,14 @@ namespace Rizityo::Utility {
             _Position += length;
         }
 
-        void skip(size_t offset)
+        void Skip(size_t offset)
         {
             _Position += offset;
         }
 
-        [[nodiscard]] constexpr const uint8* const buffer_start() const { return _Buffer; }
-        [[nodiscard]] constexpr const uint8* const position() const { return _Position; }
-        [[nodiscard]] constexpr size_t offset() const { return _Position - _Buffer; }
+        [[nodiscard]] constexpr const uint8* const BufferStart() const { return _Buffer; }
+        [[nodiscard]] constexpr const uint8* const Position() const { return _Position; }
+        [[nodiscard]] constexpr size_t Offset() const { return _Position - _Buffer; }
 
     private:
         const uint8* const _Buffer;
@@ -61,6 +62,7 @@ namespace Rizityo::Utility {
         template<typename T>
         void Write(T value)
         {
+            static_assert(std::is_arithmetic_v<T>, "Template argument should be a primitve type.");
             assert(&_Position[sizeof(T)] <= &_Buffer[_BufferSize]);
             *((T*)_Position) = value;
             _Position += sizeof(T);

@@ -60,6 +60,16 @@ namespace Rizityo::Graphics
 		graphicsInterface.Surface.Remove(id);
 	}
 
+	ID::IDType AddSubmesh(const uint8*& data)
+	{
+		return graphicsInterface.Resources.AddSubmesh(data);
+	}
+
+	void RemoveSubmesh(ID::IDType id)
+	{
+		graphicsInterface.Resources.RemoveSubmesh(id);
+	}
+
 	const char* GetEngineShadersPath()
 	{
 		
@@ -94,4 +104,5 @@ namespace Rizityo::Graphics
 		assert(IsValid());
 		graphicsInterface.Surface.Render(_ID);
 	}
+
 }

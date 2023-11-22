@@ -3,6 +3,7 @@
 #include "D3D12Shader.h"
 #include "D3D12GeometryPass.h"
 #include "D3D12PostProcess.h"
+#include "D3D12Upload.h"
 
 using namespace Microsoft::WRL;
 
@@ -62,6 +63,8 @@ namespace Rizityo::Graphics::D3D12::Core
 
 				_FenceEvent = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
 				assert(_FenceEvent);
+				if (!_FenceEvent)
+					goto _error;
 
 				return;
 
@@ -128,9 +131,9 @@ namespace Rizityo::Graphics::D3D12::Core
 				}
 			}
 
-			constexpr ID3D12CommandQueue* const CommandQueue() const { return _CmdQueue; }
-			constexpr ID3D12GraphicsCommandList* const CommandList() const { return _CmdList; }
-			constexpr uint32 FrameIndex() const { return _FrameIndex; }
+			[[nodiscard]] constexpr ID3D12CommandQueue* const CommandQueue() const { return _CmdQueue; }
+			[[nodiscard]] constexpr ID3D12GraphicsCommandList* const CommandList() const { return _CmdList; }
+			[[nodiscard]] constexpr uint32 FrameIndex() const { return _FrameIndex; }
 
 		private:
 			struct CommandFrame
@@ -339,7 +342,10 @@ namespace Rizityo::Graphics::D3D12::Core
 			return FailedInit();
 
 		// モジュールの初期化
-		if (!(Shader::Initialize() && GPass::Initialize() && Post::Initialize()))
+		if (!(Shader::Initialize() &&
+			  GPass::Initialize() && 
+			  Post::Initialize() &&
+			  Upload::Initialize()))
 			return FailedInit();
 
 		SET_NAME_D3D12_OBJECT(MainDevice, L"Main D3D12 Device");
@@ -357,6 +363,7 @@ namespace Rizityo::Graphics::D3D12::Core
 		}
 
 		// モジュールのシャットダウン
+		Upload::Shutdown();
 		Post::Shutdown();
 		GPass::Shutdown();
 		Shader::Shutdown();

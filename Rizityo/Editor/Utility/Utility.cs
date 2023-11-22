@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using System.Windows.Threading;
 
 namespace Editor.Utility
@@ -27,6 +25,24 @@ namespace Editor.Utility
             if (!value.HasValue || !other.HasValue)
                 return false;
             return Math.Abs(value.Value - other.Value) < Epsilon;
+        }
+
+        // size以上のalignmentの倍数に変換
+        public static long AlignSizeUp(long size, long alignment)
+        {
+            Debug.Assert(alignment > 0, "アラインメントはゼロでない必要があります");
+            long mask = alignment - 1;
+            Debug.Assert((alignment & mask) == 0, "アラインメントは2のべき乗である必要があります");
+            return ((size + mask) & ~mask);
+        }
+
+        // size以下のalignmentの倍数に変換
+        public static long AlignSizeDown(long size, long alignment)
+        {
+            Debug.Assert(alignment > 0, "アラインメントはゼロでない必要があります");
+            long mask = alignment - 1;
+            Debug.Assert((alignment & mask) == 0, "アラインメントは2のべき乗である必要があります");
+            return (size & ~mask);
         }
     }
 

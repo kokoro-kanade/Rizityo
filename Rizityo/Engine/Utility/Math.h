@@ -42,4 +42,24 @@ namespace Rizityo::Math
 		assert(min < max);
 		return min + UnPackToUnitFloat<bits>(ui) * (max - min);
 	}
+
+	// size以上のalignmentの倍数に変換
+	template<uint64 Alignment>
+	[[nodiscard]] constexpr uint64 AlignSizeUp(uint64 size)
+	{
+		static_assert(Alignment, "アラインメントはゼロでない必要があります");
+		constexpr uint64 mask{ Alignment - 1 };
+		static_assert(!(Alignment & mask), "アラインメントは2のべき乗である必要があります");
+		return ((size + mask) & ~mask);
+	}
+
+	// size以下のalignmentの倍数に変換
+	template<uint64 Alignment>
+	[[nodiscard]] constexpr uint64 AlignSizeDown(uint64 size)
+	{
+		static_assert(Alignment, "アラインメントはゼロでない必要があります");
+		constexpr uint64 mask{ Alignment - 1 };
+		static_assert(!(Alignment & mask), "アラインメントは2のべき乗である必要があります");
+		return (size & ~mask);
+	}
 }

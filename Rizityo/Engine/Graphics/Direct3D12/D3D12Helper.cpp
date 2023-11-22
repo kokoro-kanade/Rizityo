@@ -1,5 +1,6 @@
 #include "D3D12Helper.h"
 #include "D3D12Core.h"
+#include "D3D12Upload.h"
 
 namespace Rizityo::Graphics::D3D12::Helper
 {
@@ -71,5 +72,77 @@ namespace Rizityo::Graphics::D3D12::Helper
 		desc.SizeInBytes = stereamSize;
 		desc.pPipelineStateSubobjectStream = stream;
 		return CreatePipelineState(desc);
+	}
+
+	ID3D12Resource* CreateBuffer(const void* data, uint32 bufferSize, bool isCPU_Accessible /* = false */,
+								  D3D12_RESOURCE_STATES state /* = D3D12_RESOURCE_STATE_COMMON */,
+								  D3D12_RESOURCE_FLAGS flags /* = D3D12_RESOURCE_FLAG_NONE */,
+								  ID3D12Heap* heap /* = nullptr */, uint64 heapOffset /* = 0 */)
+	{
+		assert(bufferSize);
+
+		D3D12_RESOURCE_DESC desc{};
+		desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		desc.Alignment = 0;
+		desc.Width = bufferSize;
+		desc.Height = 1;
+		desc.DepthOrArraySize = 1;
+		desc.MipLevels = 1;
+		desc.Format = DXGI_FORMAT_UNKNOWN;
+		desc.SampleDesc = { 1,0 };
+		desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		desc.Flags = isCPU_Accessible ? D3D12_RESOURCE_FLAG_NONE : flags;
+
+		// バッファはアップロードあるいは定数バッファ/UAVとして使われる
+		assert(desc.Flags == D3D12_RESOURCE_FLAG_NONE ||
+			desc.Flags == D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
+		ID3D12Resource* resource = nullptr;
+		const D3D12_RESOURCE_STATES resourceState
+		{ 
+			isCPU_Accessible ? D3D12_RESOURCE_STATE_GENERIC_READ : state
+		};
+
+		if (heap)
+		{
+			DXCall(Core::GetMainDevice()->CreatePlacedResource(
+				heap, heapOffset, &desc, resourceState,
+				nullptr, IID_PPV_ARGS(&resource)));
+		}
+		else
+		{
+			DXCall(Core::GetMainDevice()->CreateCommittedResource(
+				isCPU_Accessible ? &HeapProperties.UploadHeap : &HeapProperties.DefaultHeap,
+				D3D12_HEAP_FLAG_NONE, &desc, resourceState,
+				nullptr, IID_PPV_ARGS(&resource)));
+		}
+
+		if (data)
+		{
+			// 後に変更するデータの場合はisCPU_Accessibleをtrueに
+			// GPU用に一回アップロードするだけの場合はisCPU_Accessibleをfalseに
+			if (isCPU_Accessible)
+			{
+				// rangeのBeginとEndを0にすることでCPUは読み込みできないことを表している
+				const D3D12_RANGE range{};
+				void* cpuAddress = nullptr;
+				DXCall(resource->Map(0, &range, reinterpret_cast<void**>(&cpuAddress)));
+				assert(cpuAddress);
+
+				memcpy(cpuAddress, data, bufferSize);
+				resource->Unmap(0, nullptr);
+			}
+			else
+			{
+				Upload::D3D12UploadContext context{ bufferSize };
+				memcpy(context.CPU_Address(), data, bufferSize);
+				context.CommandList()->CopyResource(resource, context.UploadBuffer());
+				context.EndUpload();
+			}
+		}
+
+		assert(resource);
+
+		return resource;
 	}
 }

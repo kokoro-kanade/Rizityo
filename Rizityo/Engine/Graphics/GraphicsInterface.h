@@ -19,6 +19,11 @@ namespace Rizityo::Graphics
 			void(*Render)(SurfaceID);
 		} Surface;
 
+		struct {
+			ID::IDType(*AddSubmesh)(const uint8*&);
+			void (*RemoveSubmesh)(ID::IDType);
+		} Resources;
+
 		GraphicsPlatform Platform = (GraphicsPlatform)-1;
 	};
 }

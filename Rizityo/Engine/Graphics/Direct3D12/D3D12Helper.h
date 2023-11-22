@@ -13,6 +13,15 @@ namespace Rizityo::Graphics::D3D12::Helper
 			0,												// CreationNodeMask
 			0												// VisibleNodeMask
 		};
+
+		const D3D12_HEAP_PROPERTIES UploadHeap{
+			D3D12_HEAP_TYPE_UPLOAD,                         // Type
+			D3D12_CPU_PAGE_PROPERTY_UNKNOWN,                // CPUPageProperty
+			D3D12_MEMORY_POOL_UNKNOWN,                      // MemoryPoolPreference
+			0,                                              // CreationNodeMask
+			0                                               // VisibleNodeMask
+		};
+
 	} HeapProperties ;
 
 	constexpr struct
@@ -309,4 +318,9 @@ namespace Rizityo::Graphics::D3D12::Helper
 
 	ID3D12PipelineState* CreatePipelineState(D3D12_PIPELINE_STATE_STREAM_DESC desc);
 	ID3D12PipelineState* CreatePipelineState(void* stream, uint64 stereamSize);
+
+	ID3D12Resource* CreateBuffer(const void* data, uint32 bufferSize, bool isCPU_Accessible = false,
+								  D3D12_RESOURCE_STATES state = D3D12_RESOURCE_STATE_COMMON,
+								  D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE,
+								  ID3D12Heap* heap = nullptr, uint64 heapOffset = 0);
 }

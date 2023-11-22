@@ -1,6 +1,7 @@
+#include "CommonHeaders.h"
 #include "D3D12Interface.h"
 #include "D3D12Core.h"
-#include "CommonHeaders.h"
+#include "D3D12Content.h"
 #include "Graphics/GraphicsInterface.h"
 
 namespace Rizityo::Graphics::D3D12
@@ -16,6 +17,9 @@ namespace Rizityo::Graphics::D3D12
 		graphicsInterface.Surface.Width = Core::GetSurfaceWidth;
 		graphicsInterface.Surface.Height = Core::GetSurfaceHeight;
 		graphicsInterface.Surface.Render = Core::RenderSurface;
+
+		graphicsInterface.Resources.AddSubmesh = Content::Submesh::Add;
+		graphicsInterface.Resources.RemoveSubmesh = Content::Submesh::Remove;
 
 		graphicsInterface.Platform = GraphicsPlatform::Direct3D12;
 	}

@@ -263,8 +263,8 @@ namespace Rizityo::AssetTool
 					FbxVector4 tangent = tangents->GetAt(i);
 					const float32 handedness = (float32)tangent[3]; // Úü‚Ì‘æ‚S¬•ª‚É‰Eè/¶èÀ•WŒn‚Ìî•ñ‚ª“ü‚Á‚Ä‚¢‚é
 					tangent[3] = 0.0;
+					tangent = transform.MultT(tangent);
 					tangent.Normalize();
-					tangent = inverse_transpose.MultT(tangent);
 					mesh.Tangents.emplace_back(static_cast<float32>(tangent[0]), static_cast<float32>(tangent[1]), static_cast<float32>(tangent[2]), handedness);
 				}
 			}

@@ -2,11 +2,58 @@
 #include "../Platform/PlatformTypes.h"
 #include "../Platform/Platform.h"
 #include "../Graphics/Renderer.h"
+#include "../Graphics/Direct3D12/D3D12Core.h"
+#include "../Content/ContentToEngine.h"
 #include "ShaderCompile.h"
+#include <filesystem>
+#include <fstream>
 
 #if TEST_RENDERER
 
 using namespace Rizityo;
+
+#define ENABLE_TEST_WORKERS 1
+
+constexpr uint32 NumThreads = 4;
+bool Shutdown = false;
+std::thread Workers[NumThreads];
+
+Utility::Vector<uint8> Buffer(1024 * 1024, 0);
+
+// uploadのテスト用ワーカー
+void BufferTestWorker()
+{
+	while (!Shutdown)
+	{
+		auto* resource = Graphics::D3D12::Helper::CreateBuffer(Buffer.data(), (uint32)Buffer.size());
+		Graphics::D3D12::Core::DeferredRelease(resource);
+	}
+}
+
+template<class FuncPtr, class... Args>
+void InitTestWorkers(FuncPtr&& funcPtr, Args&&... args)
+{
+#if ENABLE_TEST_WORKERS
+	Shutdown = false;
+	for (auto& w : Workers)
+	{
+		w = std::thread(std::forward<FuncPtr>(funcPtr), std::forward<Args>(args)...);
+	}
+#endif
+}
+
+void JointTestWorkers()
+{
+#if ENABLE_TEST_WORKERS
+	Shutdown = true;
+	for (auto& w : Workers)
+	{
+		w.join();
+	}
+#endif
+}
+
+ID::IDType ModelID{ ID::INVALID_ID };
 
 Graphics::RenderSurface Surfaces[4];
 
@@ -95,6 +142,28 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
+bool ReadFile(std::filesystem::path path, OUT std::unique_ptr<uint8[]>& data, OUT uint64& size)
+{
+	if (!std::filesystem::exists(path))
+		return false;
+
+	size = std::filesystem::file_size(path);
+	assert(size);
+	if (!size)
+		return false;
+
+	data = std::make_unique<uint8[]>(size);
+	std::ifstream file{ path, std::ios::in | std::ios::binary };
+	if (!file || !file.read((char*)data.get(), size))
+	{
+		file.close();
+		return false;
+	}
+
+	file.close();
+	return true;
+}
+
 void CreateRenderSurface(Graphics::RenderSurface& renderSurface, Platform::WindowInitInfo info)
 {
 	renderSurface.Window = Platform::CreateMyWindow(&info);
@@ -140,6 +209,18 @@ bool TestInitialize()
 		CreateRenderSurface(Surfaces[i], info[i]);
 	}
 
+	// テストモデルのロード
+	std::unique_ptr<uint8[]> model;
+	uint64 size = 0;
+	if (!ReadFile("..\\..\\Test\\test.model", model, size))
+		return false;
+
+	ModelID = Content::CreateResource(model.get(), Content::AssetType::Mesh);
+	if (!ID::IsValid(ModelID))
+		return false;
+
+	InitTestWorkers(BufferTestWorker);
+
 	IsRestarting = false;
 	return true;
 }
@@ -163,6 +244,13 @@ void EngineTest::Run()
 
 void TestShutdown()
 {
+	JointTestWorkers();
+
+	if (ID::IsValid(ModelID))
+	{
+		Content::DestroyResource(ModelID, Content::AssetType::Mesh);
+	}
+
 	for (uint32 i = 0; i < _countof(Surfaces); i++)
 	{
 		DestroyRenderSurface(Surfaces[i]);

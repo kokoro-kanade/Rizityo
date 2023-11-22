@@ -38,12 +38,14 @@ namespace Rizityo::Graphics
 	};
 
 	bool Initialize(GraphicsPlatform platform);
-	void Render();
 	void Shutdown();
 
 	// TODO?: ï ÇÃÉwÉbÉ_Å[Ç…èëÇ≠Ç©Ç«Ç§Ç©
 	Surface CreateSurface(Platform::Window window);
 	void RemoveSurface(SurfaceID id);
+
+	ID::IDType AddSubmesh(const uint8*& data);
+	void RemoveSubmesh(ID::IDType id);
 
 	const char* GetEngineShadersPath();
 	const char* GetEngineShadersPath(GraphicsPlatform platform);
