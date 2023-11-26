@@ -720,12 +720,11 @@ namespace Editor.Content
             var data = (writer.BaseStream as MemoryStream)?.ToArray();
             Debug.Assert(data?.Length > 0);
 
-            // For Testing. Remove later!
+            // テスト用
             using (var fs = new FileStream(@"..\..\Test\test.model", FileMode.Create))
             {
                 fs.Write(data, 0, data.Length);
             }
-            // For Testing. Remove later!
 
             return data;
         }

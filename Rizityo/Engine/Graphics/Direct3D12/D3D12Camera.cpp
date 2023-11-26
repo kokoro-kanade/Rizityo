@@ -226,9 +226,9 @@ namespace Rizityo::Graphics::D3D12::Camera
         using namespace DirectX;
         Math::Vector3 pos{ entity.GetTransformComponent().Position() };
         Math::Vector3 dir{ entity.GetTransformComponent().Orientation() };
-        XMVECTOR position{ XMLoadFloat3(&pos) };
-        XMVECTOR direction{ XMLoadFloat3(&dir) };
-        _View = XMMatrixLookToRH(position, direction, _UpVector);
+        _Position = XMLoadFloat3(&pos);
+        _Direction = XMLoadFloat3(&dir);
+        _View = XMMatrixLookToRH(_Position, _Direction, _UpVector);
 
         if (_UpdateFlag)
         {
@@ -304,17 +304,23 @@ namespace Rizityo::Graphics::D3D12::Camera
     void SetParameter(CameraID id, CameraParameter::Parameter parameter, const void* const data, uint32 data_size)
     {
         assert(data && data_size);
-        assert(parameter < CameraParameter::Count);
         D3D12Camera& camera{ GetCamera(id) };
-        SetFunctions[parameter](camera, data, data_size);
+        assert(parameter < CameraParameter::Count);
+        if (parameter < CameraParameter::Count)
+        {
+            SetFunctions[parameter](camera, data, data_size);
+        }
     }
 
     void GetParameter(CameraID id, CameraParameter::Parameter parameter, void* const data, uint32 data_size)
     {
         assert(data && data_size);
-        assert(parameter < CameraParameter::Count);
         D3D12Camera& camera{ GetCamera(id) };
-        GetFunctions[parameter](camera, data, data_size);
+        assert(parameter < CameraParameter::Count);
+        if (parameter < CameraParameter::Count)
+        {
+            GetFunctions[parameter](camera, data, data_size);
+        }
     }
 
     D3D12Camera& GetCamera(CameraID id)

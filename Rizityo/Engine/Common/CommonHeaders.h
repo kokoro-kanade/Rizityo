@@ -1,14 +1,17 @@
 #pragma once
 
+#ifdef _WIN64
 #pragma warning(disable: 4530) // —áŠO‚ÌŒx‚ğ–³‹
+#endif // _WIN64
 
 // C/C++
-#include <stdint.h>
+#include <cstdint>
 #include <assert.h>
 #include <typeinfo>
 #include <memory>
 #include <unordered_map>
 #include <mutex>
+#include <cstring>
 
 #if defined(_WIN64)
 #include <DirectXMath.h>

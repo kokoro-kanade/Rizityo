@@ -22,7 +22,7 @@ namespace Editor.GameDev
     static class VisualStudio
     {
         private static EnvDTE80.DTE2 _vsInstance = null;
-        private static readonly string _progId = "VisualStudio.DTE.16.0";
+        private static readonly string _progId = "VisualStudio.DTE.17.0";
 
         private static readonly ManualResetEventSlim _resetEvent = new ManualResetEventSlim(false);
         private static readonly object _lock = new object();
@@ -280,9 +280,9 @@ namespace Editor.GameDev
 
             CallOnSTAThread(() =>
             {
+                _vsInstance.MainWindow.Visible = showVSWindow;
                 if (!_vsInstance.Solution.IsOpen)
                     _vsInstance.Solution.Open(project.SolutionFilePath);
-                _vsInstance.MainWindow.Visible = showVSWindow;
 
                 _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBulidSolutionBegin;
                 _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBulidSolutionDone;

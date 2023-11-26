@@ -55,12 +55,17 @@ void JointTestWorkers()
 #endif
 }
 
-ID::IDType ModelID{ ID::INVALID_ID };
+ID::IDType TestModelID{ ID::INVALID_ID };
+ID::IDType TestItemID{ ID::INVALID_ID };
 
-Graphics::RenderSurface Surfaces[4];
+struct TestSurface
+{
+	Graphics::RenderSurface Surface;
+	GameEntity::Entity Entity{};
+	Graphics::Camera Camera{};
+};
 
-GameEntity::Entity TestEntity{};
-Graphics::Camera TestCamera{};
+TestSurface Surfaces[4];
 
 bool Resized = false;
 bool IsRestarting = false;
@@ -68,7 +73,10 @@ bool IsRestarting = false;
 bool TestInitialize();
 void TestShutdown();
 
-void DestroyRenderSurface(Graphics::RenderSurface& renderSurface);
+void DestroyTestSurface(OUT TestSurface& testSurface);
+
+ID::IDType CreateRenderItem(ID::IDType entityId);
+void DestroyRenderItem(ID::IDType itemId);
 
 LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -81,11 +89,11 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		bool allClosed = true;
 		for (uint32 i = 0; i < _countof(Surfaces); i++)
 		{
-			if (Surfaces[i].Window.IsValid())
+			if (Surfaces[i].Surface.Window.IsValid())
 			{
-				if (Surfaces[i].Window.IsClosed())
+				if (Surfaces[i].Surface.Window.IsClosed())
 				{
-					DestroyRenderSurface(Surfaces[i]);
+					DestroyTestSurface(Surfaces[i]);
 				}
 				else
 				{
@@ -126,7 +134,7 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		Platform::Window win{ Platform::WindowID{(ID::IDType)GetWindowLongPtr(hwnd,GWLP_USERDATA)} };
 		for (uint32 i = 0; i < _countof(Surfaces); i++)
 		{
-			if (win.ID() == Surfaces[i].Window.ID())
+			if (win.ID() == Surfaces[i].Surface.Window.ID())
 			{
 				if (toggleFullscreen)
 				{
@@ -135,7 +143,8 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				}
 				else
 				{
-					Surfaces[i].Surface.Resize(win.Width(), win.Height());
+					Surfaces[i].Surface.Surface.Resize(win.Width(), win.Height());
+					Surfaces[i].Camera.SetAspectRatio((float32)win.Width() / win.Height());
 					Resized = false;
 				}
 				break;
@@ -147,14 +156,20 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-GameEntity::Entity CreateOneGameEntity()
+GameEntity::Entity CreateTestGameEntity(bool isCamera)
 {
 	Transform::InitInfo transformInfo{};
-	Math::Vector3a rot{ 0, 3.14f, 0 };
+	Math::Vector3a rot{ 0, isCamera ? 3.14f : 0.f, 0 };
 	DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3A(&rot)) };
 	Math::Vector4a rotQuat;
 	DirectX::XMStoreFloat4A(&rotQuat, quat);
 	memcpy(&transformInfo.Rotation[0], &rotQuat.x, sizeof(transformInfo.Rotation));
+
+	if (isCamera)
+	{
+		transformInfo.Position[1] = 1.f;
+		transformInfo.Position[2] = 3.f;
+	}
 
 	GameEntity::EntityInfo entityInfo{};
 	entityInfo.Transform = &transformInfo;
@@ -185,23 +200,34 @@ bool ReadFile(std::filesystem::path path, OUT std::unique_ptr<uint8[]>& data, OU
 	return true;
 }
 
-void CreateRenderSurface(Graphics::RenderSurface& renderSurface, Platform::WindowInitInfo info)
+void CreateTestSurface(OUT TestSurface& testSurface, Platform::WindowInitInfo info)
 {
-	renderSurface.Window = Platform::CreateMyWindow(&info);
-	renderSurface.Surface = Graphics::CreateSurface(renderSurface.Window);
+	testSurface.Surface.Window = Platform::CreateMyWindow(&info);
+	testSurface.Surface.Surface = Graphics::CreateSurface(testSurface.Surface.Window);
+	testSurface.Entity = CreateTestGameEntity(true);
+	testSurface.Camera = Graphics::CreateCamera(Graphics::PerspectiveCameraInitInfo{ testSurface.Entity.ID() });
+	testSurface.Camera.SetAspectRatio((float32)testSurface.Surface.Window.Width() / testSurface.Surface.Window.Height());
 }
 
-void DestroyRenderSurface(Graphics::RenderSurface& renderSurface)
+void DestroyTestSurface(OUT TestSurface& testSurface)
 {
-	Graphics::RenderSurface tmp{ renderSurface };
-	renderSurface = {};
-	if (tmp.Surface.IsValid())
+	TestSurface tmp{ testSurface };
+	testSurface = {};
+	if (tmp.Surface.Surface.IsValid())
 	{
-		Graphics::RemoveSurface(tmp.Surface.ID());
+		Graphics::RemoveSurface(tmp.Surface.Surface.ID());
 	}
-	if (tmp.Window.IsValid())
+	if (tmp.Surface.Window.IsValid())
 	{
-		Platform::RemoveMyWindow(tmp.Window.ID());
+		Platform::RemoveMyWindow(tmp.Surface.Window.ID());
+	}
+	if (tmp.Camera.IsValid())
+	{
+		Graphics::RemoveCamera(tmp.Camera.ID());
+	}
+	if (tmp.Entity.IsValid())
+	{
+		GameEntity::RemoveGameEnity(tmp.Entity.ID());
 	}
 }
 
@@ -227,7 +253,7 @@ bool TestInitialize()
 
 	for (uint32 i = 0; i < _countof(Surfaces); i++)
 	{
-		CreateRenderSurface(Surfaces[i], info[i]);
+		CreateTestSurface(Surfaces[i], info[i]);
 	}
 
 	// テストモデルのロード
@@ -236,15 +262,13 @@ bool TestInitialize()
 	if (!ReadFile("..\\..\\Test\\test.model", model, size))
 		return false;
 
-	ModelID = Content::CreateResource(model.get(), Content::AssetType::Mesh);
-	if (!ID::IsValid(ModelID))
+	TestModelID = Content::CreateResource(model.get(), Content::AssetType::Mesh);
+	if (!ID::IsValid(TestModelID))
 		return false;
 
 	InitTestWorkers(BufferTestWorker);
 
-	TestEntity = CreateOneGameEntity();
-	TestCamera = Graphics::CreateCamera(Graphics::PerspectiveCameraInitInfo(TestEntity.ID()));
-	assert(TestCamera.IsValid());
+	TestItemID = CreateRenderItem(CreateTestGameEntity(false).ID());
 
 	IsRestarting = false;
 	return true;
@@ -260,35 +284,28 @@ void EngineTest::Run()
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	for (uint32 i = 0; i < _countof(Surfaces); i++)
 	{
-		if (Surfaces[i].Surface.IsValid())
+		if (Surfaces[i].Surface.Surface.IsValid())
 		{
-			Surfaces[i].Surface.Render();
+			float32 threshold = 10;
+			Surfaces[i].Surface.Surface.Render({&TestItemID, &threshold, 1, Surfaces[i].Camera.ID()});
 		}
 	}
 }
 
 void TestShutdown()
 {
-	if (TestCamera.IsValid())
-	{
-		Graphics::RemoveCamera(TestCamera.ID());
-	}
-
-	if (TestEntity.IsValid())
-	{
-		GameEntity::RemoveGameEnity(TestEntity.ID());
-	}
+	DestroyRenderItem(TestItemID);
 
 	JointTestWorkers();
 
-	if (ID::IsValid(ModelID))
+	if (ID::IsValid(TestModelID))
 	{
-		Content::DestroyResource(ModelID, Content::AssetType::Mesh);
+		Content::DestroyResource(TestModelID, Content::AssetType::Mesh);
 	}
 
 	for (uint32 i = 0; i < _countof(Surfaces); i++)
 	{
-		DestroyRenderSurface(Surfaces[i]);
+		DestroyTestSurface(Surfaces[i]);
 	}
 	Graphics::Shutdown();
 }

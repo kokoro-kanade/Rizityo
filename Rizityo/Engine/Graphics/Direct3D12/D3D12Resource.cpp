@@ -114,11 +114,56 @@ namespace Rizityo::Graphics::D3D12
 		handle = {};
 	}
 
+	// D3D12Buffer
+	D3D12Buffer::D3D12Buffer(D3D12BufferInitInfo info, bool isCPU_Accessible)
+	{
+		assert(!_Buffer && info.Size && info.Alignment);
+		_Size = (uint32)Math::AlignSizeUp(info.Size, info.Alignment);
+		_Buffer = Helper::CreateBuffer(info.Data, _Size, isCPU_Accessible, info.InitialState, info.Flags,
+									   info.Heap, info.AlocationInfo.Offset);
+		_GPU_Address = _Buffer->GetGPUVirtualAddress();
+		SET_NAME_D3D12_OBJECT_INDEXED(_Buffer, _Size, L"D3D12 Buffer - size");
+	}
+
+	void
+		D3D12Buffer::Release()
+	{
+		Core::DeferredRelease(_Buffer);
+		_GPU_Address = 0;
+		_Size = 0;
+	}
+
+	// Constant Buffer
+	ConstantBuffer::ConstantBuffer(D3D12BufferInitInfo info)
+		: _Buffer{ info, true }
+	{
+		SET_NAME_D3D12_OBJECT_INDEXED(Buffer(), Size(), L"Constant Buffer - size");
+
+		D3D12_RANGE range{};
+		DXCall(Buffer()->Map(0, &range, (void**)(&_CPU_Address)));
+		assert(_CPU_Address);
+	}
+
+	uint8* const ConstantBuffer::Allocate(uint32 size)
+	{
+		std::lock_guard lock{ _Mutex };
+		const uint32 alignedSize = (uint32)Helper::AlignSizeForConstantBuffer(size);
+		assert(_CPU_Offset + alignedSize <= _Buffer.Size());
+		if (_CPU_Offset + alignedSize <= _Buffer.Size())
+		{
+			uint8* const address = _CPU_Address + _CPU_Offset;
+			_CPU_Offset += alignedSize;
+			return address;
+		}
+
+		return nullptr;
+	}
+
 	// D3D12Texture
 
 	D3D12Texture::D3D12Texture(D3D12TextureInitInfo info)
 	{
-		auto* const device{ Core::GetMainDevice() };
+		auto* const device = Core::GetMainDevice();
 		assert(device);
 
 		D3D12_CLEAR_VALUE* const clearValue

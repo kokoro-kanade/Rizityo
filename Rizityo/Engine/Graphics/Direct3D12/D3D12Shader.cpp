@@ -1,30 +1,25 @@
 #include "D3D12Shader.h"
 #include "Content/ContentLoader.h"
+#include "Content/ContentToEngine.h"
 
 namespace Rizityo::Graphics::D3D12::Shader
 {
 	namespace
 	{
-		typedef struct CompiledShader
-		{
-			uint64 Size;
-			const uint8* ByteCode;
-		} const* CompiledShaderPtr;
-
 		// 各要素はShadersBlob内の位置を表す
-		CompiledShaderPtr EngineShaders[EngineShader::Count]{};
+		Content::CompiledShaderPtr EngineShaders[EngineShader::Count]{};
 
 		// すべてのコンパイルされたエンジンシェーダーのメモリ
-		// 一つ一つのシェーダーはサイズとそれに続くバイトコードからなる
-		std::unique_ptr<uint8[]> ShadersBlob{};
+		// 一つ一つのシェーダーはバイトコードのサイズとハッシュ列の長さとそれに続くバイトコードからなる
+		std::unique_ptr<uint8[]> EngineShadersBlob{};
 
 		bool LoadEngineShaders()
 		{
-			assert(!ShadersBlob);
+			assert(!EngineShadersBlob);
 
 			uint64 size = 0;
-			bool result = Content::LoadEngineShaders(ShadersBlob, size);
-			assert(ShadersBlob && size);
+			bool result = Content::LoadEngineShaders(EngineShadersBlob, size);
+			assert(EngineShadersBlob && size);
 
 			uint64 offset = 0;
 			uint32 index = 0;
@@ -32,15 +27,15 @@ namespace Rizityo::Graphics::D3D12::Shader
 			{
 				assert(index < EngineShader::Count);
 
-				CompiledShaderPtr& shader{ EngineShaders[index] };
+				Content::CompiledShaderPtr& shader{ EngineShaders[index] };
 				assert(!shader);
 
 				result &= index < EngineShader::Count && !shader;
 				if (!result)
 					break;
 
-				shader = reinterpret_cast<const CompiledShaderPtr>(&ShadersBlob[offset]);
-				offset += sizeof(uint64) + shader->Size;
+				shader = reinterpret_cast<const Content::CompiledShaderPtr>(&EngineShadersBlob[offset]);
+				offset += sizeof(uint64) + Content::CompiledShader::HashLength + shader->ByteCodeSize();
 				index++;
 			}
 			assert(offset == size && index == EngineShader::Count);
@@ -61,14 +56,14 @@ namespace Rizityo::Graphics::D3D12::Shader
 		{
 			EngineShaders[i] = {};
 		}
-		ShadersBlob.reset();
+		EngineShadersBlob.reset();
 	}
 
 	D3D12_SHADER_BYTECODE GetEngineShader(EngineShader::ID id)
 	{
 		assert(id < EngineShader::Count);
-		const CompiledShaderPtr shader = EngineShaders[id];
-		assert(shader && shader->Size);
-		return { &shader->ByteCode, shader->Size };
+		const Content::CompiledShaderPtr& shader = EngineShaders[id];
+		assert(shader && shader->ByteCodeSize());
+		return { shader->ByteCode(), shader->ByteCodeSize()};
 	}
 }

@@ -59,6 +59,146 @@ namespace Rizityo::Graphics::D3D12
 		std::mutex _Mutex{};
 	};
 
+	struct D3D12BufferInitInfo
+	{
+		ID3D12Heap1* Heap = nullptr;
+		const void* Data = nullptr;
+		D3D12_RESOURCE_ALLOCATION_INFO1 AlocationInfo{};
+		D3D12_RESOURCE_STATES InitialState{};
+		D3D12_RESOURCE_FLAGS Flags{ D3D12_RESOURCE_FLAG_NONE };
+		uint32 Size = 0;
+		uint32 Stride = 0;
+		uint32 ElementCount = 0;
+		uint32 Alignment = 0;
+		bool CreateUAV = false;
+	};
+
+	class D3D12Buffer
+	{
+	public:
+		D3D12Buffer() = default;
+
+		explicit D3D12Buffer(D3D12BufferInitInfo info, bool isCpuAccessible);
+
+		DISABLE_COPY(D3D12Buffer);
+
+		constexpr D3D12Buffer(D3D12Buffer&& o)
+			: _Buffer{ o._Buffer }, _GPU_Address{ o._GPU_Address }, _Size{ o._Size }
+		{
+			o.Reset();
+		}
+
+		constexpr D3D12Buffer& operator=(D3D12Buffer&& o)
+		{
+			assert(this != &o);
+			if (this != &o)
+			{
+				Release();
+				Move(o);
+			}
+
+			return *this;
+		}
+
+		~D3D12Buffer()
+		{ 
+			Release(); 
+		}
+
+		void Release();
+		[[nodiscard]] constexpr ID3D12Resource* const Buffer() const { return _Buffer; }
+		[[nodiscard]] constexpr D3D12_GPU_VIRTUAL_ADDRESS GPU_Address() const { return _GPU_Address; }
+		[[nodiscard]] constexpr uint32 Size() const { return _Size; }
+
+	private:
+		constexpr void Move(D3D12Buffer& o)
+		{
+			_Buffer = o._Buffer;
+			_GPU_Address = o._GPU_Address;
+			_Size = o._Size;
+			o.Reset();
+		}
+
+		constexpr void Reset()
+		{
+			_Buffer = nullptr;
+			_GPU_Address = 0;
+			_Size = 0;
+		}
+
+		ID3D12Resource* _Buffer = nullptr;
+		D3D12_GPU_VIRTUAL_ADDRESS _GPU_Address{ 0 };
+		uint32 _Size = 0;
+	};
+
+	class ConstantBuffer
+	{
+	public:
+		ConstantBuffer() = default;
+
+		explicit ConstantBuffer(D3D12BufferInitInfo info);
+
+		DISABLE_COPY_AND_MOVE(ConstantBuffer);
+
+		~ConstantBuffer()
+		{ 
+			Release(); 
+		}
+
+		void Release()
+		{
+			_Buffer.Release();
+			_CPU_Address = nullptr;
+			_CPU_Offset = 0;
+		}
+
+		constexpr void Clear()
+		{ 
+			_CPU_Offset = 0; 
+		}
+
+		[[nodiscard]] uint8* const Allocate(uint32 size);
+
+		template<typename T>
+		[[nodiscard]] T* const Allocate()
+		{
+			return (T* const)Allocate(sizeof(T));
+		}
+
+		[[nodiscard]] constexpr ID3D12Resource* const Buffer() const { return _Buffer.Buffer(); }
+		[[nodiscard]] constexpr D3D12_GPU_VIRTUAL_ADDRESS GPU_Address() const { return _Buffer.GPU_Address(); }
+		[[nodiscard]] constexpr uint32 Size() const { return _Buffer.Size(); }
+		[[nodiscard]] constexpr uint8* const CPU_Address() const { return _CPU_Address; }
+
+		template<typename T>
+		[[nodiscard]] constexpr D3D12_GPU_VIRTUAL_ADDRESS ToGPU_Address(T* const allocation)
+		{
+			std::lock_guard lock{ _Mutex };
+			assert(_CPU_Address);
+			if (!_CPU_Address) return {};
+			const uint8* const address = (const uint8* const)allocation;
+			assert(address <= _CPU_Address + _CPU_Offset);
+			assert(address >= _CPU_Address);
+			const uint64 offset = (uint64)(address - _CPU_Address);
+			return _Buffer.GPU_Address() + offset;
+		}
+
+		[[nodiscard]] constexpr static D3D12BufferInitInfo GetDefaultInitInfo(uint32 size)
+		{
+			assert(size);
+			D3D12BufferInitInfo info{};
+			info.Size = size;
+			info.Alignment = D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT;
+			return info;
+		}
+
+	private:
+		D3D12Buffer _Buffer{};
+		uint8* _CPU_Address = nullptr;
+		uint32 _CPU_Offset = 0;
+		std::mutex _Mutex{};
+	};
+
 	struct D3D12TextureInitInfo
 	{
 		ID3D12Heap1* Heap = nullptr;

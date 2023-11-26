@@ -9,11 +9,6 @@ namespace Rizityo::Content
         class GeometryHierarchyStream
         {
         public:
-            struct LOD_Offset
-            {
-                uint16 Offset;
-                uint16 Count;
-            };
 
             DISABLE_COPY_AND_MOVE(GeometryHierarchyStream);
             GeometryHierarchyStream(uint8* const buffer, uint32 lods = UINT32_INVALID_NUM)
@@ -41,6 +36,8 @@ namespace Rizityo::Content
             uint32 LOD_FromThreshold(float32 threshold)
             {
                 assert(threshold > 0);
+                if (_LOD_Count == 1)
+                    return 0;
 
                 for (uint32 i{ _LOD_Count - 1 }; i > 0; --i)
                 {
@@ -68,6 +65,9 @@ namespace Rizityo::Content
         Utility::FreeList<uint8*> GeometryHierarchies;
         std::mutex GeometryMutex;
 
+        Utility::FreeList < std::unique_ptr<uint8[]>> Shaders;
+        std::mutex ShaderMutex;
+
     } // 変数
 
     namespace
@@ -80,7 +80,7 @@ namespace Rizityo::Content
             const uint32 lodCount = reader.Read<uint32>();
             assert(lodCount);
             // LOD_Count, Thresholds, LOD Offsetsのサイズ
-            uint32 size = sizeof(uint32) + (sizeof(float32) + sizeof(GeometryHierarchyStream::LOD_Offset)) * lodCount;
+            uint32 size = sizeof(uint32) + (sizeof(float32) + sizeof(LOD_Offset)) * lodCount;
 
             for (uint32 lodIndex = 0; lodIndex < lodCount; lodIndex++)
             {
@@ -111,6 +111,7 @@ namespace Rizityo::Content
             GeometryHierarchyStream stream{ hierarchyBuffer, lodCount };
             uint32 submeshIndex = 0;
             ID::IDType* const gpuIDs = stream.GPU_IDs();
+
 
             for (uint32 lodIndex = 0; lodIndex < lodCount; lodIndex++)
             {
@@ -181,7 +182,7 @@ namespace Rizityo::Content
             return submeshCount == 1;
         }
 
-        ID::IDType GPU_ID_FromFakePointer(uint8* const pointer)
+        constexpr ID::IDType GPU_ID_FromFakePointer(uint8* const pointer)
         {
             assert((uintptr_t)pointer & SingleMeshFlag);
             static_assert(sizeof(uintptr_t) > sizeof(ID::IDType));
@@ -257,6 +258,24 @@ namespace Rizityo::Content
             GeometryHierarchies.Remove(id);
         }
 
+        // dataは以下のフォーマットを仮定
+        // struct {
+        //  MaterialType::Type Type,
+        //  uint32 TextureCount,
+        //  ID::IDType ShaderIDs[ShaderType::Count],
+        //  ID::IDType* TextureIDs;
+        // } MaterialInitInfo
+        ID::IDType CreateMaterialResource(const void* const data)
+        {
+            assert(data);
+            return Graphics::AddMaterial(*(const Graphics::MaterialInitInfo* const)data);
+        }
+
+        void DestroyMaterialResource(ID::IDType id)
+        {
+            Graphics::RemoveMaterial(id);
+        }
+
     } // 関数
 
     ID::IDType CreateResource(const void* const data, AssetType::Type type)
@@ -269,7 +288,9 @@ namespace Rizityo::Content
         {
         case AssetType::Animation: break;
         case AssetType::Audio:	break;
-        case AssetType::Material: break;
+        case AssetType::Material:
+            id = CreateMaterialResource(data);
+            break;
         case AssetType::Mesh:
             id = CreateGeometryResource(data); 
             break;
@@ -289,7 +310,9 @@ namespace Rizityo::Content
         {
         case AssetType::Animation: break;
         case AssetType::Audio:	break;
-        case AssetType::Material: break;
+        case AssetType::Material:
+            DestroyMaterialResource(id);
+            break;
         case AssetType::Mesh:
             DestroyGeometryResource(id); 
             break;
@@ -298,6 +321,78 @@ namespace Rizityo::Content
         default:
             assert(false);
             break;
+        }
+    }
+
+    ID::IDType AddShader(const uint8* data)
+    {
+        const CompiledShaderPtr shaderPtr{ (const CompiledShaderPtr)data };
+        const uint64 size = sizeof(uint64) + CompiledShader::HashLength + shaderPtr->ByteCodeSize();
+        std::unique_ptr<uint8[]> shader{ std::make_unique<uint8[]>(size) };
+        memcpy(shader.get(), data, size);
+        std::lock_guard lock{ ShaderMutex };
+        return Shaders.Add(std::move(shader));
+    }
+
+    void RemoveShader(ID::IDType id)
+    {
+        std::lock_guard lock{ ShaderMutex };
+        assert(ID::IsValid(id));
+        Shaders.Remove(id);
+    }
+
+    CompiledShaderPtr GetShader(ID::IDType id)
+    {
+        std::lock_guard lock{ ShaderMutex };
+        assert(ID::IsValid(id));
+        return (const CompiledShaderPtr)(Shaders[id].get());
+    }
+
+    void GetSubmeshGPU_IDs(ID::IDType geometryContentID, uint32 idCount, OUT ID::IDType* const gpuIDs)
+    {
+        std::lock_guard lock{ GeometryMutex };
+        uint8* const pointer = GeometryHierarchies[geometryContentID];
+        if ((uintptr_t)pointer & SingleMeshFlag)
+        {
+            assert(idCount == 1);
+            *gpuIDs = GPU_ID_FromFakePointer(pointer);
+        }
+        else
+        {
+            GeometryHierarchyStream stream{ pointer };
+
+            assert([&]() {
+                const uint32 lodCount{ stream.LOD_Count() };
+                const LOD_Offset lodOffset{ stream.LOD_Offsets()[lodCount - 1] };
+                const uint32 gpuID_Count{ (uint32)lodOffset.Offset + (uint32)lodOffset.Count };
+                return gpuID_Count == idCount;
+                }());
+
+            memcpy(gpuIDs, stream.GPU_IDs(), sizeof(ID::IDType) * idCount);
+        }
+    }
+
+    void GetLOD_Offsets(const ID::IDType* const geometryIDs, const float32* const thresholds, uint32 idCount, OUT Utility::Vector<LOD_Offset>& offsets)
+    {
+        assert(geometryIDs && thresholds && idCount);
+        assert(offsets.empty());
+
+        std::lock_guard lock{ GeometryMutex };
+
+        for (uint32 i = 0; i < idCount; ++i)
+        {
+            uint8* const pointer{ GeometryHierarchies[geometryIDs[i]] };
+            if ((uintptr_t)pointer & SingleMeshFlag)
+            {
+                assert(idCount == 1);
+                offsets.emplace_back(LOD_Offset{ 0, 1 });
+            }
+            else
+            {
+                GeometryHierarchyStream stream{ pointer };
+                const uint32 lod{ stream.LOD_FromThreshold(thresholds[i]) };
+                offsets.emplace_back(stream.LOD_Offsets()[lod]);
+            }
         }
     }
 }

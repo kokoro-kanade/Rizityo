@@ -56,7 +56,7 @@ OutputDebugString(L"\n");
 #define SET_NAME_D3D12_OBJECT_INDEXED(obj, index, name)					 \
 {																		 \
 	wchar_t fullname[128];												 \
-	if(swprintf_s(fullname, L"%s[%u]", name, index) > 0)				 \
+	if(swprintf_s(fullname, L"%s[%llu]", name, (uint64)index) > 0)		 \
 	{																	 \
 		obj->SetName(fullname);											 \
 		OutputDebugString(L"::D3D12オブジェクトが作成されました: ");	 \

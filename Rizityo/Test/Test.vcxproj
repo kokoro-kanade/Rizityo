@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="RenderItem.cpp" />
     <ClCompile Include="ShaderCompile.cpp" />
     <ClCompile Include="TestRenderer.cpp" />
   </ItemGroup>

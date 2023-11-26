@@ -28,6 +28,8 @@ namespace Rizityo::Graphics::D3D12::Camera
         [[nodiscard]] constexpr DirectX::XMMATRIX InverseProjection() const { return _InverseProjection; }
         [[nodiscard]] constexpr DirectX::XMMATRIX ViewProjection() const { return _ViewProjection; }
         [[nodiscard]] constexpr DirectX::XMMATRIX InverseViewProjection() const { return _InverseViewProjection; }
+        [[nodiscard]] constexpr DirectX::XMVECTOR Position() const { return _Position; }
+        [[nodiscard]] constexpr DirectX::XMVECTOR Direction() const { return _Direction; }
         [[nodiscard]] constexpr DirectX::XMVECTOR UpVector() const { return _UpVector; }
 
         [[nodiscard]] constexpr float32 NearZ() const { return _NearZ; }
@@ -49,6 +51,8 @@ namespace Rizityo::Graphics::D3D12::Camera
         DirectX::XMMATRIX _InverseProjection;
         DirectX::XMMATRIX _ViewProjection;
         DirectX::XMMATRIX _InverseViewProjection;
+        DirectX::XMVECTOR _Position{};
+        DirectX::XMVECTOR _Direction{};
         DirectX::XMVECTOR _UpVector;
 
         float32 _NearZ;

@@ -3,21 +3,6 @@
 
 namespace Rizityo::Graphics::D3D12::Shader
 {
-	struct ShaderType {
-		enum Type : uint32
-		{
-			Vertex = 0,
-			Hull,
-			Domain,
-			Geometry,
-			Pixel,
-			Compute,
-			Amplification,
-			Mesh,
-			Count
-		};
-	};
-
 	struct EngineShader
 	{
 		enum ID : uint32

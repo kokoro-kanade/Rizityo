@@ -4,6 +4,12 @@
 #include "D3D12GeometryPass.h"
 #include "D3D12PostProcess.h"
 #include "D3D12Upload.h"
+#include "D3D12Content.h"
+#include "D3D12Camera.h"
+#include "Shaders/SharedTypes.h"
+
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 611; }
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
 
 using namespace Microsoft::WRL;
 
@@ -171,9 +177,10 @@ namespace Rizityo::Graphics::D3D12::Core
 
 		ID3D12Device* MainDevice{ nullptr };
 		IDXGIFactory7* DxgiFactory{ nullptr };
-		D3D12Command gfxCommand;
+		D3D12Command GFX_Command;
 		Utility::FreeList<D3D12Surface> Surfaces;
 		Helper::D3D12ResourceBarrier ResourceBarriers{};
+		ConstantBuffer ConstantBuffers[FrameBufferCount];
 
 		DescriptorHeap RTVDescHeap{ D3D12_DESCRIPTOR_HEAP_TYPE_RTV };
 		DescriptorHeap DSVDescHeap{ D3D12_DESCRIPTOR_HEAP_TYPE_DSV };
@@ -257,6 +264,43 @@ namespace Rizityo::Graphics::D3D12::Core
 				resources.clear();
 			}
 		}
+
+		D3D12FrameInfo GetD3D12FrameInfo(const FrameInfo& info, ConstantBuffer& constantBuffer,
+										 const D3D12Surface& surface, uint32 frameIndex, float32 deltaTime)
+		{
+			Camera::D3D12Camera& camera{ Camera::GetCamera(info.CamerID) };
+			camera.Update();
+			HLSL::GlobalShaderData data{};
+
+			using namespace DirectX;
+			XMStoreFloat4x4A(&data.View, camera.View());
+			XMStoreFloat4x4A(&data.Projection, camera.Projection());
+			XMStoreFloat4x4A(&data.InvProjection, camera.InverseProjection());
+			XMStoreFloat4x4A(&data.ViewProjection, camera.ViewProjection());
+			XMStoreFloat4x4A(&data.InvViewProjection, camera.InverseViewProjection());
+			XMStoreFloat3(&data.CameraPosition, camera.Position());
+			XMStoreFloat3(&data.CameraDirection, camera.Direction());
+			data.ViewWidth = surface.Width();
+			data.ViewHeight = surface.Height();
+			data.DeltaTime = deltaTime;
+
+			HLSL::GlobalShaderData* const shaderData = constantBuffer.Allocate<HLSL::GlobalShaderData>();
+			memcpy(shaderData, &data, sizeof(HLSL::GlobalShaderData));
+
+			D3D12FrameInfo d3d12Info
+			{
+				&info,
+				&camera,
+				constantBuffer.ToGPU_Address(shaderData),
+				data.ViewWidth,
+				data.ViewHeight,
+				frameIndex,
+				deltaTime
+			};
+
+			return d3d12Info;
+		}
+
 	} // 関数
 
 	namespace Internal
@@ -337,15 +381,23 @@ namespace Rizityo::Graphics::D3D12::Core
 		SET_NAME_D3D12_OBJECT(UAVDescHeap.Heap(), L"UAV Descriptor Heap");
 		SET_NAME_D3D12_OBJECT(SRVDescHeap.Heap(), L"SRV Descriptor Heap");
 
-		new(&gfxCommand) D3D12Command(MainDevice, D3D12_COMMAND_LIST_TYPE_DIRECT);
-		if (!gfxCommand.CommandQueue())
+		for (uint32 i = 0; i < FrameBufferCount; ++i)
+		{
+			new (&ConstantBuffers[i])
+				ConstantBuffer{ ConstantBuffer::GetDefaultInitInfo(1024 * 1024) };
+			SET_NAME_D3D12_OBJECT_INDEXED(ConstantBuffers[i].Buffer(), i, L"Global Constant Buffer");
+		}
+
+		new(&GFX_Command) D3D12Command(MainDevice, D3D12_COMMAND_LIST_TYPE_DIRECT);
+		if (!GFX_Command.CommandQueue())
 			return FailedInit();
 
 		// モジュールの初期化
 		if (!(Shader::Initialize() &&
 			  GPass::Initialize() && 
 			  Post::Initialize() &&
-			  Upload::Initialize()))
+			  Upload::Initialize() &&
+			  Content::Initialize()))
 			return FailedInit();
 
 		SET_NAME_D3D12_OBJECT(MainDevice, L"Main D3D12 Device");
@@ -355,7 +407,7 @@ namespace Rizityo::Graphics::D3D12::Core
 
 	void Shutdown()
 	{
-		gfxCommand.Release();
+		GFX_Command.Release();
 
 		for (uint32 i = 0; i < FrameBufferCount; i++)
 		{
@@ -363,12 +415,18 @@ namespace Rizityo::Graphics::D3D12::Core
 		}
 
 		// モジュールのシャットダウン
+		Content::Shutdown();
 		Upload::Shutdown();
 		Post::Shutdown();
 		GPass::Shutdown();
 		Shader::Shutdown();
 
 		Release(DxgiFactory);
+
+		for (uint32 i = 0; i < FrameBufferCount; i++)
+		{
+			ConstantBuffers[i].Release();
+		}
 
 		RTVDescHeap.ProcessDeferredFree(0);
 		DSVDescHeap.ProcessDeferredFree(0);
@@ -427,9 +485,14 @@ namespace Rizityo::Graphics::D3D12::Core
 		return SRVDescHeap;		
 	}
 
+	ConstantBuffer& GetConstantBuffer()
+	{
+		return ConstantBuffers[GetCurrentFrameIndex()];
+	}
+
 	uint32 GetCurrentFrameIndex()
 	{
-		return gfxCommand.FrameIndex();
+		return GFX_Command.FrameIndex();
 	}
 
 	void SetDeferredReleasesFlag()
@@ -440,19 +503,19 @@ namespace Rizityo::Graphics::D3D12::Core
 	Surface CreateSurface(Platform::Window window)
 	{
 		SurfaceID id{ Surfaces.Add(window) };
-		Surfaces[id].CreateSwapChain(DxgiFactory, gfxCommand.CommandQueue());
+		Surfaces[id].CreateSwapChain(DxgiFactory, GFX_Command.CommandQueue());
 		return Surface{ id };
 	}
 
 	void RemoveSurface(SurfaceID id)
 	{
-		gfxCommand.Flush();
+		GFX_Command.Flush();
 		Surfaces.Remove(id);
 	}
 
 	void ResizeSurface(SurfaceID id, uint32 width, uint32 height)
 	{
-		gfxCommand.Flush();
+		GFX_Command.Flush();
 		Surfaces[id].Resize();
 	}
 
@@ -466,12 +529,17 @@ namespace Rizityo::Graphics::D3D12::Core
 		return Surfaces[id].Height();
 	}
 
-	void RenderSurface(SurfaceID id)
+	void RenderSurface(SurfaceID id, FrameInfo info)
 	{
-		gfxCommand.BeginFrame();
-		ID3D12GraphicsCommandList* cmdList{ gfxCommand.CommandList() };
+		GFX_Command.BeginFrame();
+		ID3D12GraphicsCommandList* cmdList{ GFX_Command.CommandList() };
 
 		const uint32 frameIndex = GetCurrentFrameIndex();
+
+		// 定数バッファのリセット
+		ConstantBuffer& cbuffer{ ConstantBuffers[frameIndex] };
+		cbuffer.Clear();
+
 		if (DeferredReleasesFlag[frameIndex])
 		{
 			ProcessDeferredReleases(frameIndex);
@@ -479,9 +547,13 @@ namespace Rizityo::Graphics::D3D12::Core
 
 		const D3D12Surface& surface{ Surfaces[id] };
 		ID3D12Resource* const currentBackBuffer{ surface.BackBuffer() };
-		D3D12FrameInfo frameInfo{ surface.Width(), surface.Height() };
 
-		GPass::SetSize({ frameInfo.SurfaceWidth, frameInfo.SurfaceHeight });
+		const D3D12FrameInfo d3d12Info
+		{
+			GetD3D12FrameInfo(info, cbuffer, surface, frameIndex, 16.7f)
+		};
+
+		GPass::SetSize({ d3d12Info.SurfaceWidth, d3d12Info.SurfaceHeight });
 
 		Helper::D3D12ResourceBarrier& barriers{ ResourceBarriers };
 
@@ -493,34 +565,30 @@ namespace Rizityo::Graphics::D3D12::Core
 		cmdList->RSSetScissorRects(1, &surface.ScissorRect());
 
 		// デプスプリパス
-		/*barriers.Add(currentBackBuffer,
+		barriers.Add(currentBackBuffer,
 					 D3D12_RESOURCE_STATE_PRESENT,
 					 D3D12_RESOURCE_STATE_RENDER_TARGET,
-					 D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY);*/
+					 D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY);
 		GPass::AddTransitionsForDepthPrepass(barriers);
 		barriers.Apply(cmdList);
 		GPass::SetRenderTargetsForDepthPrepass(cmdList);
-		GPass::DepthPrepass(cmdList, frameInfo);
+		GPass::DepthPrepass(cmdList, d3d12Info);
 
 		// ジオメトリ・ライティングパス
 		GPass::AddTransitionsForGPass(barriers);
 		barriers.Apply(cmdList);
 		GPass::SetRenderTargetsForGPass(cmdList);
-		GPass::Render(cmdList, frameInfo);
-
-		Helper::TransitionResource(cmdList, currentBackBuffer,
-								   D3D12_RESOURCE_STATE_PRESENT,
-								   D3D12_RESOURCE_STATE_RENDER_TARGET);
+		GPass::Render(cmdList, d3d12Info);
 
 		// ポストプロセス
-		/*barriers.Add(currentBackBuffer,
+		barriers.Add(currentBackBuffer,
 					 D3D12_RESOURCE_STATE_PRESENT,
 					 D3D12_RESOURCE_STATE_RENDER_TARGET,
-					 D3D12_RESOURCE_BARRIER_FLAG_END_ONLY);*/
+					 D3D12_RESOURCE_BARRIER_FLAG_END_ONLY);
 		GPass::AddTransitionsForPostProcess(barriers);
 		barriers.Apply(cmdList);
 
-		Post::PostProcess(cmdList, surface.RTV());
+		Post::PostProcess(cmdList, d3d12Info, surface.RTV());
 
 		// ポストプロセス後
 		Helper::TransitionResource(cmdList, currentBackBuffer,
@@ -528,6 +596,6 @@ namespace Rizityo::Graphics::D3D12::Core
 								   D3D12_RESOURCE_STATE_PRESENT);
 
 		// コマンド実行・次フレームのためにフェンス値のインクリメント
-		gfxCommand.EndFrame(surface);
+		GFX_Command.EndFrame(surface);
 	}
 }

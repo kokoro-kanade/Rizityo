@@ -21,6 +21,10 @@ namespace Rizityo::Graphics::D3D12
 
 		graphicsInterface.Resources.AddSubmesh = Content::Submesh::Add;
 		graphicsInterface.Resources.RemoveSubmesh = Content::Submesh::Remove;
+		graphicsInterface.Resources.AddMaterial = Content::Material::Add;
+		graphicsInterface.Resources.RemoveMaterial = Content::Material::Remove;
+		graphicsInterface.Resources.AddRenderItem = Content::RenderItem::Add;
+		graphicsInterface.Resources.RemoveRenderItem = Content::RenderItem::Remove;
 
 		graphicsInterface.Camera.Create = Camera::CreateCamera;
 		graphicsInterface.Camera.Remove = Camera::RemoveCamera;

@@ -16,13 +16,17 @@ namespace Rizityo::Graphics
 			void(*Resize)(SurfaceID, uint32, uint32);
 			uint32(*Width)(SurfaceID);
 			uint32(*Height)(SurfaceID);
-			void(*Render)(SurfaceID);
+			void(*Render)(SurfaceID, FrameInfo);
 		} Surface;
 
 		struct
 		{
 			ID::IDType(*AddSubmesh)(const uint8*&);
 			void (*RemoveSubmesh)(ID::IDType);
+			ID::IDType(*AddMaterial)(MaterialInitInfo);
+			void (*RemoveMaterial)(ID::IDType);
+			ID::IDType(*AddRenderItem)(ID::IDType, ID::IDType, uint32, const ID::IDType* const);
+			void (*RemoveRenderItem)(ID::IDType);
 		} Resources;
 
 		struct

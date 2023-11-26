@@ -12,4 +12,5 @@ namespace Rizityo::Transform
 
 	Transform::Component CreateComponent(const InitInfo& info, GameEntity::Entity entity); // TODO?: éQè∆ìnÇµÇ©ÇÁílìnÇµÇ…Ç∑ÇÈ
 	void RemoveComponent(Transform::Component component);
+	void GetTransformMatrices(const GameEntity::EntityID id, OUT Math::Matrix4x4& world, OUT Math::Matrix4x4& inverseWorld);
 }

@@ -14,14 +14,14 @@ namespace Rizityo::Graphics
 			/*".\\Shaders\\Vulkan\\Shaders.bin"*/
 		};
 
-		GraphicsInterface graphicsInterface{};
+		GraphicsInterface GFXInterface{};
 
-		bool SetPlatformInterface(GraphicsPlatform platform)
+		bool SetPlatformInterface(GraphicsPlatform platform, OUT GraphicsInterface& gi)
 		{
 			switch (platform)
 			{
 			case Rizityo::Graphics::GraphicsPlatform::Direct3D12:
-				D3D12::SetInterface(graphicsInterface);
+				D3D12::SetInterface(gi);
 				break;
 			case Rizityo::Graphics::GraphicsPlatform::Vulkan:
 				break;
@@ -31,7 +31,7 @@ namespace Rizityo::Graphics
 				return false;
 			}
 
-			assert(graphicsInterface.Platform == platform);
+			assert(gi.Platform == platform);
 
 			return true;
 		}
@@ -40,64 +40,89 @@ namespace Rizityo::Graphics
 
 	bool Initialize(GraphicsPlatform platform)
 	{
-		return SetPlatformInterface(platform) && graphicsInterface.Initialize();
+		return SetPlatformInterface(platform, GFXInterface) && GFXInterface.Initialize();
 	}
 
 	void Shutdown()
 	{
-		if (graphicsInterface.Platform != (GraphicsPlatform)-1)
-			graphicsInterface.Shutdown();
+		if (GFXInterface.Platform != (GraphicsPlatform)-1)
+			GFXInterface.Shutdown();
 	}
 
+
+	// サーフェス
 	Surface CreateSurface(Platform::Window window)
 	{
-		return graphicsInterface.Surface.Create(window);
+		return GFXInterface.Surface.Create(window);
 	}
 
 	void RemoveSurface(SurfaceID id)
 	{
 		assert(ID::IsValid(id));
-		graphicsInterface.Surface.Remove(id);
+		GFXInterface.Surface.Remove(id);
 	}
 
 	void Surface::Resize(uint32 width, uint32 height) const
 	{
 		assert(IsValid());
-		graphicsInterface.Surface.Resize(_ID, width, height);
+		GFXInterface.Surface.Resize(_ID, width, height);
 	}
 
 	uint32 Surface::Width() const
 	{
 		assert(IsValid());
-		return graphicsInterface.Surface.Width(_ID);
+		return GFXInterface.Surface.Width(_ID);
 	}
 
 	uint32 Surface::Height() const
 	{
 		assert(IsValid());
-		return graphicsInterface.Surface.Height(_ID);
+		return GFXInterface.Surface.Height(_ID);
 	}
 
-	void Surface::Render() const
+	void Surface::Render(FrameInfo info) const
 	{
 		assert(IsValid());
-		graphicsInterface.Surface.Render(_ID);
+		GFXInterface.Surface.Render(_ID, info);
 	}
 
+
+	// リソース
 	ID::IDType AddSubmesh(const uint8*& data)
 	{
-		return graphicsInterface.Resources.AddSubmesh(data);
+		return GFXInterface.Resources.AddSubmesh(data);
 	}
 
 	void RemoveSubmesh(ID::IDType id)
 	{
-		graphicsInterface.Resources.RemoveSubmesh(id);
+		GFXInterface.Resources.RemoveSubmesh(id);
+	}
+
+	ID::IDType AddMaterial(MaterialInitInfo info)
+	{
+		return GFXInterface.Resources.AddMaterial(info);
+	}
+
+	void RemoveMaterial(ID::IDType id)
+	{
+		GFXInterface.Resources.RemoveMaterial(id);
+	}
+
+	ID::IDType AddRenderItem(ID::IDType entityID, ID::IDType geometryContentID,
+							 uint32 materialCount, const ID::IDType* const materialIDs)
+	{
+		return GFXInterface.Resources.AddRenderItem(entityID, geometryContentID, materialCount, materialIDs);
+	}
+
+	void RemoveRenderItem(ID::IDType id)
+	{
+		GFXInterface.Resources.RemoveRenderItem(id);
 	}
 
 	const char* GetEngineShadersPath()
 	{
 		
-		return EngineShadersPaths[(uint32)graphicsInterface.Platform];
+		return EngineShadersPaths[(uint32)GFXInterface.Platform];
 	}
 
 	const char* GetEngineShadersPath(GraphicsPlatform platform)
@@ -105,58 +130,60 @@ namespace Rizityo::Graphics
 		return EngineShadersPaths[(uint32)platform];
 	}
 
+
+	// カメラ
 	Camera CreateCamera(CameraInitInfo info)
 	{
-		return graphicsInterface.Camera.Create(info);
+		return GFXInterface.Camera.Create(info);
 	}
 
 	void RemoveCamera(CameraID id)
 	{
-		graphicsInterface.Camera.Remove(id);
+		GFXInterface.Camera.Remove(id);
 	}
 
 	void Camera::SetUpVector(Math::Vector3 up) const
 	{
 		assert(IsValid());
-		graphicsInterface.Camera.SetParameter(_ID, CameraParameter::UpVector, &up, sizeof(up));
+		GFXInterface.Camera.SetParameter(_ID, CameraParameter::UpVector, &up, sizeof(up));
 	}
 
 	void Camera::SetFieldOfView(float32 fov) const
 	{
 		assert(IsValid());
-		graphicsInterface.Camera.SetParameter(_ID, CameraParameter::FieldOfView, &fov, sizeof(fov));
+		GFXInterface.Camera.SetParameter(_ID, CameraParameter::FieldOfView, &fov, sizeof(fov));
 	}
 
 	void Camera::SetAspectRatio(float32 aspectRatio) const
 	{
 		assert(IsValid());
-		graphicsInterface.Camera.SetParameter(_ID, CameraParameter::AspectRatio, &aspectRatio, sizeof(aspectRatio));
+		GFXInterface.Camera.SetParameter(_ID, CameraParameter::AspectRatio, &aspectRatio, sizeof(aspectRatio));
 	}
 
 	void Camera::SetViewWidth(float32 width) const
 	{
 		assert(IsValid());
-		graphicsInterface.Camera.SetParameter(_ID, CameraParameter::ViewWidth, &width, sizeof(width));
+		GFXInterface.Camera.SetParameter(_ID, CameraParameter::ViewWidth, &width, sizeof(width));
 	}
 
 	void Camera::SetViewHeight(float32 height) const
 	{
 		assert(IsValid());
-		graphicsInterface.Camera.SetParameter(_ID, CameraParameter::ViewHeight, &height, sizeof(height));
+		GFXInterface.Camera.SetParameter(_ID, CameraParameter::ViewHeight, &height, sizeof(height));
 	}
 
 	void Camera::SetRange(float32 nearZ, float32 farZ) const
 	{
 		assert(IsValid());
-		graphicsInterface.Camera.SetParameter(_ID, CameraParameter::NearZ, &nearZ, sizeof(nearZ));
-		graphicsInterface.Camera.SetParameter(_ID, CameraParameter::FarZ, &farZ, sizeof(farZ));
+		GFXInterface.Camera.SetParameter(_ID, CameraParameter::NearZ, &nearZ, sizeof(nearZ));
+		GFXInterface.Camera.SetParameter(_ID, CameraParameter::FarZ, &farZ, sizeof(farZ));
 	}
 
 	Math::Matrix4x4 Camera::View() const
 	{
 		assert(IsValid());
 		Math::Matrix4x4 matrix;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::View, &matrix, sizeof(matrix));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::View, &matrix, sizeof(matrix));
 		return matrix;
 	}
 
@@ -164,7 +191,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		Math::Matrix4x4 matrix;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::Projection, &matrix, sizeof(matrix));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::Projection, &matrix, sizeof(matrix));
 		return matrix;
 	}
 
@@ -172,7 +199,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		Math::Matrix4x4 matrix;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::InverseProjection, &matrix, sizeof(matrix));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::InverseProjection, &matrix, sizeof(matrix));
 		return matrix;
 	}
 
@@ -180,7 +207,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		Math::Matrix4x4 matrix;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::ViewProjection, &matrix, sizeof(matrix));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::ViewProjection, &matrix, sizeof(matrix));
 		return matrix;
 	}
 
@@ -188,7 +215,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		Math::Matrix4x4 matrix;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::InverseViewProjection, &matrix, sizeof(matrix));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::InverseViewProjection, &matrix, sizeof(matrix));
 		return matrix;
 	}
 
@@ -196,7 +223,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		Math::Vector3 up_vector;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::UpVector, &up_vector, sizeof(up_vector));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::UpVector, &up_vector, sizeof(up_vector));
 		return up_vector;
 	}
 
@@ -204,7 +231,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		float32 near_z;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::NearZ, &near_z, sizeof(near_z));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::NearZ, &near_z, sizeof(near_z));
 		return near_z;
 	}
 
@@ -212,7 +239,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		float32 far_z;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::FarZ, &far_z, sizeof(far_z));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::FarZ, &far_z, sizeof(far_z));
 		return far_z;
 	}
 
@@ -220,7 +247,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		float32 fov;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::FieldOfView, &fov, sizeof(fov));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::FieldOfView, &fov, sizeof(fov));
 		return fov;
 	}
 
@@ -228,7 +255,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		float32 aspect_ratio;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::AspectRatio, &aspect_ratio, sizeof(aspect_ratio));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::AspectRatio, &aspect_ratio, sizeof(aspect_ratio));
 		return aspect_ratio;
 	}
 
@@ -236,7 +263,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		float32 width;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::ViewWidth, &width, sizeof(width));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::ViewWidth, &width, sizeof(width));
 		return width;
 	}
 
@@ -244,7 +271,7 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		float32 height;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::ViewHeight, &height, sizeof(height));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::ViewHeight, &height, sizeof(height));
 		return height;
 	}
 
@@ -252,15 +279,15 @@ namespace Rizityo::Graphics
 	{
 		assert(IsValid());
 		Camera::Type type;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::Type, &type, sizeof(type));
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::Type, &type, sizeof(type));
 		return type;
 	}
 
 	ID::IDType Camera::EntityID() const
 	{
 		assert(IsValid());
-		ID::IDType entity_id;
-		graphicsInterface.Camera.GetParameter(_ID, CameraParameter::EntityID, &entity_id, sizeof(entity_id));
-		return entity_id;
+		ID::IDType entityID;
+		GFXInterface.Camera.GetParameter(_ID, CameraParameter::EntityID, &entityID, sizeof(entityID));
+		return entityID;
 	}
 }

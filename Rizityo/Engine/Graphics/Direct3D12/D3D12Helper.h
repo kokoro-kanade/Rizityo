@@ -104,7 +104,159 @@ namespace Rizityo::Graphics::D3D12::Helper
 			0												// DepthBoundsTestEnable
 		};
 
+		const D3D12_DEPTH_STENCIL_DESC1 Enabled
+		{
+			1,												// DepthEnable
+			D3D12_DEPTH_WRITE_MASK_ALL,						// DepthWriteMask
+			D3D12_COMPARISON_FUNC_LESS_EQUAL,				// DepthFunc
+			0,												// StencilEnable
+			0,												// StencilReadMask
+			0,												// StencilWriteMask
+			{},												// FrontFace
+			{},												// BackFace
+			0												// DepthBoundsTestEnable
+		};
+
+		const D3D12_DEPTH_STENCIL_DESC1 EnabledReadonly
+		{
+			1,                                              // DepthEnable
+			D3D12_DEPTH_WRITE_MASK_ZERO,                    // DepthWriteMask
+			D3D12_COMPARISON_FUNC_LESS_EQUAL,               // DepthFunc
+			0,                                              // StencilEnable
+			0,                                              // StencilReadMask
+			0,                                              // StencilWriteMask
+			{},                                             // FrontFace
+			{},                                             // BackFace
+			0                                               // DepthBoundsTestEnable
+		};
+
+		const D3D12_DEPTH_STENCIL_DESC1 Reversed
+		{
+			1,                                              // DepthEnable
+			D3D12_DEPTH_WRITE_MASK_ALL,                     // DepthWriteMask
+			D3D12_COMPARISON_FUNC_GREATER_EQUAL,            // DepthFunc
+			0,                                              // StencilEnable
+			0,                                              // StencilReadMask
+			0,                                              // StencilWriteMask
+			{},                                             // FrontFace
+			{},                                             // BackFace
+			0                                               // DepthBoundsTestEnable
+		};
+
+		const D3D12_DEPTH_STENCIL_DESC1 ReversedReadonly
+		{
+			1,                                              // DepthEnable
+			D3D12_DEPTH_WRITE_MASK_ZERO,                    // DepthWriteMask
+			D3D12_COMPARISON_FUNC_GREATER_EQUAL,            // DepthFunc
+			0,                                              // StencilEnable
+			0,                                              // StencilReadMask
+			0,                                              // StencilWriteMask
+			{},                                             // FrontFace
+			{},                                             // BackFace
+			0                                               // DepthBoundsTestEnable
+		};
+
 	} DepthState ;
+
+	constexpr struct {
+		const D3D12_BLEND_DESC Disabled
+		{
+			0,                                              // AlphaToCoverageEnable
+			0,                                              // IndependentBlendEnable
+			{
+				{
+				   0,                                       // BlendEnable
+				   0,                                       // LogicOpEnable
+				   D3D12_BLEND_SRC_ALPHA,                   // SrcBlend
+				   D3D12_BLEND_INV_SRC_ALPHA,               // DestBlend
+				   D3D12_BLEND_OP_ADD,                      // BlendOp
+				   D3D12_BLEND_ONE,                         // SrcBlendAlpha
+				   D3D12_BLEND_ONE,                         // DestBlendAlpha
+				   D3D12_BLEND_OP_ADD,                      // BlendOpAlpha
+				   D3D12_LOGIC_OP_NOOP,                     // LogicOp
+				   D3D12_COLOR_WRITE_ENABLE_ALL,            // RenderTargetWriteMask
+
+				},
+				{},{},{},{},{},{},{}
+			}
+		};
+
+		const D3D12_BLEND_DESC AlphaBlend
+		{
+			0,                                              // AlphaToCoverageEnable
+			0,                                              // IndependentBlendEnable
+			{
+				{
+				   1,                                       // BlendEnable
+				   0,                                       // LogicOpEnable
+				   D3D12_BLEND_SRC_ALPHA,                   // SrcBlend
+				   D3D12_BLEND_INV_SRC_ALPHA,               // DestBlend
+				   D3D12_BLEND_OP_ADD,                      // BlendOp
+				   D3D12_BLEND_ONE,                         // SrcBlendAlpha
+				   D3D12_BLEND_ONE,                         // DestBlendAlpha
+				   D3D12_BLEND_OP_ADD,                      // BlendOpAlpha
+				   D3D12_LOGIC_OP_NOOP,                     // LogicOp
+				   D3D12_COLOR_WRITE_ENABLE_ALL,            // RenderTargetWriteMask
+
+				},
+				{},{},{},{},{},{},{}
+			}
+		};
+
+		const D3D12_BLEND_DESC Additive
+		{
+			0,                                              // AlphaToCoverageEnable
+			0,                                              // IndependentBlendEnable
+			{
+				{
+				   1,                                       // BlendEnable
+				   0,                                       // LogicOpEnable
+				   D3D12_BLEND_ONE,                         // SrcBlend
+				   D3D12_BLEND_ONE,                         // DestBlend
+				   D3D12_BLEND_OP_ADD,                      // BlendOp
+				   D3D12_BLEND_ONE,                         // SrcBlendAlpha
+				   D3D12_BLEND_ONE,                         // DestBlendAlpha
+				   D3D12_BLEND_OP_ADD,                      // BlendOpAlpha
+				   D3D12_LOGIC_OP_NOOP,                     // LogicOp
+				   D3D12_COLOR_WRITE_ENABLE_ALL,            // RenderTargetWriteMask
+
+				},
+				{},{},{},{},{},{},{}
+			}
+		};
+
+		const D3D12_BLEND_DESC Premultiplied
+		{
+			0,                                              // AlphaToCoverageEnable
+			0,                                              // IndependentBlendEnable
+			{
+				{
+				   0,                                       // BlendEnable
+				   0,                                       // LogicOpEnable
+				   D3D12_BLEND_ONE,                         // SrcBlend
+				   D3D12_BLEND_INV_SRC_ALPHA,               // DestBlend
+				   D3D12_BLEND_OP_ADD,                      // BlendOp
+				   D3D12_BLEND_ONE,                         // SrcBlendAlpha
+				   D3D12_BLEND_ONE,                         // DestBlendAlpha
+				   D3D12_BLEND_OP_ADD,                      // BlendOpAlpha
+				   D3D12_LOGIC_OP_NOOP,                     // LogicOp
+				   D3D12_COLOR_WRITE_ENABLE_ALL,            // RenderTargetWriteMask
+
+				},
+				{},{},{},{},{},{},{}
+			}
+		};
+	} BlendState;
+
+	constexpr uint64 AlignSizeForConstantBuffer(uint64 size)
+	{
+		return Math::AlignSizeUp<D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT>(size);
+	}
+
+	constexpr uint64 AlignSizeForTexture(uint64 size)
+	{
+		return Math::AlignSizeUp<D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT>(size);
+	}
 
 	class D3D12ResourceBarrier
 	{
@@ -248,12 +400,21 @@ namespace Rizityo::Graphics::D3D12::Helper
 
 	struct D3D12RootSignatureDesc : public D3D12_ROOT_SIGNATURE_DESC1
 	{
+		constexpr static D3D12_ROOT_SIGNATURE_FLAGS DefaultFlags{
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED |
+			D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED
+		};
+
 		constexpr explicit D3D12RootSignatureDesc(const D3D12RootParameter* parameters, uint32 parameterCount,
-			const D3D12_STATIC_SAMPLER_DESC* staticSamplers = nullptr, uint32 samplerCount = 0,
-			D3D12_ROOT_SIGNATURE_FLAGS flags = 
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-			D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS)
+			D3D12_ROOT_SIGNATURE_FLAGS flags = DefaultFlags,
+			const D3D12_STATIC_SAMPLER_DESC* staticSamplers = nullptr, uint32 samplerCount = 0)
 			: D3D12_ROOT_SIGNATURE_DESC1{parameterCount, parameters, samplerCount, staticSamplers, flags}
 		{}
 
@@ -315,6 +476,33 @@ namespace Rizityo::Graphics::D3D12::Helper
 	PSS(Ms, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_MS, D3D12_SHADER_BYTECODE);
 
 #undef PSS
+
+	struct D3D12PipelineStateSubobjectStream {
+		D3D12PipelineStateSubobjectRootSignature rootSignature{ nullptr };
+		D3D12PipelineStateSubobjectVS VS{};
+		D3D12PipelineStateSubobjectPS PS{};
+		D3D12PipelineStateSubobjectDS DS{};
+		D3D12PipelineStateSubobjectHS HS{};
+		D3D12PipelineStateSubobjectGS GS{};
+		D3D12PipelineStateSubobjectCS CS{};
+		D3D12PipelineStateSubobjectStreamOutput StreamOutput{};
+		D3D12PipelineStateSubobjectBlend Blend{ BlendState.Disabled };
+		D3D12PipelineStateSubobjectSampleMask SampleMask{ UINT_MAX };
+		D3D12PipelineStateSubobjectRasterizer Rasterizer{ RasterizerState.NoCull };
+		D3D12PipelineStateSubobjectInputLayout InputLayout{};
+		D3D12PipelineStateSubobjectIbStripCutValue IbStripCutValue{};
+		D3D12PipelineStateSubobjectPrimitiveTopology PrimitiveTopology{};
+		D3D12PipelineStateSubobjectRenderTargetFormats RenderTargetFormats{};
+		D3D12PipelineStateSubobjectDepthStencilFormat DepthStencilFormat{};
+		D3D12PipelineStateSubobjectSampleDesc SampleDesc{ {1, 0} };
+		D3D12PipelineStateSubobjectNodeMask NodeMask{};
+		D3D12PipelineStateSubobjectCachedPso CachedPso{};
+		D3D12PipelineStateSubobjectFlags Flags{};
+		D3D12PipelineStateSubobjectDepthStencil1 DepthStencil1{ DepthState.Disabled };
+		D3D12PipelineStateSubobjectViewInstancing ViewInstancing{};
+		D3D12PipelineStateSubobjectAs AS{};
+		D3D12PipelineStateSubobjectMs MS{};
+	};
 
 	ID3D12PipelineState* CreatePipelineState(D3D12_PIPELINE_STATE_STREAM_DESC desc);
 	ID3D12PipelineState* CreatePipelineState(void* stream, uint64 stereamSize);

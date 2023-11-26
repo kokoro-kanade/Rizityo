@@ -1,37 +1,135 @@
 #include "D3D12GeometryPass.h"
 #include "D3D12Core.h"
 #include "D3D12Shader.h"
+#include "D3D12Content.h"
+#include "D3D12Camera.h"
+#include "Shaders/SharedTypes.h"
+#include "Components/Entity.h"
+#include "Components/Transform.h"
 
 namespace Rizityo::Graphics::D3D12::GPass
 {
 	namespace
 	{
-		struct GPassRootParamIndices
-		{
-			enum : uint32
-			{
-				RootConstants,
-				Count
-			};
-		};
-
-		constexpr DXGI_FORMAT MainBufferFormat{ DXGI_FORMAT_R16G16B16A16_FLOAT };
-		constexpr DXGI_FORMAT DepthBufferFormat{ DXGI_FORMAT_D32_FLOAT };
 		constexpr Math::U32Vector2 InitialDimensions{ 100,100 };
 
 		D3D12RenderTexture GPassMainBuffer{};
 		D3D12DepthBuffer GPassDepthBuffer{};
 		Math::U32Vector2 Dimensions{ InitialDimensions };
-		// D3D12_RESOURCE_BARRIER_FLAGS Flags{};
-
-		ID3D12RootSignature* GPassRootSig = nullptr;
-		ID3D12PipelineState* GPassPSO = nullptr;
 
 #if _DEBUG
 		constexpr float32 ClearValue[4]{ 0.5f, 0.5f, 0.5f, 1.f };
 #else
 		constexpr float32 ClearValue[4]{};
 #endif // _DEBUG
+
+		struct GPassCache
+		{
+			Utility::Vector<ID::IDType> D3D12RenderItemIDs;
+
+			// 配列で管理
+			// 配列のサイズが変わるときはResizeする必要
+			ID::IDType* EntityIDs = nullptr;
+			ID::IDType* SubmeshGPU_IDs = nullptr;
+			ID::IDType* MaterialIDs = nullptr;
+			ID3D12PipelineState** GPassPipelineStates = nullptr;
+			ID3D12PipelineState** DepthPipelineStates = nullptr;
+			ID3D12RootSignature** RootSignatures = nullptr;
+			MaterialType::Type* MaterialTypes = nullptr;
+			D3D12_GPU_VIRTUAL_ADDRESS* PositionBuffers = nullptr;
+			D3D12_GPU_VIRTUAL_ADDRESS* ElementBuffers = nullptr;
+			D3D12_INDEX_BUFFER_VIEW* IndexBufferViews = nullptr;
+			D3D_PRIMITIVE_TOPOLOGY* PrimitiveTopologies = nullptr;
+			uint32* ElementsTypes = nullptr;
+			D3D12_GPU_VIRTUAL_ADDRESS* PerObjectData = nullptr;
+
+			constexpr Content::RenderItem::ItemsCache ItemsCache() const
+			{
+				return{
+					EntityIDs,
+					SubmeshGPU_IDs,
+					MaterialIDs,
+					GPassPipelineStates,
+					DepthPipelineStates
+				};
+			}
+
+			constexpr Content::Submesh::ViewsCache ViewsCache() const
+			{
+				return{
+					PositionBuffers,
+					ElementBuffers,
+					IndexBufferViews,
+					PrimitiveTopologies,
+					ElementsTypes
+				};
+			}
+
+			constexpr Content::Material::MaterialsCache MaterialsCache() const
+			{
+				return{
+					RootSignatures,
+					MaterialTypes
+				};
+			}
+
+			constexpr uint32 Size() const
+			{
+				return (uint32)D3D12RenderItemIDs.size();
+			}
+
+			constexpr void Clear()
+			{
+				D3D12RenderItemIDs.clear();
+			}
+
+			constexpr void Resize()
+			{
+				const uint64 itemsCount = D3D12RenderItemIDs.size();
+				const uint64 newBufferSize = itemsCount * StructSize;
+				const uint64 oldBufferSize = _Buffer.size();
+				if (newBufferSize > oldBufferSize)
+				{
+					_Buffer.resize(newBufferSize);
+				}
+
+				if (newBufferSize != oldBufferSize)
+				{
+					EntityIDs = (ID::IDType*)_Buffer.data();
+					SubmeshGPU_IDs = (ID::IDType*)(&EntityIDs[itemsCount]);
+					MaterialIDs = (ID::IDType*)(&SubmeshGPU_IDs[itemsCount]);
+					GPassPipelineStates = (ID3D12PipelineState**)(&MaterialIDs[itemsCount]);
+					DepthPipelineStates = (ID3D12PipelineState**)(&GPassPipelineStates[itemsCount]);
+					RootSignatures = (ID3D12RootSignature**)(&DepthPipelineStates[itemsCount]);
+					MaterialTypes = (MaterialType::Type*)(&RootSignatures[itemsCount]);
+					PositionBuffers = (D3D12_GPU_VIRTUAL_ADDRESS*)(&MaterialTypes[itemsCount]);
+					ElementBuffers = (D3D12_GPU_VIRTUAL_ADDRESS*)(&PositionBuffers[itemsCount]);
+					IndexBufferViews = (D3D12_INDEX_BUFFER_VIEW*)(&ElementBuffers[itemsCount]);
+					PrimitiveTopologies = (D3D_PRIMITIVE_TOPOLOGY*)(&IndexBufferViews[itemsCount]);
+					ElementsTypes = (uint32*)(&PrimitiveTopologies[itemsCount]);
+					PerObjectData = (D3D12_GPU_VIRTUAL_ADDRESS*)(&ElementsTypes[itemsCount]);
+				}
+			}
+
+		private:
+			constexpr static uint32 StructSize{
+				sizeof(ID::IDType) +                   // EntityIDs
+				sizeof(ID::IDType) +                   // SubmeshGPU_IDs
+				sizeof(ID::IDType) +                   // MaterialIDs
+				sizeof(ID3D12PipelineState*) +         // GPassPipelineStates
+				sizeof(ID3D12PipelineState*) +         // DepthPipelineStates
+				sizeof(ID3D12RootSignature*) +         // RootSignatures
+				sizeof(MaterialType::Type) +           // MaterialTypes
+				sizeof(D3D12_GPU_VIRTUAL_ADDRESS) +    // PositionBuffers
+				sizeof(D3D12_GPU_VIRTUAL_ADDRESS) +    // ElementBuffers
+				sizeof(D3D12_INDEX_BUFFER_VIEW) +      // IndexBufferViews
+				sizeof(D3D_PRIMITIVE_TOPOLOGY) +       // PrimitiveTopologies
+				sizeof(uint32) +                       // ElementsTypes
+				sizeof(D3D12_GPU_VIRTUAL_ADDRESS)      // PerObjectData
+			};
+
+			Utility::Vector<uint8> _Buffer;
+		} FrameCache;
 
 	} // 変数
 
@@ -75,7 +173,7 @@ namespace Rizityo::Graphics::D3D12::GPass
 				info.Desc = &desc;
 				info.InitialState = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE; // ピクセルシェーダーとコンピュートシェーダーで読み込む
 				info.ClearValue.Format = desc.Format;
-				info.ClearValue.DepthStencil.Depth = 0.f;
+				info.ClearValue.DepthStencil.Depth = 1.f;
 				info.ClearValue.DepthStencil.Stencil = 0;
 
 				GPassDepthBuffer = D3D12DepthBuffer{ info };
@@ -84,51 +182,84 @@ namespace Rizityo::Graphics::D3D12::GPass
 			SET_NAME_D3D12_OBJECT(GPassMainBuffer.Resource(), L"GPass Main Buffer");
 			SET_NAME_D3D12_OBJECT(GPassDepthBuffer.Resource(), L"GPass Depth Buffer");
 
-			// Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-
 			return GPassMainBuffer.Resource() && GPassDepthBuffer.Resource();
 		}
 
-		bool CreateGPassPSOAndRootSignature()
+		void FillPerObjectData(OUT ConstantBuffer& cbuffer, const D3D12FrameInfo& d3d12Info)
 		{
-			assert(!GPassRootSig && !GPassPSO);
+			const GPassCache& cache{ FrameCache };
+			const uint32 renderItemsCount = (uint32)cache.Size();
+			ID::IDType currentEntityID{ ID::INVALID_ID };
+			HLSL::PerObjectData* currentDataPointer = nullptr;
 
-			 // GPassルートシグネチャー作成
-			using grpid = GPassRootParamIndices;
-			Helper::D3D12RootParameter parameters[grpid::Count]{};
-			parameters[grpid::RootConstants].AsConstants(3, D3D12_SHADER_VISIBILITY_PIXEL, 1);
-			const Helper::D3D12RootSignatureDesc rootSignature{ &parameters[0], grpid::Count };
-			GPassRootSig = rootSignature.Create();
-			assert(GPassRootSig);
-			SET_NAME_D3D12_OBJECT(GPassRootSig, L"GPass Root Signature");
+			using namespace DirectX;
+			for (uint32 i = 0; i < renderItemsCount; i++)
+			{
+				if (currentEntityID != cache.EntityIDs[i])
+				{
+					currentEntityID = cache.EntityIDs[i];
+					HLSL::PerObjectData data{};
+					Transform::GetTransformMatrices(GameEntity::EntityID{ currentEntityID }, data.World, data.InvWorld);
+					XMMATRIX world{ XMLoadFloat4x4(&data.World) };
+					XMMATRIX wvp{ XMMatrixMultiply(world, d3d12Info.Camera->ViewProjection()) };
+					XMStoreFloat4x4(&data.WorldViewProjection, wvp);
 
-			// GPass PSO作成
-			struct {
-				Helper::D3D12PipelineStateSubobjectRootSignature RootSignature{ GPassRootSig };
-				Helper::D3D12PipelineStateSubobjectVS VS{ Shader::GetEngineShader(Shader::EngineShader::FullScreenTriangleVS) };
-				Helper::D3D12PipelineStateSubobjectPS PS{ Shader::GetEngineShader(Shader::EngineShader::FillColorPS) };
-				Helper::D3D12PipelineStateSubobjectPrimitiveTopology PrimitiveTopology{ D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE };
-				Helper::D3D12PipelineStateSubobjectRenderTargetFormats RenderTargetFormats;
-				Helper::D3D12PipelineStateSubobjectDepthStencilFormat DepthStencilFormat{ DepthBufferFormat };
-				Helper::D3D12PipelineStateSubobjectRasterizer Rasterizer{ Helper::RasterizerState.NoCull };
-				Helper::D3D12PipelineStateSubobjectDepthStencil1 DepthStencil{ Helper::DepthState.Disabled };
-			} stream;
+					currentDataPointer = cbuffer.Allocate<HLSL::PerObjectData>();
+					memcpy(currentDataPointer, &data, sizeof(HLSL::PerObjectData));
+				}
 
-			D3D12_RT_FORMAT_ARRAY rtfArray{};
-			rtfArray.NumRenderTargets = 1;
-			rtfArray.RTFormats[0] = MainBufferFormat;
-			stream.RenderTargetFormats = rtfArray;
-
-			GPassPSO = Helper::CreatePipelineState(&stream, sizeof(stream));
-			SET_NAME_D3D12_OBJECT(GPassPSO, L"GPass Pipeline Stete Object");
-
-			return GPassRootSig && GPassPSO;
+				assert(currentDataPointer);
+				cache.PerObjectData[i] = cbuffer.ToGPU_Address(currentDataPointer);
+			}
 		}
+
+		void SetRootParameters(ID3D12GraphicsCommandList* const cmdList, uint32 cacheIndex)
+		{
+			GPassCache& cache{ FrameCache };
+			assert(cacheIndex < cache.Size());
+
+			const MaterialType::Type materialType{ cache.MaterialTypes[cacheIndex] };
+			switch (materialType)
+			{
+			case MaterialType::Opaque:
+			{
+				using params = OpaqueRootParameter;
+				cmdList->SetGraphicsRootShaderResourceView(params::PositionBuffer, cache.PositionBuffers[cacheIndex]);
+				cmdList->SetGraphicsRootShaderResourceView(params::ElementBuffer, cache.ElementBuffers[cacheIndex]);
+				cmdList->SetGraphicsRootConstantBufferView(params::PerObjectData, cache.PerObjectData[cacheIndex]);
+			}
+			break;
+			}
+		}
+
+		void PrepareRenderFrame(const D3D12FrameInfo& d3d12Info)
+		{
+			assert(d3d12Info.FrameInfo && d3d12Info.Camera);
+			assert(d3d12Info.FrameInfo->RenderItemIDs && d3d12Info.FrameInfo->RenderItemCount);
+
+			GPassCache& cache{ FrameCache };
+			cache.Clear();
+
+			using namespace Content;
+			RenderItem::GetD3D12RenderItemIDs(*d3d12Info.FrameInfo, cache.D3D12RenderItemIDs);
+			cache.Resize();
+			const uint32 itemsCount = cache.Size();
+
+			const RenderItem::ItemsCache itemsCache{ cache.ItemsCache() };
+			RenderItem::GetItems(cache.D3D12RenderItemIDs.data(), itemsCount, itemsCache);
+
+			const Submesh::ViewsCache viewsCache{ cache.ViewsCache() };
+			Submesh::GetViews(itemsCache.SubmeshGPU_IDs, itemsCount, viewsCache);
+
+			const Material::MaterialsCache materialsCache{ cache.MaterialsCache() };
+			Material::GetMaterials(itemsCache.MaterialIDs, itemsCount, materialsCache);
+		}
+
 	} // 関数
 
 	bool Initialize()
 	{
-		return CreateBuffers(InitialDimensions) && CreateGPassPSOAndRootSignature();
+		return CreateBuffers(InitialDimensions);
 	}
 
 	void Shutdown()
@@ -136,9 +267,6 @@ namespace Rizityo::Graphics::D3D12::GPass
 		GPassMainBuffer.Release();
 		GPassDepthBuffer.Release();
 		Dimensions = InitialDimensions;
-
-		Core::Release(GPassRootSig);
-		Core::Release(GPassPSO);
 	}
 
 	const D3D12RenderTexture& GetMainBuffer()
@@ -161,48 +289,95 @@ namespace Rizityo::Graphics::D3D12::GPass
 		}
 	}
 
-	void DepthPrepass(ID3D12GraphicsCommandList* cmdList, const D3D12FrameInfo& info)
+	void DepthPrepass(ID3D12GraphicsCommandList* cmdList, const D3D12FrameInfo& d3d12Info)
 	{
+		PrepareRenderFrame(d3d12Info);
 
+		ConstantBuffer& cbuffer{ Core::GetConstantBuffer() };
+		FillPerObjectData(cbuffer, d3d12Info);
+
+		const GPassCache& cache{ FrameCache };
+		const uint32 itemsCount = cache.Size();
+
+		ID3D12RootSignature* currentRootSignature = nullptr;
+		ID3D12PipelineState* currentPipelineState = nullptr;
+
+		for (uint32 i = 0; i < itemsCount; i++)
+		{
+			if (currentRootSignature != cache.RootSignatures[i])
+			{
+				currentRootSignature = cache.RootSignatures[i];
+				cmdList->SetGraphicsRootSignature(currentRootSignature);
+				cmdList->SetGraphicsRootConstantBufferView(OpaqueRootParameter::GlobalShaderData, d3d12Info.GlobalShaderData);
+			}
+
+			if (currentPipelineState != cache.DepthPipelineStates[i])
+			{
+				currentPipelineState = cache.DepthPipelineStates[i];
+				cmdList->SetPipelineState(currentPipelineState);
+			}
+
+			SetRootParameters(cmdList, i);
+
+			const D3D12_INDEX_BUFFER_VIEW& ibv{ cache.IndexBufferViews[i] };
+			const uint32 indexCount = ibv.SizeInBytes >> (ibv.Format == DXGI_FORMAT_R16_UINT ? 1 : 2);
+
+			cmdList->IASetIndexBuffer(&ibv);
+			cmdList->IASetPrimitiveTopology(cache.PrimitiveTopologies[i]);
+			cmdList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+		}
 	}
 
-	void Render(ID3D12GraphicsCommandList* cmdList, const D3D12FrameInfo& info)
+	void Render(ID3D12GraphicsCommandList* cmdList, const D3D12FrameInfo& d3d12Info)
 	{
-		cmdList->SetGraphicsRootSignature(GPassRootSig);
-		cmdList->SetPipelineState(GPassPSO);
+		const GPassCache& cache{ FrameCache };
+		const uint32 itemsCount = cache.Size();
 
-		static uint32 frame = 0;
-		struct
+		ID3D12RootSignature* currentRootSignature = nullptr;
+		ID3D12PipelineState* currentPipelineState = nullptr;
+
+		for (uint32 i = 0; i < itemsCount; i++)
 		{
-			float32 width;
-			float32 height;
-			uint32 frame;
-		} constants{ (float32)info.SurfaceWidth, (float32)info.SurfaceHeight, ++frame };
+			if (currentRootSignature != cache.RootSignatures[i])
+			{
+				currentRootSignature = cache.RootSignatures[i];
+				cmdList->SetGraphicsRootSignature(currentRootSignature);
+				cmdList->SetGraphicsRootConstantBufferView(OpaqueRootParameter::GlobalShaderData, d3d12Info.GlobalShaderData);
+			}
 
-		using grpid = GPassRootParamIndices;
-		cmdList->SetGraphicsRoot32BitConstants(grpid::RootConstants, 3, &constants, 0);
+			if (currentPipelineState != cache.GPassPipelineStates[i])
+			{
+				currentPipelineState = cache.GPassPipelineStates[i];
+				cmdList->SetPipelineState(currentPipelineState);
+			}
 
-		cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		cmdList->DrawInstanced(3, 1, 0, 0);
+			SetRootParameters(cmdList, i);
+
+			const D3D12_INDEX_BUFFER_VIEW& ibv{ cache.IndexBufferViews[i] };
+			const uint32 indexCount = ibv.SizeInBytes >> (ibv.Format == DXGI_FORMAT_R16_UINT ? 1 : 2);
+
+			cmdList->IASetIndexBuffer(&ibv);
+			cmdList->IASetPrimitiveTopology(cache.PrimitiveTopologies[i]);
+			cmdList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+		}
 	}
 
 	void AddTransitionsForDepthPrepass(Helper::D3D12ResourceBarrier& barriers)
 	{
-		/*barriers.Add(GPassMainBuffer.Resource(),
+		barriers.Add(GPassMainBuffer.Resource(),
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY);*/
+			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY);
 		barriers.Add(GPassDepthBuffer.Resource(),
 			D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE/*, Flags*/);
+			D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
-		// Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
 	}
 
 	void AddTransitionsForGPass(Helper::D3D12ResourceBarrier& barriers)
 	{
 		barriers.Add(GPassMainBuffer.Resource(),
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-			D3D12_RESOURCE_STATE_RENDER_TARGET/*, D3D12_RESOURCE_BARRIER_FLAG_END_ONLY*/);
+			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_BARRIER_FLAG_END_ONLY);
 		barriers.Add(GPassDepthBuffer.Resource(),
 			D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -213,16 +388,13 @@ namespace Rizityo::Graphics::D3D12::GPass
 		barriers.Add(GPassMainBuffer.Resource(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		/*barriers.Add(GPassDepthBuffer.Resource(),
-			D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY);*/
 	}
 
 	void SetRenderTargetsForDepthPrepass(ID3D12GraphicsCommandList* cmdList)
 	{
 		const D3D12_CPU_DESCRIPTOR_HANDLE dsv{ GPassDepthBuffer.DSV() };
 
-		cmdList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.f, 0, 0, nullptr);
+		cmdList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
 		cmdList->OMSetRenderTargets(0, nullptr, 0, &dsv);
 	}
 

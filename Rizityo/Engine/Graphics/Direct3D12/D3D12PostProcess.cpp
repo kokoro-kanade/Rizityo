@@ -18,7 +18,6 @@ namespace Rizityo::Graphics::D3D12::Post
 			enum : uint32
 			{
 				RootConstants,
-				DescriptorTable,
 				Count
 			};
 		};
@@ -30,20 +29,13 @@ namespace Rizityo::Graphics::D3D12::Post
 		{
 			assert(!PostRootSig && !PostPSO);
 
-			Helper::D3D12DescriptorRange range
-			{
-				D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
-				D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND,0,0,
-				D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE
-			};
-
 			// GPassルートシグネチャー作成
 			using prmid = PostRootParamIndices;
 			Helper::D3D12RootParameter parameters[prmid::Count]{};
 			parameters[prmid::RootConstants].AsConstants(1, D3D12_SHADER_VISIBILITY_PIXEL, 1);
-			parameters[prmid::DescriptorTable].AsDescriptorTable(D3D12_SHADER_VISIBILITY_PIXEL, &range, 1);
 
-			const Helper::D3D12RootSignatureDesc rootSignature{ &parameters[0], _countof(parameters) };
+			Helper::D3D12RootSignatureDesc rootSignature{ &parameters[0], _countof(parameters) };
+			rootSignature.Flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 			PostRootSig = rootSignature.Create();
 			assert(PostRootSig);
 			SET_NAME_D3D12_OBJECT(PostRootSig, L"PostProcess Root Signature");
@@ -81,14 +73,13 @@ namespace Rizityo::Graphics::D3D12::Post
 		Core::Release(PostPSO);
 	}
 
-	void PostProcess(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE targetRTV)
+	void PostProcess(ID3D12GraphicsCommandList* cmdList, const D3D12FrameInfo& d3d12Info, D3D12_CPU_DESCRIPTOR_HANDLE targetRTV)
 	{
 		cmdList->SetGraphicsRootSignature(PostRootSig);
 		cmdList->SetPipelineState(PostPSO);
 
 		using prmid = PostRootParamIndices;
 		cmdList->SetGraphicsRoot32BitConstant(prmid::RootConstants, GPass::GetMainBuffer().SRV().Index, 0);
-		cmdList->SetGraphicsRootDescriptorTable(prmid::DescriptorTable, Core::GetSRVHeap().GPUStart());
 		cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
