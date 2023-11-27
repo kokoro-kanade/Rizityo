@@ -6,6 +6,7 @@
 #include "Content/ContentToEngine.h"
 #include "Components/Entity.h"
 #include "Components/Transform.h"
+#include "Components/Script.h"
 #include "ShaderCompile.h"
 #include <filesystem>
 #include <fstream>
@@ -13,6 +14,31 @@
 #if TEST_RENDERER
 
 using namespace Rizityo;
+
+class rotator_script;
+REGISTER_SCRIPT(rotator_script);
+class rotator_script : public Script::EntityScript
+{
+public:
+	constexpr explicit rotator_script(GameEntity::Entity entity)
+		: Script::EntityScript{ entity } {}
+
+	void BeginPlay() override {}
+	void Update(float dt) override
+	{
+		_angle += 0.25f * dt * Math::TWO_PI;
+		if (_angle > Math::TWO_PI) _angle -= Math::TWO_PI;
+		Math::Vector3a rot{ 0.f, _angle, 0.f };
+		DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3A(&rot)) };
+		Math::Vector4 rot_quat{};
+		DirectX::XMStoreFloat4(&rot_quat, quat);
+		SetRotation(rot_quat);
+	}
+
+private:
+	float32 _angle{ 0.f };
+};
+
 
 #define ENABLE_TEST_WORKERS 0
 
@@ -54,6 +80,8 @@ void JointTestWorkers()
 	}
 #endif
 }
+
+Timer timer{};
 
 ID::IDType TestModelID{ ID::INVALID_ID };
 ID::IDType TestItemID{ ID::INVALID_ID };
@@ -156,26 +184,34 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-GameEntity::Entity CreateTestGameEntity(bool isCamera)
+GameEntity::Entity CreateTestGameEntity(Math::Vector3 position, Math::Vector3 rotation, bool rotates)
 {
 	Transform::InitInfo transformInfo{};
-	Math::Vector3a rot{ 0, isCamera ? 3.14f : 0.f, 0 };
-	DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3A(&rot)) };
+	DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3(&rotation)) };
 	Math::Vector4a rotQuat;
 	DirectX::XMStoreFloat4A(&rotQuat, quat);
 	memcpy(&transformInfo.Rotation[0], &rotQuat.x, sizeof(transformInfo.Rotation));
+	memcpy(&transformInfo.Position[0], &position.x, sizeof(transformInfo.Position));
 
-	if (isCamera)
+	Script::InitInfo script_info{};
+	if (rotates)
 	{
-		transformInfo.Position[1] = 1.f;
-		transformInfo.Position[2] = 3.f;
+		script_info.CreateFunc = Script::Internal::GetScriptCreateFunc(Script::Internal::StringHash()("rotator_script"));
+		assert(script_info.CreateFunc);
 	}
 
 	GameEntity::EntityInfo entityInfo{};
 	entityInfo.Transform = &transformInfo;
+	entityInfo.Script = &script_info;
 	GameEntity::Entity entity{ GameEntity::CreateGameEntity(entityInfo) };
 	assert(entity.IsValid());
 	return entity;
+}
+
+void
+remove_game_entity(GameEntity::EntityID id)
+{
+	GameEntity::RemoveGameEnity(id);
 }
 
 bool ReadFile(std::filesystem::path path, OUT std::unique_ptr<uint8[]>& data, OUT uint64& size)
@@ -204,7 +240,7 @@ void CreateTestSurface(OUT TestSurface& testSurface, Platform::WindowInitInfo in
 {
 	testSurface.Surface.Window = Platform::CreateMyWindow(&info);
 	testSurface.Surface.Surface = Graphics::CreateSurface(testSurface.Surface.Window);
-	testSurface.Entity = CreateTestGameEntity(true);
+	testSurface.Entity = CreateTestGameEntity({ 0.f, 1.f, 3.f }, { 0.f, 3.14f, 0.f }, false);
 	testSurface.Camera = Graphics::CreateCamera(Graphics::PerspectiveCameraInitInfo{ testSurface.Entity.ID() });
 	testSurface.Camera.SetAspectRatio((float32)testSurface.Surface.Window.Width() / testSurface.Surface.Window.Height());
 }
@@ -268,7 +304,7 @@ bool TestInitialize()
 
 	InitTestWorkers(BufferTestWorker);
 
-	TestItemID = CreateRenderItem(CreateTestGameEntity(false).ID());
+	TestItemID = CreateRenderItem(CreateTestGameEntity({}, {}, true).ID());
 
 	IsRestarting = false;
 	return true;
@@ -281,15 +317,24 @@ bool EngineTest::Initialize()
 
 void EngineTest::Run()
 {
+	timer.Begin();
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	Script::Update(timer.AverageFrameSecond());
 	for (uint32 i = 0; i < _countof(Surfaces); i++)
 	{
 		if (Surfaces[i].Surface.Surface.IsValid())
 		{
 			float32 threshold = 10;
-			Surfaces[i].Surface.Surface.Render({&TestItemID, &threshold, 1, Surfaces[i].Camera.ID()});
+			Graphics::FrameInfo info{};
+			info.RenderItemIDs = &TestItemID;
+			info.RenderItemCount = 1;
+			info.Thresholds = &threshold;
+			info.CamerID = Surfaces[i].Camera.ID();
+
+			Surfaces[i].Surface.Surface.Render(info);
 		}
 	}
+	timer.End();
 }
 
 void TestShutdown()

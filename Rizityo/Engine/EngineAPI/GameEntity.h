@@ -12,14 +12,22 @@ namespace Rizityo
 		class Entity
 		{
 		public:
+
 			constexpr explicit Entity(EntityID id) : _ID{ id } {}
 			constexpr Entity() : _ID{ ID::INVALID_ID } {}
-			constexpr EntityID ID() const { return _ID; }
-			constexpr bool IsValid() const { return ID::IsValid(_ID); }
+			[[nodiscard]] constexpr EntityID ID() const { return _ID; }
+			[[nodiscard]] constexpr bool IsValid() const { return ID::IsValid(_ID); }
 
-			Transform::Component GetTransformComponent() const;
-			Script::Component GetScriptComponent() const;
+			[[nodiscard]] Transform::Component GetTransformComponent() const;
+			[[nodiscard]] Script::Component GetScriptComponent() const;
+
+			[[nodiscard]] Math::Vector4 rotation() const { return GetTransformComponent().Rotation(); }
+			[[nodiscard]] Math::Vector3 orientation() const { return GetTransformComponent().Orientation(); }
+			[[nodiscard]] Math::Vector3 position() const { return GetTransformComponent().Position(); }
+			[[nodiscard]] Math::Vector3 scale() const { return GetTransformComponent().Scale(); }
+
 		private:
+
 			EntityID _ID;
 		};
 	}
@@ -31,12 +39,24 @@ namespace Rizityo
 		class EntityScript : public GameEntity::Entity
 		{
 		public:
+
 			virtual ~EntityScript() = default;
 			virtual void BeginPlay() {}
 			virtual void Update(float) {}
 
 		protected:
+
 			constexpr explicit EntityScript(GameEntity::Entity entity) : GameEntity::Entity{entity.ID()}{}
+
+			void SetPosition(Math::Vector3 position) const { SetPosition(this, position); }
+			void SetRotation(Math::Vector4 rotation_quaternion) const { SetRotation(this, rotation_quaternion); }
+			void SetOrientation(Math::Vector3 orientation_vector) const { SetOrientation(this, orientation_vector); }
+			void SetScale(Math::Vector3 scale) const { SetScale(this, scale); }
+
+			static void SetPosition(const GameEntity::Entity* const entity, Math::Vector3 position);
+			static void SetRotation(const GameEntity::Entity* const entity, Math::Vector4 rotation_quaternion);
+			static void SetOrientation(const GameEntity::Entity* const entity, Math::Vector3 orientation_vector);
+			static void SetScale(const GameEntity::Entity* const entity, Math::Vector3 scale);
 		};
 
 		namespace Internal

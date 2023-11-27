@@ -65,7 +65,16 @@ namespace Rizityo::Content
         Utility::FreeList<uint8*> GeometryHierarchies;
         std::mutex GeometryMutex;
 
-        Utility::FreeList < std::unique_ptr<uint8[]>> Shaders;
+        struct NoexceptMap {
+            std::unordered_map<uint32, std::unique_ptr<uint8[]>> map;
+            NoexceptMap() = default;
+            NoexceptMap(const NoexceptMap&) = default;
+            NoexceptMap(NoexceptMap&&) noexcept = default;
+            NoexceptMap& operator=(const NoexceptMap&) = default;
+            NoexceptMap& operator=(NoexceptMap&&) noexcept = default;
+        };
+
+        Utility::FreeList<NoexceptMap> ShaderGroups;
         std::mutex ShaderMutex;
 
     } // ïœêî
@@ -121,7 +130,7 @@ namespace Rizityo::Content
 
                 stream.LOD_Offsets()[lodIndex] = { (uint16)submeshIndex, (uint16)idCount };
                 reader.Skip(sizeof(uint32)); // SizeOfSubmeshesÇÕñ≥éã
-                for (uint32 idIndex = 0; idIndex < idCount; ++idIndex)
+                for (uint32 idIndex = 0; idIndex < idCount; idIndex++)
                 {
                     const uint8* at{ reader.Position() };
                     gpuIDs[submeshIndex++] = Graphics::AddSubmesh(at);
@@ -132,7 +141,7 @@ namespace Rizityo::Content
 
             assert([&]() {
                 float32 previous_threshold{ stream.Thresholds()[0] };
-                for (uint32 i{ 1 }; i < lodCount; ++i)
+                for (uint32 i{ 1 }; i < lodCount; i++)
                 {
                     if (stream.Thresholds()[i] <= previous_threshold) return false;
                     previous_threshold = stream.Thresholds()[i];
@@ -324,30 +333,52 @@ namespace Rizityo::Content
         }
     }
 
-    ID::IDType AddShader(const uint8* data)
+    ID::IDType AddShaderGroup(const uint8* const* shaders, uint32 numShaders, const uint32* const keys)
     {
-        const CompiledShaderPtr shaderPtr{ (const CompiledShaderPtr)data };
-        const uint64 size = sizeof(uint64) + CompiledShader::HashLength + shaderPtr->ByteCodeSize();
-        std::unique_ptr<uint8[]> shader{ std::make_unique<uint8[]>(size) };
-        memcpy(shader.get(), data, size);
+        assert(shaders && numShaders && keys);
+
+        NoexceptMap group;
+        for (uint32 i = 0; i < numShaders; i++)
+        {
+            assert(shaders[i]);
+
+            const CompiledShaderPtr shaderPtr{ (const CompiledShaderPtr)shaders[i] };
+            const uint64 size = CompiledShader::BufferSize(shaderPtr->ByteCodeSize());
+            std::unique_ptr<uint8[]> shader{ std::make_unique<uint8[]>(size) };
+            memcpy(shader.get(), shaders[i], size);
+            group.map[keys[i]] = std::move(shader);
+        }
         std::lock_guard lock{ ShaderMutex };
-        return Shaders.Add(std::move(shader));
+        return ShaderGroups.Add(std::move(group));
     }
 
-    void RemoveShader(ID::IDType id)
+    void RemoveShaderGroup(ID::IDType id)
     {
         std::lock_guard lock{ ShaderMutex };
         assert(ID::IsValid(id));
-        Shaders.Remove(id);
+
+        ShaderGroups[id].map.clear();
+        ShaderGroups.Remove(id);
     }
 
-    CompiledShaderPtr GetShader(ID::IDType id)
+    CompiledShaderPtr GetShader(ID::IDType id, uint32 shaderKey)
     {
         std::lock_guard lock{ ShaderMutex };
         assert(ID::IsValid(id));
-        return (const CompiledShaderPtr)(Shaders[id].get());
+
+        for (const auto& [key, value] : ShaderGroups[id].map)
+        {
+            if (key == shaderKey)
+            {
+                return (const CompiledShaderPtr)value.get();
+            }
+        }
+
+        assert(false);
+        return nullptr;
     }
 
+    
     void GetSubmeshGPU_IDs(ID::IDType geometryContentID, uint32 idCount, OUT ID::IDType* const gpuIDs)
     {
         std::lock_guard lock{ GeometryMutex };
@@ -379,7 +410,7 @@ namespace Rizityo::Content
 
         std::lock_guard lock{ GeometryMutex };
 
-        for (uint32 i = 0; i < idCount; ++i)
+        for (uint32 i = 0; i < idCount; i++)
         {
             uint8* const pointer{ GeometryHierarchies[geometryIDs[i]] };
             if ((uintptr_t)pointer & SingleMeshFlag)

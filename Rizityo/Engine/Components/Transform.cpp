@@ -12,6 +12,9 @@ namespace Rizityo::Transform
 		Utility::Vector<Math::Matrix4x4> InvWorld;
 		Utility::Vector<uint8> HasTransform;
 
+		Utility::Vector<uint8> ChangesFromPreviousFrame;
+		uint8 ReadWriteFlag;
+
 		Math::Vector3 CalculateOrientation(Math::Vector4 rotation)
 		{
 			using namespace DirectX;
@@ -43,6 +46,35 @@ namespace Rizityo::Transform
 			HasTransform[index] = 1;
 		}
 
+		void SetPosition(TransformID id, const Math::Vector3& position)
+		{
+			const uint32 index{ ID::GetIndex(id) };
+			Positions[index] = position;
+			HasTransform[index] = 0;
+			ChangesFromPreviousFrame[index] |= ComponentFlags::Position;
+		}
+
+		void SetRotation(TransformID id, const Math::Vector4& rotation_quaternion)
+		{
+			const uint32 index{ ID::GetIndex(id) };
+			Rotations[index] = rotation_quaternion;
+			Orientations[index] = CalculateOrientation(rotation_quaternion);
+			HasTransform[index] = 0;
+			ChangesFromPreviousFrame[index] |= ComponentFlags::Rotation;
+		}
+
+		void set_orientation(TransformID, const Math::Vector3&)
+		{
+		}
+
+		void SetScale(TransformID id, const Math::Vector3& scale)
+		{
+			const uint32 index{ ID::GetIndex(id) };
+			Scales[index] = scale;
+			HasTransform[index] = 0;
+			ChangesFromPreviousFrame[index] |= ComponentFlags::Scale;
+		}
+
 	} // –³–¼‹óŠÔ
 
 	Transform::Component CreateComponent(const InitInfo& info, GameEntity::Entity entity)
@@ -53,10 +85,11 @@ namespace Rizityo::Transform
 		{
 			Math::Vector4 rotation{ info.Rotation };
 			Positions[index] = Math::Vector3{ info.Position };
-			Rotations[index] =rotation;
+			Rotations[index] = rotation;
 			Orientations[index] = CalculateOrientation(rotation);
-			Scales[index] = Math::Vector3{info.Scale};
+			Scales[index] = Math::Vector3{ info.Scale };
 			HasTransform[index] = 0;
+			ChangesFromPreviousFrame[index] = (uint8)ComponentFlags::All;
 		}
 		else
 		{
@@ -68,6 +101,7 @@ namespace Rizityo::Transform
 			ToWorld.emplace_back();
 			InvWorld.emplace_back();
 			HasTransform.emplace_back((uint8)0);
+			ChangesFromPreviousFrame.emplace_back((uint8)ComponentFlags::All);
 		}
 
 		return Component{ TransformID{entity.ID()} };
@@ -90,6 +124,55 @@ namespace Rizityo::Transform
 
 		world = ToWorld[entityIndex];
 		inverseWorld = InvWorld[entityIndex];
+	}
+
+	void GetUpdatedComponentsFlags(const GameEntity::EntityID* const ids, uint32 count, OUT uint8* const flags)
+	{
+		assert(ids && count && flags);
+		ReadWriteFlag = 1;
+
+		for (uint32 i = 0; i < count; i++)
+		{
+			assert(GameEntity::Entity{ ids[i] }.IsValid());
+			flags[i] = ChangesFromPreviousFrame[ID::GetIndex(ids[i])];
+		}
+	}
+
+	void Update(const ComponentCache* const cache, uint32 count)
+	{
+		assert(cache && count);
+
+		if (ReadWriteFlag)
+		{
+			memset(ChangesFromPreviousFrame.data(), 0, ChangesFromPreviousFrame.size());
+			ReadWriteFlag = 0;
+		}
+
+		for (uint32 i = 0; i < count; i++)
+		{
+			const ComponentCache& c{ cache[i] };
+			assert(Component{ c.ID }.IsValid());
+
+			if (c.Flags & ComponentFlags::Rotation)
+			{
+				SetRotation(c.ID, c.Rotation);
+			}
+
+			if (c.Flags & ComponentFlags::Orientation)
+			{
+				set_orientation(c.ID, c.Orientation);
+			}
+
+			if (c.Flags & ComponentFlags::Position)
+			{
+				SetPosition(c.ID, c.Position);
+			}
+
+			if (c.Flags & ComponentFlags::Scale)
+			{
+				SetScale(c.ID, c.Scale);
+			}
+		}
 	}
 
 	Math::Vector3 Component::Position() const

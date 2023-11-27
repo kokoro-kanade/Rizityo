@@ -1,5 +1,8 @@
 #include "Script.h"
 #include "Entity.h"
+#include "Transform.h"
+
+#define USE_TRANSFORM_CACHE_MAP 0
 
 namespace Rizityo::Script
 {
@@ -10,6 +13,12 @@ namespace Rizityo::Script
 
 		Utility::Vector<ID::GENERATION_TYPE> Generations;
 		Utility::Deque<ScriptID> FreeIds;
+
+		Utility::Vector<Transform::ComponentCache> TransformCache;
+
+#if USE_TRANSFORM_CACHE_MAP
+		std::unordered_map<ID::IDType, uint32>    CacheMap;
+#endif
 
 		// Why: EntityのIsAliveのようにヘッダーに関数宣言して定義すればよいのではないか？
 		bool Exists(ScriptID id)
@@ -34,6 +43,53 @@ namespace Rizityo::Script
 			return names;
 		}
 #endif // USE_EDITOR
+
+#if USE_TRANSFORM_CACHE_MAP
+		Transform::ComponentCache* const GetCachePtr(const GameEntity::Entity* const entity)
+		{
+			assert(GameEntity::IsAlive((*entity).ID()));
+			const Transform::TransformID id{ (*entity).GetTransformComponent().ID() };
+
+			uint32 index{ UINT32_INVALID_NUM };
+			auto pair = CacheMap.try_emplace(id, ID::INVALID_ID);
+
+			// Cache_Mp didn't have an entry for this id, new entry inserted
+			if (pair.second)
+			{
+				index = (uint32)TransformCache.size();
+				TransformCache.emplace_back();
+				TransformCache.back().ID = id;
+				CacheMap[id] = index;
+			}
+			else
+			{
+				index = CacheMap[id];
+			}
+
+			assert(index < TransformCache.size());
+			return &TransformCache[index];
+		}
+#else
+		Transform::ComponentCache* const GetCachePtr(const GameEntity::Entity* const entity)
+		{
+			assert(GameEntity::IsAlive((*entity).ID()));
+			const Transform::TransformID id{ (*entity).GetTransformComponent().ID() };
+
+			for (auto& cache : TransformCache)
+			{
+				if (cache.ID == id)
+				{
+					return &cache;
+				}
+			}
+
+			// キャッシュがなければ
+			TransformCache.emplace_back();
+			TransformCache.back().ID = id;
+
+			return &TransformCache.back();
+		}
+#endif
 
 	}
 
@@ -97,9 +153,9 @@ namespace Rizityo::Script
 		assert(component.IsValid() && Exists(component.ID()));
 		const ScriptID id{ component.ID() };
 		const ID::IDType scriptEntityIndex{ IdMapping[ID::GetIndex(id)] };
-		const ScriptID lastId{ (scriptEntityIndex != EntityScripts.size()-1) ? EntityScripts.back()->GetScriptComponent().ID() : id };
+		const ScriptID lastId{ (scriptEntityIndex != EntityScripts.size() - 1) ? EntityScripts.back()->GetScriptComponent().ID() : id };
 		Utility::EraseUnordered(EntityScripts, scriptEntityIndex);
-		IdMapping[ID::GetIndex(lastId)] = scriptEntityIndex; 
+		IdMapping[ID::GetIndex(lastId)] = scriptEntityIndex;
 		IdMapping[ID::GetIndex(id)] = ID::INVALID_ID; // 要素が一つの時はid == lastIdなのでinvalid_idの代入が後
 	}
 
@@ -109,6 +165,44 @@ namespace Rizityo::Script
 		{
 			ptr->Update(dt);
 		}
+
+		if (TransformCache.size())
+		{
+			Transform::Update(TransformCache.data(), (uint32)TransformCache.size());
+			TransformCache.clear();
+
+#if USE_TRANSFORM_CACHE_MAP
+			CacheMap.clear();
+#endif
+		}
+	}
+
+	void EntityScript::SetPosition(const GameEntity::Entity* const entity, Math::Vector3 position)
+	{
+		Transform::ComponentCache& cache{ *GetCachePtr(entity) };
+		cache.Flags |= Transform::ComponentFlags::Position;
+		cache.Position = position;
+	}
+
+	void EntityScript::SetRotation(const GameEntity::Entity* const entity, Math::Vector4 rotation_quaternion)
+	{
+		Transform::ComponentCache& cache{ *GetCachePtr(entity) };
+		cache.Flags |= Transform::ComponentFlags::Rotation;
+		cache.Rotation = rotation_quaternion;
+	}
+
+	void EntityScript::SetOrientation(const GameEntity::Entity* const entity, Math::Vector3 orientation_vector)
+	{
+		Transform::ComponentCache& cache{ *GetCachePtr(entity) };
+		cache.Flags |= Transform::ComponentFlags::Orientation;
+		cache.Orientation = orientation_vector;
+	}
+
+	void EntityScript::SetScale(const GameEntity::Entity* const entity, Math::Vector3 scale)
+	{
+		Transform::ComponentCache& cache{ *GetCachePtr(entity) };
+		cache.Flags |= Transform::ComponentFlags::Scale;
+		cache.Scale = scale;
 	}
 
 } // Script

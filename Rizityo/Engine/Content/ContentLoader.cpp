@@ -117,7 +117,8 @@ namespace Rizityo::Content
 		for (uint32 entityIndex = 0; entityIndex < numEntities; entityIndex++)
 		{
 			GameEntity::EntityInfo info{};
-			const uint32 entityType = *at; at += su32;
+			// エンティティ型は無視
+			at += su32;
 			const uint32 numComponents = *at; at += su32;
 			if (!numComponents)
 				return false;

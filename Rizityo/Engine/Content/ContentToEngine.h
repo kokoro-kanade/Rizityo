@@ -26,15 +26,17 @@ namespace Rizityo::Content {
         constexpr uint64 ByteCodeSize() const { return _ByteCodeSize; }
         constexpr const uint8* const Hash() const { return &_Hash[0]; }
         constexpr const uint8* const ByteCode() const { return &_ByteCode; }
+        constexpr const uint64 BufferSize() const { return sizeof(_ByteCodeSize) + HashLength + _ByteCodeSize;}
+        constexpr static uint64 BufferSize(uint64 size) { return sizeof(_ByteCodeSize) + HashLength + size; }
     private:
-        uint64         _ByteCodeSize;
-        uint8          _Hash[HashLength];
-        uint8          _ByteCode;
+        uint64 _ByteCodeSize;
+        uint8 _Hash[HashLength];
+        uint8 _ByteCode;
     } const* CompiledShaderPtr;
 
-    ID::IDType AddShader(const uint8* data);
-    void RemoveShader(ID::IDType id);
-    CompiledShaderPtr GetShader(ID::IDType id);
+    ID::IDType AddShaderGroup(const uint8* const* shaders, uint32 numShaders, const uint32* const keys);
+    void RemoveShaderGroup(ID::IDType id);
+    CompiledShaderPtr GetShader(ID::IDType id, uint32 shaderKey);
 
     struct LOD_Offset
     {
