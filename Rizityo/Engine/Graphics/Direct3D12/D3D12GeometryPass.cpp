@@ -23,6 +23,12 @@ namespace Rizityo::Graphics::D3D12::GPass
 		constexpr float32 ClearValue[4]{};
 #endif // _DEBUG
 
+#if USE_STL_VECTOR
+#define CONSTEXPR
+#else
+#define CONSTEXPR constexpr
+#endif
+
 		struct GPassCache
 		{
 			Utility::Vector<ID::IDType> D3D12RenderItemIDs;
@@ -73,17 +79,17 @@ namespace Rizityo::Graphics::D3D12::GPass
 				};
 			}
 
-			constexpr uint32 Size() const
+			CONSTEXPR uint32 Size() const
 			{
 				return (uint32)D3D12RenderItemIDs.size();
 			}
 
-			constexpr void Clear()
+			CONSTEXPR void Clear()
 			{
 				D3D12RenderItemIDs.clear();
 			}
 
-			constexpr void Resize()
+			CONSTEXPR void Resize()
 			{
 				const uint64 itemsCount = D3D12RenderItemIDs.size();
 				const uint64 newBufferSize = itemsCount * StructSize;
@@ -131,6 +137,8 @@ namespace Rizityo::Graphics::D3D12::GPass
 			Utility::Vector<uint8> _Buffer;
 		} FrameCache;
 
+#undef CONSTEXPR
+
 	} // 変数
 
 	namespace
@@ -173,7 +181,7 @@ namespace Rizityo::Graphics::D3D12::GPass
 				info.Desc = &desc;
 				info.InitialState = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE; // ピクセルシェーダーとコンピュートシェーダーで読み込む
 				info.ClearValue.Format = desc.Format;
-				info.ClearValue.DepthStencil.Depth = 1.f;
+				info.ClearValue.DepthStencil.Depth = 0.f;
 				info.ClearValue.DepthStencil.Stencil = 0;
 
 				GPassDepthBuffer = D3D12DepthBuffer{ info };
@@ -185,12 +193,14 @@ namespace Rizityo::Graphics::D3D12::GPass
 			return GPassMainBuffer.Resource() && GPassDepthBuffer.Resource();
 		}
 
-		void FillPerObjectData(OUT ConstantBuffer& cbuffer, const D3D12FrameInfo& d3d12Info)
+		void FillPerObjectData(const D3D12FrameInfo& d3d12Info)
 		{
 			const GPassCache& cache{ FrameCache };
 			const uint32 renderItemsCount = (uint32)cache.Size();
 			ID::IDType currentEntityID{ ID::INVALID_ID };
 			HLSL::PerObjectData* currentDataPointer = nullptr;
+
+			ConstantBuffer& cbuffer{ Core::GetConstantBuffer() };
 
 			using namespace DirectX;
 			for (uint32 i = 0; i < renderItemsCount; i++)
@@ -253,6 +263,8 @@ namespace Rizityo::Graphics::D3D12::GPass
 
 			const Material::MaterialsCache materialsCache{ cache.MaterialsCache() };
 			Material::GetMaterials(itemsCache.MaterialIDs, itemsCount, materialsCache);
+
+			FillPerObjectData(d3d12Info);
 		}
 
 	} // 関数
@@ -292,9 +304,6 @@ namespace Rizityo::Graphics::D3D12::GPass
 	void DepthPrepass(ID3D12GraphicsCommandList* cmdList, const D3D12FrameInfo& d3d12Info)
 	{
 		PrepareRenderFrame(d3d12Info);
-
-		ConstantBuffer& cbuffer{ Core::GetConstantBuffer() };
-		FillPerObjectData(cbuffer, d3d12Info);
 
 		const GPassCache& cache{ FrameCache };
 		const uint32 itemsCount = cache.Size();
@@ -394,7 +403,7 @@ namespace Rizityo::Graphics::D3D12::GPass
 	{
 		const D3D12_CPU_DESCRIPTOR_HANDLE dsv{ GPassDepthBuffer.DSV() };
 
-		cmdList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
+		cmdList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.f, 0, 0, nullptr);
 		cmdList->OMSetRenderTargets(0, nullptr, 0, &dsv);
 	}
 
