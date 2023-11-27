@@ -232,9 +232,10 @@ namespace Rizityo::Graphics::D3D12::Camera
 
         if (_UpdateFlag)
         {
+            // D3D12ÇÃå¸Ç´Ç∆çáÇÌÇπÇÈÇΩÇﬂÇ…nearZÇ∆farZÇì¸ÇÍë÷Ç¶ÇƒÇ¢ÇÈ
             _Projection = (_ProjectionType == Graphics::Camera::Type::Perspective)
-                ? XMMatrixPerspectiveFovRH(_FieldOfView * XM_PI, _AspectRatio, _NearZ, _FarZ)
-                : XMMatrixOrthographicRH(_ViewWidth, _ViewHeight, _NearZ, _FarZ);
+                ? XMMatrixPerspectiveFovRH(_FieldOfView * XM_PI, _AspectRatio, _FarZ, _NearZ)
+                : XMMatrixOrthographicRH(_ViewWidth, _ViewHeight, _FarZ, _NearZ);
             _InverseProjection = XMMatrixInverse(nullptr, _Projection);
             _UpdateFlag = false;
         }

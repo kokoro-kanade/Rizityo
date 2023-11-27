@@ -35,7 +35,7 @@ namespace Rizityo::Graphics::D3D12::Shader
 					break;
 
 				shader = reinterpret_cast<const Content::CompiledShaderPtr>(&EngineShadersBlob[offset]);
-				offset += sizeof(uint64) + Content::CompiledShader::HashLength + shader->ByteCodeSize();
+				offset += shader->BufferSize();
 				index++;
 			}
 			assert(offset == size && index == EngineShader::Count);

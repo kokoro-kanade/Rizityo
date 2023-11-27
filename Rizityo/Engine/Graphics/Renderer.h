@@ -174,8 +174,8 @@ namespace Rizityo::Graphics
             UpVector = { 0.f, 1.f, 0.f };
             FieldOfView = 0.25f;
             AspectRatio = 16.f / 10.f;
-            NearZ = 0.001f;
-            FarZ = 10000.f;
+            NearZ = 0.01f;
+            FarZ = 1000.f;
         }
     };
 
@@ -189,8 +189,8 @@ namespace Rizityo::Graphics
             UpVector = { 0.f, 1.f, 0.f };
             ViewWidth = 1920;
             ViewHeight = 1080;
-            NearZ = 0.001f;
-            FarZ = 10000.f;
+            NearZ = 0.01f;
+            FarZ = 1000.f;
         }
     };
 
