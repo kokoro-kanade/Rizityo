@@ -23,6 +23,6 @@ struct ShaderFileInfo
 	ShaderType::Type Type;
 };
 
-std::unique_ptr<uint8[]> CompileShader(ShaderFileInfo info, const char* filePath, Rizityo::Utility::Vector<std::wstring>& extraArgs);
+std::unique_ptr<uint8[]> CompileShader(ShaderFileInfo info, const char* filePath);
 
 bool CompileShaders();

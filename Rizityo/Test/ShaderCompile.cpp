@@ -65,18 +65,40 @@ namespace
 
 		DISABLE_COPY_AND_MOVE(ShaderCompiler);
 
-		DxcCompiledShader Compile(ShaderFileInfo info, std::filesystem::path fullPath, Rizityo::Utility::Vector<std::wstring>& extraArgs)
+		DxcCompiledShader Compile(ShaderFileInfo info, std::filesystem::path fullPath)
 		{
 			assert(_Compiler && _Utils && _IncludeHandler);
-
 			HRESULT hr{ S_OK };
 
 			ComPtr<IDxcBlobEncoding> sourceBlob{ nullptr };
 			DXCall(hr = _Utils->LoadFile(fullPath.c_str(), nullptr, &sourceBlob));
 			if (FAILED(hr))
 				return {};
-
 			assert(sourceBlob && sourceBlob->GetBufferSize());
+
+			std::wstring file{ ToWstring(info.FileName) };
+			std::wstring func{ ToWstring(info.FunctionName) };
+			std::wstring prof{ ToWstring(_profileStrings[(uint32)info.Type]) };
+			std::wstring inc{ ToWstring(ShadersSourcePath) };
+
+			LPCWSTR args[]
+			{
+				file.c_str(),						 // エラーレポート用のファイル名
+				L"-E", func.c_str(),				 // エントリーファンクション
+				L"-T", prof.c_str(),				 // ターゲットプロファイル
+				L"-I", inc.c_str(),					 // インクルードパス
+				L"-enable-16bit-types",
+				DXC_ARG_ALL_RESOURCES_BOUND,
+#if _DEBUG
+				DXC_ARG_DEBUG,
+				DXC_ARG_SKIP_OPTIMIZATIONS,
+#else
+				DXC_ARG_OPTIMIZATION_LEVEL3,
+#endif // _DEBUG
+				DXC_ARG_WARNINGS_ARE_ERRORS,
+				L"-Qstrip_reflect",
+				L"-Qstrip_debug",
+			};
 
 			OutputDebugStringA("コンパイル ");
 			OutputDebugStringA(info.FileName);
@@ -84,25 +106,19 @@ namespace
 			OutputDebugStringA(info.FunctionName);
 			OutputDebugStringA("\n");
 
-			return Compile(sourceBlob.Get(), GetArgs(info, extraArgs));
+			return Compile(sourceBlob.Get(), args, _countof(args));
 		}
 
-		DxcCompiledShader Compile(IDxcBlobEncoding* sourceBlob, Rizityo::Utility::Vector<std::wstring> compilerArgs)
+		DxcCompiledShader Compile(IDxcBlobEncoding* sourceBlob, LPCWSTR* args, uint32 numArgs)
 		{
 			DxcBuffer buffer{};
 			buffer.Encoding = DXC_CP_ACP;
 			buffer.Ptr = sourceBlob->GetBufferPointer();
 			buffer.Size = sourceBlob->GetBufferSize();
 
-			Utility::Vector<LPCWSTR> args;
-			for (const auto& arg : compilerArgs)
-			{
-				args.emplace_back(arg.c_str());
-			}
-
 			HRESULT hr{ S_OK };
 			ComPtr<IDxcResult> results{ nullptr };
-			DXCall(hr = _Compiler->Compile(&buffer, args.data(), (uint32)args.size(), _IncludeHandler.Get(), IID_PPV_ARGS(&results)));
+			DXCall(hr = _Compiler->Compile(&buffer, args, numArgs, _IncludeHandler.Get(), IID_PPV_ARGS(&results)));
 			if (FAILED(hr))
 				return {};
 
@@ -135,10 +151,10 @@ namespace
 			DxcShaderHash* const hashBuffer{ (DxcShaderHash* const)hash->GetBufferPointer() };
 			assert(!(hashBuffer->Flags & DXC_HASHFLAG_INCLUDES_SOURCE));
 
-			OutputDebugStringA("Shader Hash: ");
+			OutputDebugStringA("Shader hash: ");
 			for (uint32 i{ 0 }; i < _countof(hashBuffer->HashDigest); ++i)
 			{
-				char hash_bytes[3]{};
+				char hash_bytes[3]{}; // 2 chars for hex value plus termination 0.
 				sprintf_s(hash_bytes, "%02x", (uint32)hashBuffer->HashDigest[i]);
 				OutputDebugStringA(hash_bytes);
 				OutputDebugStringA(" ");
@@ -172,37 +188,6 @@ namespace
 		ComPtr<IDxcCompiler3> _Compiler{ nullptr };
 		ComPtr<IDxcUtils> _Utils{ nullptr };
 		ComPtr<IDxcIncludeHandler> _IncludeHandler{ nullptr };
-
-		Utility::Vector<std::wstring> GetArgs(const ShaderFileInfo& info, Utility::Vector<std::wstring>& extraArgs)
-		{
-			Utility::Vector<std::wstring> args{};
-
-			args.emplace_back(ToWstring(info.FileName));						// (オプション) エラーレポート用のファイル名
-			args.emplace_back(L"-E");
-			args.emplace_back(ToWstring(info.FunctionName));                    // エントリー関数
-			args.emplace_back(L"-T");
-			args.emplace_back(ToWstring(_profileStrings[(uint32)info.Type]));   // ターゲットプロファイル
-			args.emplace_back(L"-I");
-			args.emplace_back(ToWstring(ShadersSourcePath));					// インクルードパス
-			args.emplace_back(L"-enable-16bit-types");
-			args.emplace_back(DXC_ARG_ALL_RESOURCES_BOUND);
-#if _DEBUG
-			args.emplace_back(DXC_ARG_DEBUG);
-			args.emplace_back(DXC_ARG_SKIP_OPTIMIZATIONS);
-#else
-			args.emplace_back(DXC_ARG_OPTIMIZATION_LEVEL3);
-#endif
-			args.emplace_back(DXC_ARG_WARNINGS_ARE_ERRORS);
-			args.emplace_back(L"-Qstrip_reflect");                               // reflectionsを分ける
-			args.emplace_back(L"-Qstrip_debug");                                 // デバッグ情報を分ける
-
-			for (const auto& arg : extraArgs)
-			{
-				args.emplace_back(arg.c_str());
-			}
-
-			return args;
-		}
 	};
 
 	decltype(auto) GetEngineShadersPath()
@@ -247,7 +232,7 @@ namespace
 			return false;
 		}
 
-		for (const auto& shader : shaders)
+		for (auto& shader : shaders)
 		{
 			const D3D12_SHADER_BYTECODE byteCode{ shader.ByteCode->GetBufferPointer(), shader.ByteCode->GetBufferSize() };
 			file.write((char*)&byteCode.BytecodeLength, sizeof(byteCode.BytecodeLength));
@@ -258,29 +243,29 @@ namespace
 		file.close();
 		return true; 
 	}
+}
 
-} // 無名空間
-
-std::unique_ptr<uint8[]> CompileShader(ShaderFileInfo info, const char* filePath, Utility::Vector<std::wstring>& extraArgs)
+std::unique_ptr<uint8[]>
+CompileShader(ShaderFileInfo info, const char* filePath)
 {
-	std::filesystem::path fullPath{ filePath };
-	fullPath += info.FileName;
-	if (!std::filesystem::exists(fullPath)) return {};
+	std::filesystem::path full_path{ filePath };
+	full_path += info.FileName;
+	if (!std::filesystem::exists(full_path)) return {};
 
 	ShaderCompiler compiler{};
-	DxcCompiledShader compiledShader{ compiler.Compile(info, fullPath, extraArgs) };
+	DxcCompiledShader compiled_shader{ compiler.Compile(info, full_path) };
 
-	if (compiledShader.ByteCode && compiledShader.ByteCode->GetBufferPointer() && compiledShader.ByteCode->GetBufferSize())
+	if (compiled_shader.ByteCode && compiled_shader.ByteCode->GetBufferPointer() && compiled_shader.ByteCode->GetBufferSize())
 	{
 		static_assert(Content::CompiledShader::HashLength == _countof(DxcShaderHash::HashDigest));
-		const uint64 bufferSize{ sizeof(uint64) + Content::CompiledShader::HashLength + compiledShader.ByteCode->GetBufferSize() };
-		std::unique_ptr<uint8[]> buffer{ std::make_unique<uint8[]>(bufferSize) };
-		Utility::BinaryWriter writer{ buffer.get(), bufferSize };
-		writer.Write(compiledShader.ByteCode->GetBufferSize());
-		writer.Write(compiledShader.Hash.HashDigest, Content::CompiledShader::HashLength);
-		writer.Write((uint8*)compiledShader.ByteCode->GetBufferPointer(), compiledShader.ByteCode->GetBufferSize());;
+		const uint64 buffer_size{ sizeof(uint64) + Content::CompiledShader::HashLength + compiled_shader.ByteCode->GetBufferSize() };
+		std::unique_ptr<uint8[]> buffer{ std::make_unique<uint8[]>(buffer_size) };
+		Utility::BinaryWriter writer{ buffer.get(), buffer_size };
+		writer.Write(compiled_shader.ByteCode->GetBufferSize());
+		writer.Write(compiled_shader.Hash.HashDigest, Content::CompiledShader::HashLength);
+		writer.Write((uint8*)compiled_shader.ByteCode->GetBufferPointer(), compiled_shader.ByteCode->GetBufferSize());;
 
-		assert(writer.offset() == bufferSize);
+		assert(writer.offset() == buffer_size);
 		return buffer;
 	}
 
@@ -304,9 +289,7 @@ bool CompileShaders()
 		fullPath += file.Info.FileName;
 		if (!std::filesystem::exists(fullPath)) 
 			return false;
-
-		Utility::Vector<std::wstring> extra_args{};
-		DxcCompiledShader compiledShader{ compiler.Compile(file.Info, fullPath, extra_args) };
+		DxcCompiledShader compiledShader{ compiler.Compile(file.Info, fullPath) };
 		if (compiledShader.ByteCode && compiledShader.ByteCode->GetBufferPointer() && compiledShader.ByteCode->GetBufferSize())
 		{
 			shaders.emplace_back(std::move(compiledShader));

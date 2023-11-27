@@ -4,7 +4,6 @@
 #include "ShaderCompile.h"
 #include "Components/Entity.h"
 #include "Graphics/Renderer.h"
-#include "../AssetTool/Geometry.h"
 
 using namespace Rizityo;
 
@@ -39,36 +38,17 @@ namespace
 
         const char* shaderPath{ "..\\..\\Test\\" };
 
-        std::wstring defines[]{ L"ELEMENTS_TYPE=1", L"ELEMENTS_TYPE=3" }; // 頂点属性ごとにコンパイル引数を変える
-        Utility::Vector<uint32> keys;
-        keys.emplace_back(AssetTool::Elements::ElementsType::StaticNormal);
-        keys.emplace_back(AssetTool::Elements::ElementsType::StaticNormalTexture);
-
-        Utility::Vector<std::wstring> extraArgs{};
-        Utility::Vector<std::unique_ptr<uint8[]>> vertexShaders;
-        Utility::Vector<const uint8*> vertexShaderPointers;
-        for (uint32 i = 0; i < _countof(defines); i++)
-        {
-            extraArgs.clear();
-            extraArgs.emplace_back(L"-D");
-            extraArgs.emplace_back(defines[i]);
-            vertexShaders.emplace_back(std::move(CompileShader(info, shaderPath, extraArgs)));
-            assert(vertexShaders.back().get());
-            vertexShaderPointers.emplace_back(vertexShaders.back().get());
-        }
-
-        extraArgs.clear();
+        auto vertexShader = CompileShader(info, shaderPath);
+        assert(vertexShader.get());
 
         info.FunctionName = "TestShaderPS";
         info.Type = ShaderType::Pixel;
 
-        auto pixelShader = CompileShader(info, shaderPath, extraArgs);
+        auto pixelShader = CompileShader(info, shaderPath);
         assert(pixelShader.get());
 
-        VS_ID = Content::AddShaderGroup(vertexShaderPointers.data(), (uint32)vertexShaderPointers.size(), keys.data());
-
-        const uint8* pixel_shaders[]{ pixelShader.get() };
-        PS_ID = Content::AddShaderGroup(&pixel_shaders[0], 1, &UINT32_INVALID_NUM);
+        VS_ID = Content::AddShader(vertexShader.get());
+        PS_ID = Content::AddShader(pixelShader.get());
     }
 
     void CreateMaterial()
@@ -126,12 +106,12 @@ void DestroyRenderItem(ID::IDType itemID)
     // シェーダーとテクスチャの削除
     if (ID::IsValid(VS_ID))
     {
-        Content::RemoveShaderGroup(VS_ID);
+        Content::RemoveShader(VS_ID);
     }
 
     if (ID::IsValid(PS_ID))
     {
-        Content::RemoveShaderGroup(PS_ID);
+        Content::RemoveShader(PS_ID);
     }
 
     // モデルの削除
