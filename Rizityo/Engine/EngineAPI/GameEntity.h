@@ -21,10 +21,10 @@ namespace Rizityo
 			[[nodiscard]] Transform::Component GetTransformComponent() const;
 			[[nodiscard]] Script::Component GetScriptComponent() const;
 
-			[[nodiscard]] Math::Vector4 rotation() const { return GetTransformComponent().Rotation(); }
-			[[nodiscard]] Math::Vector3 orientation() const { return GetTransformComponent().Orientation(); }
-			[[nodiscard]] Math::Vector3 position() const { return GetTransformComponent().Position(); }
-			[[nodiscard]] Math::Vector3 scale() const { return GetTransformComponent().Scale(); }
+			[[nodiscard]] Math::Vector4 GetRotation() const { return GetTransformComponent().GetRotation(); }
+			[[nodiscard]] Math::Vector3 GetOrientation() const { return GetTransformComponent().GetOrientation(); }
+			[[nodiscard]] Math::Vector3 GetPosition() const { return GetTransformComponent().GetPosition(); }
+			[[nodiscard]] Math::Vector3 GetScale() const { return GetTransformComponent().GetScale(); }
 
 		private:
 

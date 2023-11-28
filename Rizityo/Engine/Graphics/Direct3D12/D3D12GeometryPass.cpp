@@ -3,6 +3,7 @@
 #include "D3D12Shader.h"
 #include "D3D12Content.h"
 #include "D3D12Camera.h"
+#include "D3D12Light.h"
 #include "Shaders/SharedTypes.h"
 #include "Components/Entity.h"
 #include "Components/Transform.h"
@@ -352,6 +353,8 @@ namespace Rizityo::Graphics::D3D12::GPass
 				currentRootSignature = cache.RootSignatures[i];
 				cmdList->SetGraphicsRootSignature(currentRootSignature);
 				cmdList->SetGraphicsRootConstantBufferView(OpaqueRootParameter::GlobalShaderData, d3d12Info.GlobalShaderData);
+				cmdList->SetGraphicsRootShaderResourceView(OpaqueRootParameter::directional_lights,
+														   Light::GetNonCullableLightBuffer(d3d12Info.FrameIndex));
 			}
 
 			if (currentPipelineState != cache.GPassPipelineStates[i])

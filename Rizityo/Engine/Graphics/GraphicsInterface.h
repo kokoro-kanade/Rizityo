@@ -37,6 +37,13 @@ namespace Rizityo::Graphics
 			void(*GetParameter)(CameraID, CameraParameter::Parameter, OUT void* const, uint32);
 		} Camera;
 
+		struct {
+			Light(*Create)(LightInitInfo);
+			void(*Remove)(LightID, uint64);
+			void(*SetParameter)(LightID, uint64, LightParameter::Parameter, const void* const, uint32);
+			void(*GetParameter)(LightID, uint64, LightParameter::Parameter, void* const, uint32);
+		} Light;
+
 		GraphicsPlatform Platform = (GraphicsPlatform)-1;
 	};
 }

@@ -21,7 +21,7 @@ namespace Rizityo::Graphics::D3D12
 		constexpr static uint32 BufferCount = 3;
 		constexpr static DXGI_FORMAT DefaultBackBufferFormat{ DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };
 
-		void CreateSwapChain(IDXGIFactory7* factory, ID3D12CommandQueue* cmdQueue, DXGI_FORMAT format = DefaultBackBufferFormat);
+		void CreateSwapChain(IDXGIFactory7* factory, ID3D12CommandQueue* cmdQueue);
 		void Present() const;
 		void Resize();
 		uint32 Width() const { return (uint32)_Viewport.Width; }
@@ -41,7 +41,6 @@ namespace Rizityo::Graphics::D3D12
 		Platform::Window _Window{};
 		IDXGISwapChain4* _SwapChain{};
 		RenderTargetData _RenderTargetData[BufferCount]{};
-		DXGI_FORMAT _Format{ DefaultBackBufferFormat };
 		D3D12_VIEWPORT _Viewport{};
 		D3D12_RECT _ScissorRect{};
 		mutable uint32 _CurrentBackBufferIndex = 0;

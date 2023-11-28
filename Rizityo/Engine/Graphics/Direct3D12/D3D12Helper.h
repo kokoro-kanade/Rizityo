@@ -74,7 +74,7 @@ namespace Rizityo::Graphics::D3D12::Helper
 		const D3D12_RASTERIZER_DESC WireFrame
 		{
 			D3D12_FILL_MODE_WIREFRAME,						// FillMode 
-			D3D12_CULL_MODE_FRONT,							// CullMode
+			D3D12_CULL_MODE_NONE,							// CullMode
 			1,												// FrontCounterClockwise
 			0,												// DepthBias
 			0,												// DepthBiasClamp

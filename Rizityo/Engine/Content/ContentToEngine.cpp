@@ -65,6 +65,7 @@ namespace Rizityo::Content
         Utility::FreeList<uint8*> GeometryHierarchies;
         std::mutex GeometryMutex;
 
+        // std::vector—p
         struct NoexceptMap {
             std::unordered_map<uint32, std::unique_ptr<uint8[]>> map;
             NoexceptMap() = default;
@@ -343,7 +344,7 @@ namespace Rizityo::Content
             assert(shaders[i]);
 
             const CompiledShaderPtr shaderPtr{ (const CompiledShaderPtr)shaders[i] };
-            const uint64 size = CompiledShader::BufferSize(shaderPtr->ByteCodeSize());
+            const uint64 size = shaderPtr->BufferSize();
             std::unique_ptr<uint8[]> shader{ std::make_unique<uint8[]>(size) };
             memcpy(shader.get(), shaders[i], size);
             group.map[keys[i]] = std::move(shader);
@@ -415,7 +416,6 @@ namespace Rizityo::Content
             uint8* const pointer{ GeometryHierarchies[geometryIDs[i]] };
             if ((uintptr_t)pointer & SingleMeshFlag)
             {
-                assert(idCount == 1);
                 offsets.emplace_back(LOD_Offset{ 0, 1 });
             }
             else

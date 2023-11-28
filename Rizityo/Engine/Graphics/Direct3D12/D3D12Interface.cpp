@@ -3,6 +3,7 @@
 #include "D3D12Core.h"
 #include "D3D12Content.h"
 #include "D3D12Camera.h"
+#include "D3D12Light.h"
 #include "Graphics/GraphicsInterface.h"
 
 namespace Rizityo::Graphics::D3D12
@@ -30,6 +31,11 @@ namespace Rizityo::Graphics::D3D12
 		graphicsInterface.Camera.Remove = Camera::RemoveCamera;
 		graphicsInterface.Camera.SetParameter = Camera::SetParameter;
 		graphicsInterface.Camera.GetParameter = Camera::GetParameter;
+
+		graphicsInterface.Light.Create = Light::Create;
+		graphicsInterface.Light.Remove = Light::Remove;
+		graphicsInterface.Light.SetParameter = Light::SetParameter;
+		graphicsInterface.Light.GetParameter = Light::GetParameter;
 
 		graphicsInterface.Platform = GraphicsPlatform::Direct3D12;
 	}

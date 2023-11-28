@@ -6,6 +6,7 @@
 #include "D3D12Upload.h"
 #include "D3D12Content.h"
 #include "D3D12Camera.h"
+#include "D3D12Light.h"
 #include "Shaders/SharedTypes.h"
 
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 611; }
@@ -20,6 +21,7 @@ namespace Rizityo::Graphics::D3D12::Core
 		class D3D12Command
 		{
 		public:
+
 			D3D12Command() = default;
 			DISABLE_COPY_AND_MOVE(D3D12Command);
 
@@ -280,8 +282,9 @@ namespace Rizityo::Graphics::D3D12::Core
 			XMStoreFloat4x4A(&data.InvViewProjection, camera.InverseViewProjection());
 			XMStoreFloat3(&data.CameraPosition, camera.Position());
 			XMStoreFloat3(&data.CameraDirection, camera.Direction());
-			data.ViewWidth = surface.Width();
-			data.ViewHeight = surface.Height();
+			data.ViewWidth = (float32)surface.Width();
+			data.ViewHeight = (float32)surface.Height();
+			data.NumDirectionalLights = Light::GetNonCullableLightCount(info.LightSetKey);
 			data.DeltaTime = deltaTime;
 
 			HLSL::GlobalShaderData* const shaderData = constantBuffer.Allocate<HLSL::GlobalShaderData>();
@@ -292,8 +295,8 @@ namespace Rizityo::Graphics::D3D12::Core
 				&info,
 				&camera,
 				constantBuffer.ToGPU_Address(shaderData),
-				data.ViewWidth,
-				data.ViewHeight,
+				surface.Width(),
+				surface.Height(),
 				frameIndex,
 				deltaTime
 			};
@@ -397,7 +400,8 @@ namespace Rizityo::Graphics::D3D12::Core
 			  GPass::Initialize() && 
 			  Post::Initialize() &&
 			  Upload::Initialize() &&
-			  Content::Initialize()))
+			  Content::Initialize() &&
+			  Light::Initialize()))
 			return FailedInit();
 
 		SET_NAME_D3D12_OBJECT(MainDevice, L"Main D3D12 Device");
@@ -415,6 +419,7 @@ namespace Rizityo::Graphics::D3D12::Core
 		}
 
 		// モジュールのシャットダウン
+		Light::Shutdown();
 		Content::Shutdown();
 		Upload::Shutdown();
 		Post::Shutdown();
@@ -575,6 +580,7 @@ namespace Rizityo::Graphics::D3D12::Core
 		GPass::DepthPrepass(cmdList, d3d12Info);
 
 		// ジオメトリ・ライティングパス
+		Light::UpdateLightBuffers(d3d12Info);
 		GPass::AddTransitionsForGPass(barriers);
 		barriers.Apply(cmdList);
 		GPass::SetRenderTargetsForGPass(cmdList);

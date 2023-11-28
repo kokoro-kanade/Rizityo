@@ -15,7 +15,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             camera.SetUpVector(upVector);
         }
 
-        void SetFieldOfView(D3D12Camera& camera, const void* const data, uint32 size)
+        constexpr void SetFieldOfView(D3D12Camera& camera, const void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Perspective);
             float32 fov{ *(float32*)data };
@@ -23,7 +23,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             camera.SetFieldOfView(fov);
         }
 
-        void SetAspectRatio(D3D12Camera& camera, const void* const data, uint32 size)
+        constexpr void SetAspectRatio(D3D12Camera& camera, const void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Perspective);
             float32 aspect_ratio{ *(float32*)data };
@@ -31,7 +31,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             camera.SetAspectRatio(aspect_ratio);
         }
 
-        void SetViewWidth(D3D12Camera& camera, const void* const data, uint32 size)
+        constexpr void SetViewWidth(D3D12Camera& camera, const void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Orthographic);
             float32 view_width{ *(float32*)data };
@@ -39,7 +39,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             camera.SetViewWidth(view_width);
         }
 
-        void SetViewHeight(D3D12Camera& camera, const void* const data, uint32 size)
+        constexpr void SetViewHeight(D3D12Camera& camera, const void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Orthographic);
             float32 view_height{ *(float32*)data };
@@ -47,14 +47,14 @@ namespace Rizityo::Graphics::D3D12::Camera
             camera.SetViewHeight(view_height);
         }
 
-        void SetNearZ(D3D12Camera& camera, const void* const data, uint32 size)
+        constexpr void SetNearZ(D3D12Camera& camera, const void* const data, uint32 size)
         {
             float32 near_z{ *(float32*)data };
             assert(sizeof(near_z) == size);
             camera.SetNearZ(near_z);
         }
 
-        void SetFarZ(D3D12Camera& camera, const void* const data, uint32 size)
+        constexpr void SetFarZ(D3D12Camera& camera, const void* const data, uint32 size)
         {
             float32 far_z{ *(float32*)data };
             assert(sizeof(far_z) == size);
@@ -103,7 +103,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             DirectX::XMStoreFloat3(up_vector, camera.UpVector());
         }
 
-        void GetFieldOfView(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetFieldOfView(const D3D12Camera& camera, void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Perspective);
             float32* const fov{ (float32* const)data };
@@ -111,7 +111,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             *fov = camera.FieldOfView();
         }
 
-        void GetAspectRatio(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetAspectRatio(const D3D12Camera& camera, void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Perspective);
             float32* const aspect_ratio{ (float32* const)data };
@@ -119,7 +119,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             *aspect_ratio = camera.AspectRatio();
         }
 
-        void GetViewWidth(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetViewWidth(const D3D12Camera& camera, void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Orthographic);
             float32* const view_width{ (float32* const)data };
@@ -127,7 +127,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             *view_width = camera.ViewWidth();
         }
 
-        void GetViewHeight(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetViewHeight(const D3D12Camera& camera, void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Orthographic);
             float32* const view_height{ (float32* const)data };
@@ -135,35 +135,35 @@ namespace Rizityo::Graphics::D3D12::Camera
             *view_height = camera.ViewHeight();
         }
 
-        void GetNearZ(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetNearZ(const D3D12Camera& camera, void* const data, uint32 size)
         {
             float32* const near_z{ (float32* const)data };
             assert(sizeof(float32) == size);
             *near_z = camera.NearZ();
         }
 
-        void GetFarZ(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetFarZ(const D3D12Camera& camera, void* const data, uint32 size)
         {
             float32* const far_z{ (float32* const)data };
             assert(sizeof(float32) == size);
             *far_z = camera.FarZ();
         }
 
-        void GetProjectionType(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetProjectionType(const D3D12Camera& camera, void* const data, uint32 size)
         {
             Graphics::Camera::Type* const type{ (Graphics::Camera::Type* const)data };
             assert(sizeof(Graphics::Camera::Type) == size);
             *type = camera.RrojectionType();
         }
 
-        void GetEntityID(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetEntityID(const D3D12Camera& camera, void* const data, uint32 size)
         {
             ID::IDType* const entity_id{ (ID::IDType* const)data };
             assert(sizeof(ID::IDType) == size);
             *entity_id = camera.EntityID();
         }
 
-        void SetDummy(D3D12Camera&, const void* const, uint32)
+        constexpr void SetDummy(D3D12Camera&, const void* const, uint32)
         {}
 
         using SetFunc = void(*)(D3D12Camera&, const void* const, uint32);
@@ -224,8 +224,8 @@ namespace Rizityo::Graphics::D3D12::Camera
     {
         GameEntity::Entity entity{ GameEntity::EntityID{_EntityID} };
         using namespace DirectX;
-        Math::Vector3 pos{ entity.GetTransformComponent().Position() };
-        Math::Vector3 dir{ entity.GetTransformComponent().Orientation() };
+        Math::Vector3 pos{ entity.GetTransformComponent().GetPosition() };
+        Math::Vector3 dir{ entity.GetTransformComponent().GetOrientation() };
         _Position = XMLoadFloat3(&pos);
         _Direction = XMLoadFloat3(&dir);
         _View = XMMatrixLookToRH(_Position, _Direction, _UpVector);
@@ -249,21 +249,21 @@ namespace Rizityo::Graphics::D3D12::Camera
         _UpVector = DirectX::XMLoadFloat3(&up);
     }
 
-    void D3D12Camera::SetFieldOfView(float32 fov)
+    constexpr void D3D12Camera::SetFieldOfView(float32 fov)
     {
         assert(_ProjectionType == Graphics::Camera::Type::Perspective);
         _FieldOfView = fov;
         _UpdateFlag = true;
     }
 
-    void D3D12Camera::SetAspectRatio(float32 aspect_ratio)
+    constexpr void D3D12Camera::SetAspectRatio(float32 aspectRatio)
     {
         assert(_ProjectionType == Graphics::Camera::Type::Perspective);
-        _AspectRatio = aspect_ratio;
+        _AspectRatio = aspectRatio;
         _UpdateFlag = true;
     }
 
-    void D3D12Camera::SetViewWidth(float32 width)
+    constexpr void D3D12Camera::SetViewWidth(float32 width)
     {
         assert(width);
         assert(_ProjectionType == Graphics::Camera::Type::Orthographic);
@@ -271,7 +271,7 @@ namespace Rizityo::Graphics::D3D12::Camera
         _UpdateFlag = true;
     }
 
-    void D3D12Camera::SetViewHeight(float32 height)
+    constexpr void D3D12Camera::SetViewHeight(float32 height)
     {
         assert(height);
         assert(_ProjectionType == Graphics::Camera::Type::Orthographic);
@@ -279,15 +279,15 @@ namespace Rizityo::Graphics::D3D12::Camera
         _UpdateFlag = true;
     }
 
-    void D3D12Camera::SetNearZ(float32 near_z)
+    constexpr void D3D12Camera::SetNearZ(float32 nearZ)
     {
-        _NearZ = near_z;
+        _NearZ = nearZ;
         _UpdateFlag = true;
     }
 
-    void D3D12Camera::SetFarZ(float32 far_z)
+    constexpr void D3D12Camera::SetFarZ(float32 farZ)
     {
-        _FarZ = far_z;
+        _FarZ = farZ;
         _UpdateFlag = true;
     }
 
@@ -302,25 +302,25 @@ namespace Rizityo::Graphics::D3D12::Camera
         Cameras.Remove(id);
     }
 
-    void SetParameter(CameraID id, CameraParameter::Parameter parameter, const void* const data, uint32 data_size)
+    void SetParameter(CameraID id, CameraParameter::Parameter parameter, const void* const data, uint32 dataSize)
     {
-        assert(data && data_size);
+        assert(data && dataSize);
         D3D12Camera& camera{ GetCamera(id) };
         assert(parameter < CameraParameter::Count);
         if (parameter < CameraParameter::Count)
         {
-            SetFunctions[parameter](camera, data, data_size);
+            SetFunctions[parameter](camera, data, dataSize);
         }
     }
 
-    void GetParameter(CameraID id, CameraParameter::Parameter parameter, void* const data, uint32 data_size)
+    void GetParameter(CameraID id, CameraParameter::Parameter parameter, OUT void* const data, uint32 dataSize)
     {
-        assert(data && data_size);
+        assert(data && dataSize);
         D3D12Camera& camera{ GetCamera(id) };
         assert(parameter < CameraParameter::Count);
         if (parameter < CameraParameter::Count)
         {
-            GetFunctions[parameter](camera, data, data_size);
+            GetFunctions[parameter](camera, data, dataSize);
         }
     }
 

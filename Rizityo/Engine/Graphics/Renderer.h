@@ -2,6 +2,7 @@
 #include "CommonHeaders.h"
 #include "Platform/Window.h"
 #include "EngineAPI/Camera.h"
+#include "EngineAPI/Light.h"
 
 namespace Rizityo::Graphics
 {
@@ -21,6 +22,9 @@ namespace Rizityo::Graphics
         float32* Thresholds = nullptr;
         uint32 RenderItemCount = 0;
         CameraID CamerID{ ID::INVALID_ID };
+        uint64 LightSetKey = 0;
+        float32 LastFrameTime = 16.7f;
+        float32 AverageFrameTime = 16.7f;
     };
 
     // サーフェス
@@ -196,4 +200,52 @@ namespace Rizityo::Graphics
 
     Camera CreateCamera(CameraInitInfo info);
     void RemoveCamera(CameraID id);
+
+
+    // ライト
+    struct DirectionalLightParams {};
+
+    struct PointLightParams
+    {
+        Math::Vector3 Attenuation;
+        float32 Range;
+    };
+
+    struct SpotLightParams
+    {
+        Math::Vector3 Attenuation;
+        float32 Range;
+        float32 InnerAngle; // [0, PI)
+        float32 OuterAngle; // [Inner, PI)
+    };
+
+    struct LightInitInfo
+    {
+        uint64 LightSetKey = 0;
+        ID::IDType EntityID{ ID::INVALID_ID };
+        Light::Type Type{};
+        float32 Intensity = 1.f;
+        Math::Vector3 Color{ 1.f, 1.f, 1.f };
+        union
+        {
+            DirectionalLightParams DirectionalParams;
+            PointLightParams PointParams;
+            SpotLightParams SpotParams;
+        };
+        bool IsEnabled = true;
+    };
+
+    struct LightParameter {
+        enum Parameter : uint32 {
+            IsEnabled,
+            Intensity,
+            Color,
+            Type,
+            EntityID,
+            Count
+        };
+    };
+
+    Light CreateLight(LightInitInfo info);
+    void RemoveLight(LightID id, uint64 lightSetKey);
 }

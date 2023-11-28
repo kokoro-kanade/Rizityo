@@ -14,14 +14,14 @@ namespace Rizityo::Graphics::D3D12::Camera
 
         void SetUpVector(Math::Vector3 up);
 
-        void SetFieldOfView(float32 fov);
-        void SetAspectRatio(float32 aspect_ratio);
+        constexpr void SetFieldOfView(float32 fov);
+        constexpr void SetAspectRatio(float32 aspect_ratio);
 
-        void SetViewWidth(float32 width);
-        void SetViewHeight(float32 height);
+        constexpr void SetViewWidth(float32 width);
+        constexpr void SetViewHeight(float32 height);
 
-        void SetNearZ(float32 near_z);
-        void SetFarZ(float32 far_z);
+        constexpr void SetNearZ(float32 near_z);
+        constexpr void SetFarZ(float32 far_z);
 
         [[nodiscard]] constexpr DirectX::XMMATRIX View() const { return _View; }
         [[nodiscard]] constexpr DirectX::XMMATRIX Projection() const { return _Projection; }
@@ -78,6 +78,6 @@ namespace Rizityo::Graphics::D3D12::Camera
     Graphics::Camera CreateCamera(CameraInitInfo info);
     void RemoveCamera(CameraID id);
     void SetParameter(CameraID id, CameraParameter::Parameter parameter, const void* const data, uint32 data_size);
-    void GetParameter(CameraID id, CameraParameter::Parameter parameter, void* const data, uint32 data_size);
+    void GetParameter(CameraID id, CameraParameter::Parameter parameter, OUT void* const data, uint32 data_size);
     [[nodiscard]] D3D12Camera& GetCamera(CameraID id);
 }

@@ -263,6 +263,7 @@ namespace Rizityo::Graphics::D3D12::Content
 				parameters[params::PositionBuffer].AsSRV(bufferVisibility, 0);
 				parameters[params::ElementBuffer].AsSRV(bufferVisibility, 1);
 				parameters[params::SrvIndices].AsSRV(D3D12_SHADER_VISIBILITY_PIXEL, 2); // TODO: needs to be visible to any stages that need to sample textures.
+				parameters[params::directional_lights].AsSRV(D3D12_SHADER_VISIBILITY_PIXEL, 3);
 				parameters[params::PerObjectData].AsCBV(dataVisibility, 1);
 
 				rootSignature = Helper::D3D12RootSignatureDesc{ &parameters[0], _countof(parameters), GetRootSignatureFlags(flags) }.Create();
@@ -342,7 +343,7 @@ namespace Rizityo::Graphics::D3D12::Content
 				stream.PrimitiveTopology = GetD3D_PrimitiveTopologyType(primitiveTopology);
 				stream.DepthStencilFormat = GPass::DepthBufferFormat;
 				stream.Rasterizer = Helper::RasterizerState.BackfaceCull;
-				stream.DepthStencil1 = Helper::DepthState.EnabledReadonly;
+				stream.DepthStencil1 = Helper::DepthState.ReversedReadonly;
 				stream.Blend = Helper::BlendState.Disabled;
 
 				const ShaderFlags::Flags flags{ material.ShaderFlags() };

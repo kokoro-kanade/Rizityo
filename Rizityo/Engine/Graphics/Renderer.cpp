@@ -290,4 +290,76 @@ namespace Rizityo::Graphics
 		GFXInterface.Camera.GetParameter(_ID, CameraParameter::EntityID, &entityID, sizeof(entityID));
 		return entityID;
 	}
+
+
+	// ƒ‰ƒCƒg
+	Light CreateLight(LightInitInfo info)
+	{
+		return GFXInterface.Light.Create(info);
+	}
+
+	void RemoveLight(LightID id, uint64 light_set_key)
+	{
+		GFXInterface.Light.Remove(id, light_set_key);
+	}
+
+	void Light::SetEnabled(bool is_enabled) const
+	{
+		assert(IsValid());
+		GFXInterface.Light.SetParameter(_ID, _LightSetKey, LightParameter::IsEnabled, &is_enabled, sizeof(is_enabled));
+	}
+
+	void Light::SetIntensity(float32 intensity) const
+	{
+		assert(IsValid());
+		GFXInterface.Light.SetParameter(_ID, _LightSetKey, LightParameter::Intensity, &intensity, sizeof(intensity));
+	}
+
+	void Light::SetColor(Math::Vector3 color) const
+	{
+		assert(IsValid());
+		GFXInterface.Light.SetParameter(_ID, _LightSetKey, LightParameter::Color, &color, sizeof(color));
+	}
+
+
+	bool Light::IsEnabled() const
+	{
+		assert(IsValid());
+		bool is_enabled;
+		GFXInterface.Light.GetParameter(_ID, _LightSetKey, LightParameter::IsEnabled, &is_enabled, sizeof(is_enabled));
+		return is_enabled;
+	}
+
+	float32 Light::GetIntensity() const
+	{
+		assert(IsValid());
+		float32 intensity;
+		GFXInterface.Light.GetParameter(_ID, _LightSetKey, LightParameter::Intensity, &intensity, sizeof(intensity));
+		return intensity;
+	}
+
+	Math::Vector3 Light::GetColor() const
+	{
+		assert(IsValid());
+		Math::Vector3 color;
+		GFXInterface.Light.GetParameter(_ID, _LightSetKey, LightParameter::Color, &color, sizeof(color));
+		return color;
+	}
+
+	Light::Type Light::GetLightType() const
+	{
+		assert(IsValid());
+		Type type;
+		GFXInterface.Light.GetParameter(_ID, _LightSetKey, LightParameter::Type, &type, sizeof(type));
+		return type;
+	}
+
+	ID::IDType Light::GetEntityID() const
+	{
+		assert(IsValid());
+		ID::IDType id;
+		GFXInterface.Light.GetParameter(_ID, _LightSetKey, LightParameter::EntityID, &id, sizeof(id));
+		return id;
+	}
+
 }

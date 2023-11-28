@@ -15,20 +15,20 @@
 
 using namespace Rizityo;
 
-class rotator_script;
-REGISTER_SCRIPT(rotator_script);
-class rotator_script : public Script::EntityScript
+class RotatorScript;
+REGISTER_SCRIPT(RotatorScript);
+class RotatorScript : public Script::EntityScript
 {
 public:
-	constexpr explicit rotator_script(GameEntity::Entity entity)
+	constexpr explicit RotatorScript(GameEntity::Entity entity)
 		: Script::EntityScript{ entity } {}
 
 	void BeginPlay() override {}
 	void Update(float dt) override
 	{
-		_angle += 0.25f * dt * Math::TWO_PI;
-		if (_angle > Math::TWO_PI) _angle -= Math::TWO_PI;
-		Math::Vector3a rot{ 0.f, _angle, 0.f };
+		_Angle += 0.25f * dt * Math::TWO_PI;
+		if (_Angle > Math::TWO_PI) _Angle -= Math::TWO_PI;
+		Math::Vector3a rot{ 0.f, _Angle, 0.f };
 		DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3A(&rot)) };
 		Math::Vector4 rot_quat{};
 		DirectX::XMStoreFloat4(&rot_quat, quat);
@@ -36,7 +36,7 @@ public:
 	}
 
 private:
-	float32 _angle{ 0.f };
+	float32 _Angle = 0.f;
 };
 
 
@@ -105,6 +105,9 @@ void DestroyTestSurface(OUT TestSurface& testSurface);
 
 ID::IDType CreateRenderItem(ID::IDType entityId);
 void DestroyRenderItem(ID::IDType itemId);
+
+void GenerateLights();
+void RemoveLights();
 
 LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -184,7 +187,7 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-GameEntity::Entity CreateTestGameEntity(Math::Vector3 position, Math::Vector3 rotation, bool rotates)
+GameEntity::Entity CreateTestGameEntity(Math::Vector3 position, Math::Vector3 rotation, const char* scriptName)
 {
 	Transform::InitInfo transformInfo{};
 	DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3(&rotation)) };
@@ -194,9 +197,9 @@ GameEntity::Entity CreateTestGameEntity(Math::Vector3 position, Math::Vector3 ro
 	memcpy(&transformInfo.Position[0], &position.x, sizeof(transformInfo.Position));
 
 	Script::InitInfo script_info{};
-	if (rotates)
+	if (scriptName)
 	{
-		script_info.CreateFunc = Script::Internal::GetScriptCreateFunc(Script::Internal::StringHash()("rotator_script"));
+		script_info.CreateFunc = Script::Internal::GetScriptCreateFunc(Script::Internal::StringHash()(scriptName));
 		assert(script_info.CreateFunc);
 	}
 
@@ -208,8 +211,7 @@ GameEntity::Entity CreateTestGameEntity(Math::Vector3 position, Math::Vector3 ro
 	return entity;
 }
 
-void
-remove_game_entity(GameEntity::EntityID id)
+void RemoveGameEntity(GameEntity::EntityID id)
 {
 	GameEntity::RemoveGameEnity(id);
 }
@@ -240,7 +242,7 @@ void CreateTestSurface(OUT TestSurface& testSurface, Platform::WindowInitInfo in
 {
 	testSurface.Surface.Window = Platform::CreateMyWindow(&info);
 	testSurface.Surface.Surface = Graphics::CreateSurface(testSurface.Surface.Window);
-	testSurface.Entity = CreateTestGameEntity({ 0.f, 1.f, 3.f }, { 0.f, 3.14f, 0.f }, false);
+	testSurface.Entity = CreateTestGameEntity({ 0.f, 1.f, 3.f }, { 0.f, 3.14f, 0.f }, nullptr);
 	testSurface.Camera = Graphics::CreateCamera(Graphics::PerspectiveCameraInitInfo{ testSurface.Entity.ID() });
 	testSurface.Camera.SetAspectRatio((float32)testSurface.Surface.Window.Width() / testSurface.Surface.Window.Height());
 }
@@ -304,7 +306,9 @@ bool TestInitialize()
 
 	InitTestWorkers(BufferTestWorker);
 
-	TestItemID = CreateRenderItem(CreateTestGameEntity({}, {}, true).ID());
+	TestItemID = CreateRenderItem(CreateTestGameEntity({}, {}, "RotatorScript").ID());
+
+	GenerateLights();
 
 	IsRestarting = false;
 	return true;
@@ -339,6 +343,8 @@ void EngineTest::Run()
 
 void TestShutdown()
 {
+	RemoveLights();
+
 	DestroyRenderItem(TestItemID);
 
 	JointTestWorkers();

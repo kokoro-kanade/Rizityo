@@ -175,25 +175,25 @@ namespace Rizityo::Transform
 		}
 	}
 
-	Math::Vector3 Component::Position() const
+	Math::Vector3 Component::GetPosition() const
 	{
 		assert(IsValid());
 		return Positions[ID::GetIndex(_ID)];
 	}
 
-	Math::Vector4 Component::Rotation() const
+	Math::Vector4 Component::GetRotation() const
 	{
 		assert(IsValid());
 		return Rotations[ID::GetIndex(_ID)];
 	}
 
-	Math::Vector3 Component::Orientation() const
+	Math::Vector3 Component::GetOrientation() const
 	{
 		assert(IsValid());
 		return Orientations[ID::GetIndex(_ID)];
 	}
 
-	Math::Vector3 Component::Scale() const
+	Math::Vector3 Component::GetScale() const
 	{
 		assert(IsValid());
 		return Scales[ID::GetIndex(_ID)];

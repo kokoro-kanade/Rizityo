@@ -66,13 +66,13 @@ namespace Rizityo::AssetTool
 					positionAsArray[verticalAxis] += i * verticalStep;
 					mesh.Positions.emplace_back(position.x * info.Size.x, position.y * info.Size.y, position.z * info.Size.z);
 
-					//Vector2 uv{ uRange.x, 1.f - vRange.x }; // v‚Í”½“]
-					//uv.x += j * uStep;
-					//uv.y -= i * vStep;
+					Vector2 uv{ uRange.x, 1.f - vRange.x }; // v‚Í”½“]
+					uv.x += j * uStep;
+					uv.y -= i * vStep;
 
-					Vector2 uv{ 0, 1.f };
+					/*Vector2 uv{ 0, 1.f };
 					uv.x += (j % 2);
-					uv.y -= (i % 2);
+					uv.y -= (i % 2);*/
 					uvs.emplace_back(uv);
 				}
 			}
@@ -82,8 +82,7 @@ namespace Rizityo::AssetTool
 			const uint32 rowLength = horizontalCount + 1;
 			for (uint32 i = 0; i < verticalCount; i++)
 			{
-				uint32 k = 0;
-				for (uint32 j = k; j < horizontalCount; j++)
+				for (uint32 j = 0; j < horizontalCount; j++)
 				{
 					const uint32 index[4]
 					{
@@ -101,7 +100,6 @@ namespace Rizityo::AssetTool
 					mesh.RawIndices.emplace_back(index[flipWinding ? 3 : 1]);
 					mesh.RawIndices.emplace_back(index[flipWinding ? 1 : 3]);
 				}
-				k++;
 			}
 
 			const uint32 numIndices = 3 * 2 * horizontalCount * verticalCount;

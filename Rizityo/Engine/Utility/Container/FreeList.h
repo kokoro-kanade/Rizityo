@@ -85,7 +85,7 @@ namespace Rizityo::Utility
 		uint32 _Size = 0;
 		uint32 _NextFreeIndex = UINT32_INVALID_NUM;
 
-		constexpr bool AlreadyRemoved(uint32 index)
+		constexpr bool AlreadyRemoved(uint32 index) const
 		{
 			// sizeof(T) == sizeof(uint32)‚Ì‚Æ‚«‚Í‚±‚ÌƒeƒXƒg‚Í‚Å‚«‚È‚¢
 			if constexpr (sizeof(T) > sizeof(uint32))

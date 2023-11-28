@@ -187,7 +187,7 @@ namespace Editor.Content
             get => _smoothingAngle;
             set
             {
-                if (_smoothingAngle != value)
+                if (_smoothingAngle.IsTheSameAs(value))
                 {
                     _smoothingAngle = value;
                     OnPropertyChanged(nameof(SmoothingAngle));
@@ -721,7 +721,7 @@ namespace Editor.Content
             Debug.Assert(data?.Length > 0);
 
             // テスト用
-            using (var fs = new FileStream(@"..\..\Test\test.model", FileMode.Create))
+            using (var fs = new FileStream(@"../../x64\test.model", FileMode.Create))
             {
                 fs.Write(data, 0, data.Length);
             }
