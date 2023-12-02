@@ -1,5 +1,6 @@
 #include "Platform.h"
 #include "PlatformTypes.h"
+#include "PlatformInput/PlatformInput.h"
 
 namespace Rizityo::Platform
 {
@@ -7,7 +8,6 @@ namespace Rizityo::Platform
 
 	namespace
 	{
-		// TODO? PlatfromTypes.h‚ÉˆÚ“®
 		struct WindowInfo
 		{
 			HWND Hwnd = nullptr;
@@ -62,6 +62,8 @@ namespace Rizityo::Platform
 			default:
 				break;
 			}
+
+			ProcessInputMessage(hwnd, msg, wparam, lparam);
 
 			if (Resized && GetAsyncKeyState(VK_LBUTTON) >= 0)
 			{
@@ -149,7 +151,7 @@ namespace Rizityo::Platform
 			SetWindowText(info.Hwnd, caption);
 		}
 
-		Math::U32Vector4 GetWindowSize(WindowID id)
+		Math::DX_U32Vector4 GetWindowSize(WindowID id)
 		{
 			WindowInfo& info{ GetWindowInfoFromId(id) };
 			RECT& area{ info.IsFullScreen ? info.FullScreenArea : info.ClientArea };
@@ -275,7 +277,7 @@ namespace Rizityo::Platform
 	SetWindowCaption(_ID, caption);
 }
 	
-	Math::U32Vector4 Window::Size() const
+	Math::DX_U32Vector4 Window::Size() const
 	{
 		assert(IsValid());
 		return GetWindowSize(_ID);
@@ -289,13 +291,13 @@ namespace Rizityo::Platform
 	
 	uint32 Window::Width() const
 	{
-		Math::U32Vector4 size{ Size() };
+		Math::DX_U32Vector4 size{ Size() };
 		return size.z - size.x;
 	}
 
 	uint32 Window::Height() const
 	{
-		Math::U32Vector4 size{ Size() };
+		Math::DX_U32Vector4 size{ Size() };
 		return size.w - size.y;
 	}
 	

@@ -433,7 +433,7 @@ namespace Rizityo::Graphics::D3D12::Content
 			const uint32 indexSize = (vertexCount < (1 << 16)) ? sizeof(uint16) : sizeof(uint32);
 
 			// ’¸“_ˆÊ’u‚¾‚¯‚Ìê‡elementSize‚Í0‚É‚È‚é
-			const uint32 positionBufferSize = sizeof(Math::Vector3) * vertexCount;
+			const uint32 positionBufferSize = sizeof(Math::DX_Vector3) * vertexCount;
 			const uint32 elementBufferSize = elementSize * vertexCount;
 			const uint32 indexBufferSize = indexSize * indexCount;
 
@@ -450,7 +450,7 @@ namespace Rizityo::Graphics::D3D12::Content
 			SubmeshView view{};
 			view.PositionBufferView.BufferLocation = resource->GetGPUVirtualAddress();
 			view.PositionBufferView.SizeInBytes = positionBufferSize;
-			view.PositionBufferView.StrideInBytes = sizeof(Math::Vector3);
+			view.PositionBufferView.StrideInBytes = sizeof(Math::DX_Vector3);
 
 			if (elementSize)
 			{

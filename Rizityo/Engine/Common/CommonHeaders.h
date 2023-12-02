@@ -31,8 +31,8 @@
 #include "PrimitiveTypes.h"
 #include "Id.h"
 #include "../Utility/Utility.h"
-#include "../Utility/MathType.h"
-#include "../Utility/Math.h"
+#include "../Utility/Math/MathType.h"
+#include "../Utility/Math/Math.h"
 
 #ifndef DISABLE_COPY
 #define DISABLE_COPY(T)				  \

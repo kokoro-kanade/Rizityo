@@ -8,6 +8,7 @@ namespace Rizityo::Platform
 	class Window
 	{
 	public:
+
 		constexpr explicit Window(WindowID id) : _ID{ id } {}
 		constexpr Window() : _ID{ ID::INVALID_ID } {}
 		constexpr WindowID ID() const { return _ID; }
@@ -15,9 +16,9 @@ namespace Rizityo::Platform
 
 		void SetFullScreen(bool isFullScreen) const;
 		bool IsFullScreen() const;
-		void* Handle() const;
 		void SetCaption(const wchar_t* caption) const;
-		Math::U32Vector4 Size() const;
+		void* Handle() const;
+		Math::DX_U32Vector4 Size() const;
 		void Resize(uint32 width, uint32 height) const;
 		uint32 Width() const;
 		uint32 Height() const;

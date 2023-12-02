@@ -20,7 +20,7 @@ namespace Rizityo::Graphics
         constexpr CameraID ID() const { return _ID; }
         constexpr bool IsValid() const { return ID::IsValid(_ID); }
 
-        void SetUpVector(Math::Vector3 up) const;
+        void SetUpVector(Math::DX_Vector3 up) const;
 
         void SetFieldOfView(float32 fov) const;
         void SetAspectRatio(float32 aspect_ratio) const;
@@ -30,12 +30,12 @@ namespace Rizityo::Graphics
 
         void SetRange(float32 near_z, float32 far_z) const;
 
-        Math::Matrix4x4 View() const;
-        Math::Matrix4x4 Projection() const;
-        Math::Matrix4x4 InverseProjection() const;
-        Math::Matrix4x4 ViewProjection() const;
-        Math::Matrix4x4 InverseViewProjection() const;
-        Math::Vector3 UpVector() const;
+        Math::DX_Matrix4x4 View() const;
+        Math::DX_Matrix4x4 Projection() const;
+        Math::DX_Matrix4x4 InverseProjection() const;
+        Math::DX_Matrix4x4 ViewProjection() const;
+        Math::DX_Matrix4x4 InverseViewProjection() const;
+        Math::DX_Vector3 UpVector() const;
 
         float32 NearZ() const;
         float32 FarZ() const;

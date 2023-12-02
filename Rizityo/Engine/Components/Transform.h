@@ -22,17 +22,17 @@ namespace Rizityo::Transform
 
     struct ComponentCache
     {
-        Math::Vector4 Rotation;
-        Math::Vector3 Orientation;
-        Math::Vector3 Position;
-        Math::Vector3 Scale;
+        Math::DX_Vector4 Rotation;
+        Math::DX_Vector3 Orientation;
+        Math::DX_Vector3 Position;
+        Math::DX_Vector3 Scale;
         TransformID ID;
         uint32 Flags;
     };
 
 	Transform::Component CreateComponent(const InitInfo& info, GameEntity::Entity entity); // TODO?: éQè∆ìnÇµÇ©ÇÁílìnÇµÇ…Ç∑ÇÈ
 	void RemoveComponent(Transform::Component component);
-	void GetTransformMatrices(const GameEntity::EntityID id, OUT Math::Matrix4x4& world, OUT Math::Matrix4x4& inverseWorld);
+	void GetTransformMatrices(const GameEntity::EntityID id, OUT Math::DX_Matrix4x4& world, OUT Math::DX_Matrix4x4& inverseWorld);
 
     void GetUpdatedComponentsFlags(const GameEntity::EntityID* const ids, uint32 count, OUT uint8* const flags);
     void Update(const ComponentCache* const cache, uint32 count);

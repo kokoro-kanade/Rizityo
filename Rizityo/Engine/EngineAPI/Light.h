@@ -27,11 +27,11 @@ namespace Rizityo::Graphics
 
         void SetEnabled(bool is_enabled) const;
         void SetIntensity(float32 intensity) const;
-        void SetColor(Math::Vector3 color) const;
+        void SetColor(Math::DX_Vector3 color) const;
 
         bool IsEnabled() const;
         float32 GetIntensity() const;
-        Math::Vector3 GetColor() const;
+        Math::DX_Vector3 GetColor() const;
         Type GetLightType() const;
         ID::IDType GetEntityID() const;
 

@@ -153,7 +153,7 @@ namespace Rizityo::Graphics
     {
         ID::IDType EntityID{ ID::INVALID_ID };
         Camera::Type Type{};
-        Math::Vector3 UpVector;
+        Math::DX_Vector3 UpVector;
         union
         {
             float32 FieldOfView;
@@ -207,13 +207,13 @@ namespace Rizityo::Graphics
 
     struct PointLightParams
     {
-        Math::Vector3 Attenuation;
+        Math::DX_Vector3 Attenuation;
         float32 Range;
     };
 
     struct SpotLightParams
     {
-        Math::Vector3 Attenuation;
+        Math::DX_Vector3 Attenuation;
         float32 Range;
         float32 InnerAngle; // [0, PI)
         float32 OuterAngle; // [Inner, PI)
@@ -225,7 +225,7 @@ namespace Rizityo::Graphics
         ID::IDType EntityID{ ID::INVALID_ID };
         Light::Type Type{};
         float32 Intensity = 1.f;
-        Math::Vector3 Color{ 1.f, 1.f, 1.f };
+        Math::DX_Vector3 Color{ 1.f, 1.f, 1.f };
         union
         {
             DirectionalLightParams DirectionalParams;

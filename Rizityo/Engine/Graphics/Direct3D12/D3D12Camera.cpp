@@ -10,7 +10,7 @@ namespace Rizityo::Graphics::D3D12::Camera
 
         void SetUpVector(D3D12Camera& camera, const void* const data, uint32 size)
         {
-            Math::Vector3 upVector{ *(Math::Vector3*)data };
+            Math::DX_Vector3 upVector{ *(Math::DX_Vector3*)data };
             assert(sizeof(upVector) == size);
             camera.SetUpVector(upVector);
         }
@@ -18,7 +18,7 @@ namespace Rizityo::Graphics::D3D12::Camera
         constexpr void SetFieldOfView(D3D12Camera& camera, const void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Perspective);
-            float32 fov{ *(float32*)data };
+            float32 fov = *(float32*)data;
             assert(sizeof(fov) == size);
             camera.SetFieldOfView(fov);
         }
@@ -26,7 +26,7 @@ namespace Rizityo::Graphics::D3D12::Camera
         constexpr void SetAspectRatio(D3D12Camera& camera, const void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Perspective);
-            float32 aspect_ratio{ *(float32*)data };
+            float32 aspect_ratio = *(float32*)data;
             assert(sizeof(aspect_ratio) == size);
             camera.SetAspectRatio(aspect_ratio);
         }
@@ -34,7 +34,7 @@ namespace Rizityo::Graphics::D3D12::Camera
         constexpr void SetViewWidth(D3D12Camera& camera, const void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Orthographic);
-            float32 view_width{ *(float32*)data };
+            float32 view_width = *(float32*)data;
             assert(sizeof(view_width) == size);
             camera.SetViewWidth(view_width);
         }
@@ -42,68 +42,68 @@ namespace Rizityo::Graphics::D3D12::Camera
         constexpr void SetViewHeight(D3D12Camera& camera, const void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Orthographic);
-            float32 view_height{ *(float32*)data };
+            float32 view_height = *(float32*)data;
             assert(sizeof(view_height) == size);
             camera.SetViewHeight(view_height);
         }
 
         constexpr void SetNearZ(D3D12Camera& camera, const void* const data, uint32 size)
         {
-            float32 near_z{ *(float32*)data };
+            float32 near_z = *(float32*)data;
             assert(sizeof(near_z) == size);
             camera.SetNearZ(near_z);
         }
 
         constexpr void SetFarZ(D3D12Camera& camera, const void* const data, uint32 size)
         {
-            float32 far_z{ *(float32*)data };
+            float32 far_z = *(float32*)data;
             assert(sizeof(far_z) == size);
             camera.SetFarZ(far_z);
         }
 
-        void GetView(const D3D12Camera& camera, void* const data, uint32 size)
+        void GetView(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
-            Math::Matrix4x4* const matrix{ (Math::Matrix4x4* const)data };
-            assert(sizeof(Math::Matrix4x4) == size);
+            Math::DX_Matrix4x4* const matrix{ (Math::DX_Matrix4x4* const)data };
+            assert(sizeof(Math::DX_Matrix4x4) == size);
             DirectX::XMStoreFloat4x4(matrix, camera.View());
         }
 
-        void GetProjection(const D3D12Camera& camera, void* const data, uint32 size)
+        void GetProjection(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
-            Math::Matrix4x4* const matrix{ (Math::Matrix4x4* const)data };
-            assert(sizeof(Math::Matrix4x4) == size);
+            Math::DX_Matrix4x4* const matrix{ (Math::DX_Matrix4x4* const)data };
+            assert(sizeof(Math::DX_Matrix4x4) == size);
             DirectX::XMStoreFloat4x4(matrix, camera.Projection());
         }
 
-        void GetInverseProjection(const D3D12Camera& camera, void* const data, uint32 size)
+        void GetInverseProjection(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
-            Math::Matrix4x4* const matrix{ (Math::Matrix4x4* const)data };
-            assert(sizeof(Math::Matrix4x4) == size);
+            Math::DX_Matrix4x4* const matrix{ (Math::DX_Matrix4x4* const)data };
+            assert(sizeof(Math::DX_Matrix4x4) == size);
             DirectX::XMStoreFloat4x4(matrix, camera.InverseProjection());
         }
 
-        void GetViewProjection(const D3D12Camera& camera, void* const data, uint32 size)
+        void GetViewProjection(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
-            Math::Matrix4x4* const matrix{ (Math::Matrix4x4* const)data };
-            assert(sizeof(Math::Matrix4x4) == size);
+            Math::DX_Matrix4x4* const matrix{ (Math::DX_Matrix4x4* const)data };
+            assert(sizeof(Math::DX_Matrix4x4) == size);
             DirectX::XMStoreFloat4x4(matrix, camera.ViewProjection());
         }
 
-        void GetInverseViewProjection(const D3D12Camera& camera, void* const data, uint32 size)
+        void GetInverseViewProjection(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
-            Math::Matrix4x4* const matrix{ (Math::Matrix4x4* const)data };
-            assert(sizeof(Math::Matrix4x4) == size);
+            Math::DX_Matrix4x4* const matrix{ (Math::DX_Matrix4x4* const)data };
+            assert(sizeof(Math::DX_Matrix4x4) == size);
             DirectX::XMStoreFloat4x4(matrix, camera.InverseViewProjection());
         }
 
-        void GetUpVector(const D3D12Camera& camera, void* const data, uint32 size)
+        void GetUpVector(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
-            Math::Vector3* const up_vector{ (Math::Vector3* const)data };
-            assert(sizeof(Math::Vector3) == size);
+            Math::DX_Vector3* const up_vector{ (Math::DX_Vector3* const)data };
+            assert(sizeof(Math::DX_Vector3) == size);
             DirectX::XMStoreFloat3(up_vector, camera.UpVector());
         }
 
-        constexpr void GetFieldOfView(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetFieldOfView(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Perspective);
             float32* const fov{ (float32* const)data };
@@ -111,7 +111,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             *fov = camera.FieldOfView();
         }
 
-        constexpr void GetAspectRatio(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetAspectRatio(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Perspective);
             float32* const aspect_ratio{ (float32* const)data };
@@ -119,7 +119,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             *aspect_ratio = camera.AspectRatio();
         }
 
-        constexpr void GetViewWidth(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetViewWidth(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Orthographic);
             float32* const view_width{ (float32* const)data };
@@ -127,7 +127,7 @@ namespace Rizityo::Graphics::D3D12::Camera
             *view_width = camera.ViewWidth();
         }
 
-        constexpr void GetViewHeight(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetViewHeight(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
             assert(camera.RrojectionType() == Graphics::Camera::Type::Orthographic);
             float32* const view_height{ (float32* const)data };
@@ -135,28 +135,28 @@ namespace Rizityo::Graphics::D3D12::Camera
             *view_height = camera.ViewHeight();
         }
 
-        constexpr void GetNearZ(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetNearZ(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
             float32* const near_z{ (float32* const)data };
             assert(sizeof(float32) == size);
             *near_z = camera.NearZ();
         }
 
-        constexpr void GetFarZ(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetFarZ(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
             float32* const far_z{ (float32* const)data };
             assert(sizeof(float32) == size);
             *far_z = camera.FarZ();
         }
 
-        constexpr void GetProjectionType(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetProjectionType(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
             Graphics::Camera::Type* const type{ (Graphics::Camera::Type* const)data };
             assert(sizeof(Graphics::Camera::Type) == size);
             *type = camera.RrojectionType();
         }
 
-        constexpr void GetEntityID(const D3D12Camera& camera, void* const data, uint32 size)
+        constexpr void GetEntityID(const D3D12Camera& camera, OUT void* const data, uint32 size)
         {
             ID::IDType* const entity_id{ (ID::IDType* const)data };
             assert(sizeof(ID::IDType) == size);
@@ -224,8 +224,8 @@ namespace Rizityo::Graphics::D3D12::Camera
     {
         GameEntity::Entity entity{ GameEntity::EntityID{_EntityID} };
         using namespace DirectX;
-        Math::Vector3 pos{ entity.GetTransformComponent().GetPosition() };
-        Math::Vector3 dir{ entity.GetTransformComponent().GetOrientation() };
+        Math::DX_Vector3 pos{ entity.GetTransformComponent().GetPosition() };
+        Math::DX_Vector3 dir{ entity.GetTransformComponent().GetOrientation() };
         _Position = XMLoadFloat3(&pos);
         _Direction = XMLoadFloat3(&dir);
         _View = XMMatrixLookToRH(_Position, _Direction, _UpVector);
@@ -244,7 +244,7 @@ namespace Rizityo::Graphics::D3D12::Camera
         _InverseViewProjection = XMMatrixInverse(nullptr, _ViewProjection);
     }
 
-    void D3D12Camera::SetUpVector(Math::Vector3 up)
+    void D3D12Camera::SetUpVector(Math::DX_Vector3 up)
     {
         _UpVector = DirectX::XMLoadFloat3(&up);
     }

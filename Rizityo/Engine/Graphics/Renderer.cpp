@@ -142,7 +142,7 @@ namespace Rizityo::Graphics
 		GFXInterface.Camera.Remove(id);
 	}
 
-	void Camera::SetUpVector(Math::Vector3 up) const
+	void Camera::SetUpVector(Math::DX_Vector3 up) const
 	{
 		assert(IsValid());
 		GFXInterface.Camera.SetParameter(_ID, CameraParameter::UpVector, &up, sizeof(up));
@@ -179,50 +179,50 @@ namespace Rizityo::Graphics
 		GFXInterface.Camera.SetParameter(_ID, CameraParameter::FarZ, &farZ, sizeof(farZ));
 	}
 
-	Math::Matrix4x4 Camera::View() const
+	Math::DX_Matrix4x4 Camera::View() const
 	{
 		assert(IsValid());
-		Math::Matrix4x4 matrix;
+		Math::DX_Matrix4x4 matrix;
 		GFXInterface.Camera.GetParameter(_ID, CameraParameter::View, &matrix, sizeof(matrix));
 		return matrix;
 	}
 
-	Math::Matrix4x4 Camera::Projection() const
+	Math::DX_Matrix4x4 Camera::Projection() const
 	{
 		assert(IsValid());
-		Math::Matrix4x4 matrix;
+		Math::DX_Matrix4x4 matrix;
 		GFXInterface.Camera.GetParameter(_ID, CameraParameter::Projection, &matrix, sizeof(matrix));
 		return matrix;
 	}
 
-	Math::Matrix4x4 Camera::InverseProjection() const
+	Math::DX_Matrix4x4 Camera::InverseProjection() const
 	{
 		assert(IsValid());
-		Math::Matrix4x4 matrix;
+		Math::DX_Matrix4x4 matrix;
 		GFXInterface.Camera.GetParameter(_ID, CameraParameter::InverseProjection, &matrix, sizeof(matrix));
 		return matrix;
 	}
 
-	Math::Matrix4x4 Camera::ViewProjection() const
+	Math::DX_Matrix4x4 Camera::ViewProjection() const
 	{
 		assert(IsValid());
-		Math::Matrix4x4 matrix;
+		Math::DX_Matrix4x4 matrix;
 		GFXInterface.Camera.GetParameter(_ID, CameraParameter::ViewProjection, &matrix, sizeof(matrix));
 		return matrix;
 	}
 
-	Math::Matrix4x4 Camera::InverseViewProjection() const
+	Math::DX_Matrix4x4 Camera::InverseViewProjection() const
 	{
 		assert(IsValid());
-		Math::Matrix4x4 matrix;
+		Math::DX_Matrix4x4 matrix;
 		GFXInterface.Camera.GetParameter(_ID, CameraParameter::InverseViewProjection, &matrix, sizeof(matrix));
 		return matrix;
 	}
 
-	Math::Vector3 Camera::UpVector() const
+	Math::DX_Vector3 Camera::UpVector() const
 	{
 		assert(IsValid());
-		Math::Vector3 up_vector;
+		Math::DX_Vector3 up_vector;
 		GFXInterface.Camera.GetParameter(_ID, CameraParameter::UpVector, &up_vector, sizeof(up_vector));
 		return up_vector;
 	}
@@ -315,7 +315,7 @@ namespace Rizityo::Graphics
 		GFXInterface.Light.SetParameter(_ID, _LightSetKey, LightParameter::Intensity, &intensity, sizeof(intensity));
 	}
 
-	void Light::SetColor(Math::Vector3 color) const
+	void Light::SetColor(Math::DX_Vector3 color) const
 	{
 		assert(IsValid());
 		GFXInterface.Light.SetParameter(_ID, _LightSetKey, LightParameter::Color, &color, sizeof(color));
@@ -338,10 +338,10 @@ namespace Rizityo::Graphics
 		return intensity;
 	}
 
-	Math::Vector3 Light::GetColor() const
+	Math::DX_Vector3 Light::GetColor() const
 	{
 		assert(IsValid());
-		Math::Vector3 color;
+		Math::DX_Vector3 color;
 		GFXInterface.Light.GetParameter(_ID, _LightSetKey, LightParameter::Color, &color, sizeof(color));
 		return color;
 	}

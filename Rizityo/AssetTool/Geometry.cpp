@@ -120,7 +120,7 @@ namespace Rizityo::AssetTool
 					// j番目のUVとほぼ同じものは削除
 					for (uint32 k = j + 1; k < num; k++)
 					{
-						Vector2& uv1{ mesh.UVSets[0][iRefs[k]] };
+						DX_Vector2& uv1{ mesh.UVSets[0][iRefs[k]] };
 						if (XMScalarNearEqual(v.UV.x, uv1.x, EPSILON) && XMScalarNearEqual(v.UV.y, uv1.y, EPSILON))
 						{
 							mesh.Indices[iRefs[k]] = mesh.Indices[iRefs[j]];
@@ -188,8 +188,8 @@ namespace Rizityo::AssetTool
 			const uint32 numVertices = (uint32)mesh.Vertices.size();
 			assert(numVertices);
 
-			mesh.PositionBuffer.resize(sizeof(Math::Vector3) * numVertices);
-			Math::Vector3* const positionBuffer = (Math::Vector3* const)mesh.PositionBuffer.data();
+			mesh.PositionBuffer.resize(sizeof(Math::DX_Vector3) * numVertices);
+			Math::DX_Vector3* const positionBuffer = (Math::DX_Vector3* const)mesh.PositionBuffer.data();
 
 			// 頂点位置の格納
 			for (uint32 i = 0; i < numVertices; i++)
@@ -384,7 +384,7 @@ namespace Rizityo::AssetTool
 		{
 			const uint64 numVertices = mesh.Vertices.size();
 			const uint64 positionBufferSize{ mesh.PositionBuffer.size() };
-			assert(positionBufferSize == sizeof(Math::Vector3) * numVertices);
+			assert(positionBufferSize == sizeof(Math::DX_Vector3) * numVertices);
 			const uint64 elementBufferSize{ mesh.ElementBuffer.size() };
 			assert(elementBufferSize == GetVertexElementSize(mesh.ElementsType) * numVertices);
 			const uint64 indexSize = (numVertices < (1 << 16)) ? sizeof(uint16) : sizeof(uint32);
@@ -468,7 +468,7 @@ namespace Rizityo::AssetTool
 			binaryWriter.Write(mesh.LODThreshold);
 
 			// 頂点位置データ
-			assert(mesh.PositionBuffer.size() == sizeof(Math::Vector3) * numVertices);
+			assert(mesh.PositionBuffer.size() == sizeof(Math::DX_Vector3) * numVertices);
 			binaryWriter.Write(mesh.PositionBuffer.data(), mesh.PositionBuffer.size());
 
 			// 頂点属性データ

@@ -1,6 +1,9 @@
 #include "Script.h"
 #include "Entity.h"
 #include "Transform.h"
+#include "Utility/Math/Vector3.h"
+#include "Utility/Math/Vector4.h"
+#include "Utility/Math/Quaternion.h"
 
 #define USE_TRANSFORM_CACHE_MAP 0
 
@@ -17,10 +20,10 @@ namespace Rizityo::Script
 		Utility::Vector<Transform::ComponentCache> TransformCache;
 
 #if USE_TRANSFORM_CACHE_MAP
-		std::unordered_map<ID::IDType, uint32>    CacheMap;
+		std::unordered_map<ID::IDType, uint32> CacheMap;
 #endif
 
-		// Why: EntityのIsAliveのようにヘッダーに関数宣言して定義すればよいのではないか？
+		// TODO?: EntityのIsAliveのようにヘッダーに関数宣言して定義すればよいのではないか？ -> Existsをほかのファイルから使うかどうか
 		bool Exists(ScriptID id)
 		{
 			assert(ID::IsValid(id));
@@ -53,7 +56,6 @@ namespace Rizityo::Script
 			uint32 index{ UINT32_INVALID_NUM };
 			auto pair = CacheMap.try_emplace(id, ID::INVALID_ID);
 
-			// Cache_Mp didn't have an entry for this id, new entry inserted
 			if (pair.second)
 			{
 				index = (uint32)TransformCache.size();
@@ -125,7 +127,7 @@ namespace Rizityo::Script
 		assert(info.CreateFunc);
 
 		ScriptID id;
-		if (FreeIds.size() > ID::MIN_DELETED_ELEMENTS) // FreeIdsが少ない状態で使いまわすとすぐにgenerationが一周してしまうので閾値を設ける
+		if (FreeIds.size() > ID::MIN_DELETED_ELEMENTS) // FreeIdsが少ない状態で使いまわすとすぐにgenerationが一周してしまうのでしきい値を設ける
 		{
 			id = FreeIds.front();
 			assert(!Exists(id));
@@ -182,20 +184,21 @@ namespace Rizityo::Script
 		Transform::ComponentCache& cache{ *GetCachePtr(entity) };
 		cache.Flags |= Transform::ComponentFlags::Position;
 		cache.Position = position;
+		// cache.Position = { position.x, position.y position.z };
 	}
 
-	void EntityScript::SetRotation(const GameEntity::Entity* const entity, Math::Vector4 rotation_quaternion)
+	void EntityScript::SetRotation(const GameEntity::Entity* const entity, Math::Quaternion rotationQuaternion)
 	{
 		Transform::ComponentCache& cache{ *GetCachePtr(entity) };
 		cache.Flags |= Transform::ComponentFlags::Rotation;
-		cache.Rotation = rotation_quaternion;
+		cache.Rotation = rotationQuaternion;
 	}
 
-	void EntityScript::SetOrientation(const GameEntity::Entity* const entity, Math::Vector3 orientation_vector)
+	void EntityScript::SetOrientation(const GameEntity::Entity* const entity, Math::Vector3 orientationVector)
 	{
 		Transform::ComponentCache& cache{ *GetCachePtr(entity) };
 		cache.Flags |= Transform::ComponentFlags::Orientation;
-		cache.Orientation = orientation_vector;
+		cache.Orientation = orientationVector;
 	}
 
 	void EntityScript::SetScale(const GameEntity::Entity* const entity, Math::Vector3 scale)

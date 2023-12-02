@@ -330,7 +330,7 @@ namespace Rizityo::Platform
             }
         }
 
-        constexpr Math::Vector2 GetMousePosition(LPARAM lparam)
+        constexpr Math::DX_Vector2 GetMousePosition(LPARAM lparam)
         {
             return { (float32)((int16)(lparam & 0x0000ffff)), (float32)((int16)(lparam >> 16)) };
         }
@@ -367,7 +367,7 @@ namespace Rizityo::Platform
         break;
         case WM_MOUSEMOVE:
         {
-            const Math::Vector2 pos{ GetMousePosition(lparam) };
+            const Math::DX_Vector2 pos{ GetMousePosition(lparam) };
             SetInputValue(Input::InputSource::Mouse, Input::InputCode::MousePositionX, { pos.x, 0.f, 0.f });
             SetInputValue(Input::InputSource::Mouse, Input::InputCode::MousePositionY, { pos.y, 0.f, 0.f });
             SetInputValue(Input::InputSource::Mouse, Input::InputCode::MousePosition, { pos.x, pos.y, 0.f });
@@ -379,7 +379,7 @@ namespace Rizityo::Platform
         {
             SetCapture(hwnd);
             const Input::InputCode::Code code{ msg == WM_LBUTTONDOWN ? Input::InputCode::MouseLeft : msg == WM_RBUTTONDOWN ? Input::InputCode::MouseRight : Input::InputCode::MouseMiddle };
-            const Math::Vector2 pos{ GetMousePosition(lparam) };
+            const Math::DX_Vector2 pos{ GetMousePosition(lparam) };
             SetInputValue(Input::InputSource::Mouse, code, { pos.x, pos.y, 1.f });
         }
         break;
@@ -389,7 +389,7 @@ namespace Rizityo::Platform
         {
             ReleaseCapture();
             const Input::InputCode::Code code{ msg == WM_LBUTTONUP ? Input::InputCode::MouseLeft : msg == WM_RBUTTONUP ? Input::InputCode::MouseRight : Input::InputCode::MouseMiddle };
-            const Math::Vector2 pos{ GetMousePosition(lparam) };
+            const Math::DX_Vector2 pos{ GetMousePosition(lparam) };
             SetInputValue(Input::InputSource::Mouse, code, { pos.x, pos.y, 0.f });
         }
         break;

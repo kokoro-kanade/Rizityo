@@ -18,7 +18,7 @@ namespace Rizityo::AssetTool
 	{
 		PrimitiveMeshType Type;
 		uint32 Segments[3]{ 1,1,1 };
-		Math::Vector3 Size{ 1,1,1 };
+		Math::DX_Vector3 Size{ 1,1,1 };
 		uint32 Lod = 0;
 	};
 

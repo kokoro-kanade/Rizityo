@@ -39,7 +39,7 @@ namespace Rizityo::AssetTool
             uint8 TSign;
             uint16 Normal[2];
             uint16 Tangent[2];
-            Math::Vector2 UV;
+            Math::DX_Vector2 UV;
         };
 
         struct Skeletal
@@ -83,7 +83,7 @@ namespace Rizityo::AssetTool
             uint16 JointIndices[4];
             uint16 Normal[2];
             uint16 Tangent[2];
-            Math::Vector2    UV;
+            Math::DX_Vector2    UV;
         };
 
         struct SkeletalNormalTextureColor
@@ -93,7 +93,7 @@ namespace Rizityo::AssetTool
             uint16 JointIndices[4];
             uint16 Normal[2];
             uint16 Tangent[2];
-            Math::Vector2 UV;
+            Math::DX_Vector2 UV;
             uint8 Color[3];
             uint8 Padding;
         };
@@ -102,12 +102,12 @@ namespace Rizityo::AssetTool
 
     struct Vertex
     {
-        Math::Vector4 Tangent{};
-        Math::Vector4 JointWeights{};
-        Math::U32Vector4 JointIndices{ UINT32_INVALID_NUM, UINT32_INVALID_NUM , UINT32_INVALID_NUM , UINT32_INVALID_NUM };
-        Math::Vector3 Position{};
-        Math::Vector3 Normal{};
-        Math::Vector2 UV{};
+        Math::DX_Vector4 Tangent{};
+        Math::DX_Vector4 JointWeights{};
+        Math::DX_U32Vector4 JointIndices{ UINT32_INVALID_NUM, UINT32_INVALID_NUM , UINT32_INVALID_NUM , UINT32_INVALID_NUM };
+        Math::DX_Vector3 Position{};
+        Math::DX_Vector3 Normal{};
+        Math::DX_Vector2 UV{};
         uint8 Red{}, Green{}, Blue{};
         uint8 Padding;
     };
@@ -115,11 +115,11 @@ namespace Rizityo::AssetTool
 	struct Mesh
 	{
 		// èâä˙âªÉfÅ[É^
-		Utility::Vector<Math::Vector3> Positions;
-        Utility::Vector<Math::Vector3> Colors;
-		Utility::Vector<Math::Vector3> Normals;
-		Utility::Vector<Math::Vector4> Tangents;
-		Utility::Vector<Utility::Vector<Math::Vector2>> UVSets;
+		Utility::Vector<Math::DX_Vector3> Positions;
+        Utility::Vector<Math::DX_Vector3> Colors;
+		Utility::Vector<Math::DX_Vector3> Normals;
+		Utility::Vector<Math::DX_Vector4> Tangents;
+		Utility::Vector<Utility::Vector<Math::DX_Vector2>> UVSets;
 		Utility::Vector<uint32> MaterialIndices;
 		Utility::Vector<uint32> MaterialUsed;
 		Utility::Vector<uint32> RawIndices;

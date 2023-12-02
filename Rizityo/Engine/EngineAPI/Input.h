@@ -32,8 +32,8 @@ namespace Rizityo::Input
 
     struct InputValue
     {
-        Math::Vector3 Previous;
-        Math::Vector3 Current;
+        Math::DX_Vector3 Previous;
+        Math::DX_Vector3 Current;
     };
 
     struct InputCode

@@ -40,7 +40,7 @@ namespace Rizityo::AssetTool
 
 		Mesh CreatePlane(const PrimitiveInitInfo& info,
 			uint32 horizontalAxis = Axis::x, uint32 verticalAxis = Axis::z, bool flipWinding = false, 
-			Vector3 offset = { -0.5f, 0.f, -0.5f }, Vector2 uRange = { 0.f, 1.f }, Vector2 vRange = { 0.f, 1.f })
+			DX_Vector3 offset = { -0.5f, 0.f, -0.5f }, DX_Vector2 uRange = { 0.f, 1.f }, DX_Vector2 vRange = { 0.f, 1.f })
 		{
 			assert(horizontalAxis < 3 && verticalAxis < 3);
 			assert(horizontalAxis != verticalAxis);
@@ -54,19 +54,19 @@ namespace Rizityo::AssetTool
 
 			Mesh mesh{};
 			mesh.Name = "Plane";
-			Utility::Vector<Vector2> uvs;
+			Utility::Vector<DX_Vector2> uvs;
 
 			for (uint32 i = 0; i <= verticalCount; i++)
 			{
 				for (uint32 j = 0; j <= horizontalCount; j++)
 				{
-					Vector3 position{ offset };
+					DX_Vector3 position{ offset };
 					float32* const positionAsArray{ &position.x };
 					positionAsArray[horizontalAxis] += j * horizontalStep;
 					positionAsArray[verticalAxis] += i * verticalStep;
 					mesh.Positions.emplace_back(position.x * info.Size.x, position.y * info.Size.y, position.z * info.Size.z);
 
-					Vector2 uv{ uRange.x, 1.f - vRange.x }; // v‚Í”½“]
+					DX_Vector2 uv{ uRange.x, 1.f - vRange.x }; // v‚Í”½“]
 					uv.x += j * uStep;
 					uv.y -= i * vStep;
 
@@ -164,7 +164,7 @@ namespace Rizityo::AssetTool
 			c = 0;
 			const uint32 numIndices = 2 * (3 * phiCount) + 2 * 3 * phiCount * (thetaCount - 2);
 			mesh.RawIndices.resize(numIndices);
-			Utility::Vector<Vector2> uvs{ numIndices };
+			Utility::Vector<DX_Vector2> uvs{ numIndices };
 			const float32 uvThetaStep = 1.f / thetaCount;
 			const float32 uvPhiStep = 1.f / phiCount;
 

@@ -1,0 +1,60 @@
+#include "Vector4.h"
+
+namespace Rizityo::Math
+{
+#if defined(_WIN64)
+
+	const Vector4 Vector4::ZERO(0.0f, 0.0f, 0.0f, 0.0f);
+	const Vector4 Vector4::UNIT_X(1.0f, 0.0f, 0.0f, 0.0f);
+	const Vector4 Vector4::UNIT_Y(0.0f, 1.0f, 0.0f, 0.0f);
+	const Vector4 Vector4::UNIT_Z(0.0f, 0.0f, 1.0f, 0.0f);
+	const Vector4 Vector4::UNIT_W(0.0f, 0.0f, 0.0f, 1.0f);
+
+	float32 Vector4::Length() const
+	{
+		return DirectX::XMVectorGetX(XMVector4Length(*this));
+	}
+
+	float32 Vector4::LengthSquared() const
+	{
+		return DirectX::XMVectorGetX(XMVector4LengthSq(*this));
+	}
+
+	void Vector4::Normalise()
+	{
+		*this = DirectX::XMVector4Normalize(*this);
+	}
+
+	Vector4 Vector4::Normalise() const
+	{
+		return Vector4(DirectX::XMVector4Normalize(*this));
+	}
+
+	float32 Vector4::Dot(const Vector4& v) const
+	{
+		return DirectX::XMVectorGetX(DirectX::XMVector4Dot(*this, v));
+	}
+
+	Vector4 Vector4::Cross(const Vector4& a, const Vector4& b) const
+	{
+		return Vector4(DirectX::XMVector4Cross(*this, a, b));
+	}
+
+	Vector4 Vector4::Lerp(const Vector4& a, const Vector4& b, float32 t)
+	{
+		return Vector4(DirectX::XMVectorLerp(a, b, t));
+	}
+
+	Vector4 Vector4::Min(const Vector4& a, const Vector4& b)
+	{
+		return Vector4(DirectX::XMVectorMin(a, b));
+	}
+
+	Vector4 Vector4::Max(const Vector4& a, const Vector4& b)
+	{
+		return Vector4(DirectX::XMVectorMax(a, b));
+	}
+
+#endif // defined(_WIN64)
+
+}

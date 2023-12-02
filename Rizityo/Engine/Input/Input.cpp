@@ -87,7 +87,7 @@ namespace Rizityo::Input
         InputBindingMap.erase(bindingKey);
     }
 
-    void SetInputValue(InputSource::Type type, InputCode::Code code, Math::Vector3 value)
+    void SetInputValue(InputSource::Type type, InputCode::Code code, Math::DX_Vector3 value)
     {
         assert(type < InputSource::Count);
         const uint64 key = GetKey(type, code);

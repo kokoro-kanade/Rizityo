@@ -133,7 +133,7 @@ namespace Rizityo::Graphics::D3D12::Light
 				}
 			}
 
-			constexpr void SetColor(LightID id, Math::Vector3 color)
+			constexpr void SetColor(LightID id, Math::DX_Vector3 color)
 			{
 				assert(color.x <= 1.f && color.y <= 1.f && color.z <= 1.f);
 				assert(color.x >= 0.f && color.y >= 0.f && color.z >= 0.f);
@@ -171,7 +171,7 @@ namespace Rizityo::Graphics::D3D12::Light
 				return 0.f;
 			}
 
-			constexpr Math::Vector3 GetColor(LightID id) const
+			constexpr Math::DX_Vector3 GetColor(LightID id) const
 			{
 				const LightOwner& owner{ _Owners[id] };
 				const uint32 index{ owner.Index };
@@ -341,7 +341,7 @@ namespace Rizityo::Graphics::D3D12::Light
 
 		constexpr void SetColor(LightSet& set, LightID id, const void* const data, [[maybe_unused]] uint32 size)
 		{
-			Math::Vector3 color{ *(Math::Vector3*)data };
+			Math::DX_Vector3 color{ *(Math::DX_Vector3*)data };
 			assert(sizeof(color) == size);
 			set.SetColor(id, color);
 		}
@@ -362,8 +362,8 @@ namespace Rizityo::Graphics::D3D12::Light
 
 		constexpr void GetColor(const LightSet& set, LightID id, OUT void* const data, [[maybe_unused]] uint32 size)
 		{
-			Math::Vector3* const color{ (Math::Vector3* const)data };
-			assert(sizeof(Math::Vector3) == size);
+			Math::DX_Vector3* const color{ (Math::DX_Vector3* const)data };
+			assert(sizeof(Math::DX_Vector3) == size);
 			*color = set.GetColor(id);
 		}
 

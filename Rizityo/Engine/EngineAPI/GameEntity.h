@@ -21,9 +21,9 @@ namespace Rizityo
 			[[nodiscard]] Transform::Component GetTransformComponent() const;
 			[[nodiscard]] Script::Component GetScriptComponent() const;
 
+			[[nodiscard]] Math::Vector3 GetPosition() const { return GetTransformComponent().GetPosition(); }
 			[[nodiscard]] Math::Vector4 GetRotation() const { return GetTransformComponent().GetRotation(); }
 			[[nodiscard]] Math::Vector3 GetOrientation() const { return GetTransformComponent().GetOrientation(); }
-			[[nodiscard]] Math::Vector3 GetPosition() const { return GetTransformComponent().GetPosition(); }
 			[[nodiscard]] Math::Vector3 GetScale() const { return GetTransformComponent().GetScale(); }
 
 		private:
@@ -49,13 +49,13 @@ namespace Rizityo
 			constexpr explicit EntityScript(GameEntity::Entity entity) : GameEntity::Entity{entity.ID()}{}
 
 			void SetPosition(Math::Vector3 position) const { SetPosition(this, position); }
-			void SetRotation(Math::Vector4 rotation_quaternion) const { SetRotation(this, rotation_quaternion); }
-			void SetOrientation(Math::Vector3 orientation_vector) const { SetOrientation(this, orientation_vector); }
+			void SetRotation(Math::Quaternion rotationQuaternion) const { SetRotation(this, rotationQuaternion); }
+			void SetOrientation(Math::Vector3 orientationVector) const { SetOrientation(this, orientationVector); }
 			void SetScale(Math::Vector3 scale) const { SetScale(this, scale); }
 
 			static void SetPosition(const GameEntity::Entity* const entity, Math::Vector3 position);
-			static void SetRotation(const GameEntity::Entity* const entity, Math::Vector4 rotation_quaternion);
-			static void SetOrientation(const GameEntity::Entity* const entity, Math::Vector3 orientation_vector);
+			static void SetRotation(const GameEntity::Entity* const entity, Math::Quaternion rotationQuaternion);
+			static void SetOrientation(const GameEntity::Entity* const entity, Math::Vector3 orientationVector);
 			static void SetScale(const GameEntity::Entity* const entity, Math::Vector3 scale);
 		};
 

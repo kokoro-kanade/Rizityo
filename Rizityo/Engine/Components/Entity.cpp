@@ -21,7 +21,7 @@ namespace Rizityo::GameEntity
 
 		// ID
 		EntityID id;
-		if (FreeIds.size() > ID::MIN_DELETED_ELEMENTS) // 
+		if (FreeIds.size() > ID::MIN_DELETED_ELEMENTS) // FreeIds‚ª­‚È‚¢ó‘Ô‚Åg‚¢‚Ü‚í‚·‚Æ‚·‚®‚Égeneration‚ªˆêü‚µ‚Ä‚µ‚Ü‚¤‚Ì‚Å‚µ‚«‚¢’l‚ğİ‚¯‚é
 		{
 			id = FreeIds.front();
 			assert(!IsAlive(id));

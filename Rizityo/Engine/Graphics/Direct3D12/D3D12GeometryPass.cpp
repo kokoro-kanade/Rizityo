@@ -12,11 +12,11 @@ namespace Rizityo::Graphics::D3D12::GPass
 {
 	namespace
 	{
-		constexpr Math::U32Vector2 InitialDimensions{ 100,100 };
+		constexpr Math::DX_U32Vector2 InitialDimensions{ 100,100 };
 
 		D3D12RenderTexture GPassMainBuffer{};
 		D3D12DepthBuffer GPassDepthBuffer{};
-		Math::U32Vector2 Dimensions{ InitialDimensions };
+		Math::DX_U32Vector2 Dimensions{ InitialDimensions };
 
 #if _DEBUG
 		constexpr float32 ClearValue[4]{ 0.5f, 0.5f, 0.5f, 1.f };
@@ -144,7 +144,7 @@ namespace Rizityo::Graphics::D3D12::GPass
 
 	namespace
 	{
-		bool CreateBuffers(Math::U32Vector2 size)
+		bool CreateBuffers(Math::DX_U32Vector2 size)
 		{
 			assert(size.x && size.y);
 			GPassMainBuffer.Release();
@@ -292,9 +292,9 @@ namespace Rizityo::Graphics::D3D12::GPass
 		return GPassDepthBuffer;
 	}
 
-	void SetSize(Math::U32Vector2 size)
+	void SetSize(Math::DX_U32Vector2 size)
 	{
-		Math::U32Vector2& d{ Dimensions };
+		Math::DX_U32Vector2& d{ Dimensions };
 		if (size.x > d.x || size.y > d.y)
 		{
 			d = { std::max(size.x, d.x), std::max(size.y, d.y) };

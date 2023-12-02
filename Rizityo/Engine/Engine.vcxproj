@@ -31,6 +31,7 @@
     <ClInclude Include="Content\ContentToEngine.h" />
     <ClInclude Include="EngineAPI\Camera.h" />
     <ClInclude Include="EngineAPI\GameEntity.h" />
+    <ClInclude Include="EngineAPI\Input.h" />
     <ClInclude Include="EngineAPI\Light.h" />
     <ClInclude Include="EngineAPI\ScriptComponent.h" />
     <ClInclude Include="EngineAPI\TransformComponent.h" />
@@ -50,13 +51,18 @@
     <ClInclude Include="Graphics\Direct3D12\Shaders\SharedTypes.h" />
     <ClInclude Include="Graphics\GraphicsInterface.h" />
     <ClInclude Include="Graphics\Renderer.h" />
+    <ClInclude Include="Input\Input.h" />
+    <ClInclude Include="Platform\PlatformInput\PlatformInput.h" />
     <ClInclude Include="Platform\Platform.h" />
     <ClInclude Include="Platform\PlatformTypes.h" />
     <ClInclude Include="Platform\Window.h" />
     <ClInclude Include="Utility\Container\FreeList.h" />
     <ClInclude Include="Utility\IOStream.h" />
-    <ClInclude Include="Utility\Math.h" />
-    <ClInclude Include="Utility\MathType.h" />
+    <ClInclude Include="Utility\Math\Math.h" />
+    <ClInclude Include="Utility\Math\MathType.h" />
+    <ClInclude Include="Utility\Math\Quaternion.h" />
+    <ClInclude Include="Utility\Math\Vector3.h" />
+    <ClInclude Include="Utility\Math\Vector4.h" />
     <ClInclude Include="Utility\Utility.h" />
     <ClInclude Include="Utility\Container\Vector.h" />
   </ItemGroup>
@@ -81,7 +87,12 @@
     <ClCompile Include="Graphics\Direct3D12\D3D12Surface.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Upload.cpp" />
     <ClCompile Include="Graphics\Renderer.cpp" />
+    <ClCompile Include="Input\Input.cpp" />
+    <ClCompile Include="Platform\PlatformInput\PlatformInput.cpp" />
     <ClCompile Include="Platform\Platform.cpp" />
+    <ClCompile Include="Utility\Math\Quaternion.cpp" />
+    <ClCompile Include="Utility\Math\Vector3.cpp" />
+    <ClCompile Include="Utility\Math\Vector4.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

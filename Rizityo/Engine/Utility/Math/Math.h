@@ -9,6 +9,16 @@ namespace Rizityo::Math
 		return (value < min) ? min : ((value > max) ? max : value);
 	}
 
+	constexpr bool IsEqual(float32 a, float32 b, float32 eps = EPSILON)
+	{
+		float32 diff = a - b;
+		if (diff < 0.f)
+		{
+			diff = -diff;
+		}
+		return diff < eps;
+	}
+
 	template<uint32 bits>
 	[[nodiscard]] constexpr uint32 PackUnitFloat(float32 f)
 	{

@@ -12,7 +12,7 @@ namespace Rizityo::Graphics::D3D12::Camera
 
         void Update();
 
-        void SetUpVector(Math::Vector3 up);
+        void SetUpVector(Math::DX_Vector3 up);
 
         constexpr void SetFieldOfView(float32 fov);
         constexpr void SetAspectRatio(float32 aspect_ratio);

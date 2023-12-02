@@ -29,7 +29,7 @@ namespace Rizityo::Graphics::D3D12::GPass
 	[[nodiscard]] const D3D12RenderTexture& GetMainBuffer();
 	[[nodiscard]] const D3D12DepthBuffer& GetDepthBuffer();
 
-	void SetSize(Math::U32Vector2 size);
+	void SetSize(Math::DX_U32Vector2 size);
 
 	void DepthPrepass(ID3D12GraphicsCommandList* cmdList, const D3D12FrameInfo& d3d12Info);
 	void Render(ID3D12GraphicsCommandList* cmdList, const D3D12FrameInfo& d3d12Info);
