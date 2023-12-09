@@ -1,13 +1,14 @@
 #if !defined(SHIPPING)
 
-#include "../Content/ContentLoader.h"
-#include "../Components/Script.h"
-#include "../Platform/PlatformTypes.h"
-#include "../Platform/Platform.h"
-#include "../Graphics/Renderer.h"
+#include "Content/ContentLoader.h"
+#include "Components/Script.h"
+#include "Platform/PlatformTypes.h"
+#include "Platform/Platform.h"
+#include "Graphics/Renderer.h"
 #include <thread>
 
 using namespace Rizityo;
+
 namespace
 {
 	Graphics::RenderSurface GameWindow{};
@@ -53,7 +54,7 @@ bool EngineInitialize()
 
 void EngineUpdate()
 {
-	Rizityo::Script::Update(10.f);
+	Rizityo::Script::Update(10.f); // TODO: timer‚ðŽg‚¤
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 

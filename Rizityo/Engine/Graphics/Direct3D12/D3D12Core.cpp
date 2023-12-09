@@ -267,7 +267,7 @@ namespace Rizityo::Graphics::D3D12::Core
 			}
 		}
 
-		D3D12FrameInfo GetD3D12FrameInfo(const FrameInfo& info, ConstantBuffer& constantBuffer,
+		D3D12FrameInfo GetD3D12FrameInfo(const FrameInfo& info, OUT ConstantBuffer& constantBuffer,
 										 const D3D12Surface& surface, uint32 frameIndex, float32 deltaTime)
 		{
 			Camera::D3D12Camera& camera{ Camera::GetCamera(info.CamerID) };

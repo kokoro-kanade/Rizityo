@@ -17,7 +17,7 @@ namespace Rizityo::Graphics::D3D12::GPass
 			PositionBuffer,
 			ElementBuffer,
 			SrvIndices,
-			directional_lights,
+			DirectionalLights,
 			PerObjectData,
 			Count
 		};

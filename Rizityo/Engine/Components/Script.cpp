@@ -1,9 +1,6 @@
 #include "Script.h"
 #include "Entity.h"
 #include "Transform.h"
-#include "Utility/Math/Vector3.h"
-#include "Utility/Math/Vector4.h"
-#include "Utility/Math/Quaternion.h"
 
 #define USE_TRANSFORM_CACHE_MAP 0
 
@@ -206,6 +203,12 @@ namespace Rizityo::Script
 		Transform::ComponentCache& cache{ *GetCachePtr(entity) };
 		cache.Flags |= Transform::ComponentFlags::Scale;
 		cache.Scale = scale;
+	}
+
+	EntityScript* Script::Component::GetEntityScript(ScriptID id)
+	{
+		const ID::IDType index{ ID::GetIndex(id) };
+		return EntityScripts[IdMapping[index]].get();
 	}
 
 } // Script

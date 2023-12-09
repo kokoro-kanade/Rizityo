@@ -1,5 +1,5 @@
 #pragma once
-#include "../Common/CommonHeaders.h"
+#include "CommonHeaders.h"
 
 namespace Rizityo::Graphics
 {
@@ -52,4 +52,9 @@ namespace Rizityo::Graphics
     private:
         CameraID _ID{ ID::INVALID_ID };
     };
+
+    // TODO: カメラを作成するAPIを公開
+    //       内部でエンティティを作成する
+    //       
+
 }

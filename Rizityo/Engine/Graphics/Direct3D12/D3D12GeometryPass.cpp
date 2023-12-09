@@ -182,7 +182,7 @@ namespace Rizityo::Graphics::D3D12::GPass
 				info.Desc = &desc;
 				info.InitialState = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE; // ピクセルシェーダーとコンピュートシェーダーで読み込む
 				info.ClearValue.Format = desc.Format;
-				info.ClearValue.DepthStencil.Depth = 0.f;
+				info.ClearValue.DepthStencil.Depth = 0.f; // 深度バッファの精度を上げるために遠い面の深さを0にする
 				info.ClearValue.DepthStencil.Stencil = 0;
 
 				GPassDepthBuffer = D3D12DepthBuffer{ info };
@@ -353,7 +353,7 @@ namespace Rizityo::Graphics::D3D12::GPass
 				currentRootSignature = cache.RootSignatures[i];
 				cmdList->SetGraphicsRootSignature(currentRootSignature);
 				cmdList->SetGraphicsRootConstantBufferView(OpaqueRootParameter::GlobalShaderData, d3d12Info.GlobalShaderData);
-				cmdList->SetGraphicsRootShaderResourceView(OpaqueRootParameter::directional_lights,
+				cmdList->SetGraphicsRootShaderResourceView(OpaqueRootParameter::DirectionalLights,
 														   Light::GetNonCullableLightBuffer(d3d12Info.FrameIndex));
 			}
 

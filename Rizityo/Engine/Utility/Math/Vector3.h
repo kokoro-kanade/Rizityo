@@ -1,5 +1,5 @@
 #pragma once
-#include "CommonHeaders.h"
+#include "../Common/CommonHeaders.h"
 
 namespace Rizityo::Math
 {
@@ -84,9 +84,9 @@ namespace Rizityo::Math
 
 		[[nodiscard]] float32 LengthSquared() const;
 
-		void Normalise();
+		void Normalize();
 
-		[[nodiscard]] Vector3 Normalise() const;
+		[[nodiscard]] Vector3 Normalize() const;
 
 		[[nodiscard]] float32 Dot(const Vector3& v) const;
 
@@ -172,6 +172,12 @@ namespace Rizityo::Math
 		static const Vector3 UNIT_X;
 		static const Vector3 UNIT_Y;
 		static const Vector3 UNIT_Z;
+		static const Vector3 UP;
+		static const Vector3 DOWN;
+		static const Vector3 RIGHT;
+		static const Vector3 LEFT;
+		static const Vector3 FORWARD;
+		static const Vector3 BACKWORD;
 	};
 
 #endif // defined(_WIN64)

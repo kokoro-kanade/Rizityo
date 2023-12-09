@@ -48,7 +48,7 @@ namespace Editor.DLLWrapper
 
         [DllImport(_engineDllName)]
         [return: MarshalAs(UnmanagedType.SafeArray)]
-        public static extern string[] GetGameScriptNames(); // Rename
+        public static extern string[] GetGameScriptNames();
 
         [DllImport(_engineDllName)]
         public static extern int CreateRenderSurface(IntPtr host, int width, int height);

@@ -1,6 +1,6 @@
 #pragma once
-#include "CommonHeaders.h"
-#include "Vector3.h"
+#include "../Common/CommonHeaders.h"
+#include "../Utility/Math/Vector3.h"
 
 
 namespace Rizityo::Math
@@ -18,12 +18,20 @@ namespace Rizityo::Math
 			DirectX::XMStoreFloat4A(this, DirectX::XMQuaternionIdentity());
 		}
 
-		Quaternion(float32 x, float32 y, float32 z, float32 w) : DirectX::XMFLOAT4A(x, y, z, w)
+		constexpr Quaternion(float32 x, float32 y, float32 z, float32 w) : DirectX::XMFLOAT4A(x, y, z, w)
+		{}
+
+		explicit Quaternion(DX_Vector4 v) : DirectX::XMFLOAT4A(v.x, v.y, v.z, v.w)
 		{}
 
 		Quaternion(float32 pitch, float32 yaw, float32 roll)
 		{
 			DirectX::XMStoreFloat4A(this, DirectX::XMQuaternionRotationRollPitchYaw(pitch, yaw, roll));
+		}
+
+		Quaternion(const Vector3& rotation)
+		{
+			DirectX::XMStoreFloat4A(this, DirectX::XMQuaternionRotationRollPitchYawFromVector(rotation));
 		}
 
 		Quaternion(const Vector3& axis, float32 angle)
@@ -135,6 +143,10 @@ namespace Rizityo::Math
 		}
 
 		Vector3 Transform(const Vector3& v) const;
+
+		static Quaternion FromToRotation(const Math::Vector3& from, const Math::Vector3& to);
+
+		static Quaternion LookRotation(const Math::Vector3& forward, const Math::Vector3& up = Math::Vector3::UP);
 
 		static const Quaternion IDENTITY;
 	};

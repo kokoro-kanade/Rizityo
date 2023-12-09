@@ -1,5 +1,5 @@
 #pragma once
-#include "ComponentsCommon.h"
+#include "ComponentsCommonHeaders.h"
 
 namespace Rizityo::Transform
 {

@@ -30,7 +30,7 @@ namespace {1}
 
     }}
 
-    void {0}::Update(float dt)
+    void {0}::Update(float32 dt)
     {{
 
     }}
@@ -46,7 +46,7 @@ namespace {1}
 		constexpr explicit {0}(Rizityo::GameEntity::Entity entity) : Rizityo::Script::EntityScript(entity) {{}}
 
 		void BeginPlay() override;
-		void Update(float dt) override;
+		void Update(float32 dt) override;
 
 	}};
 

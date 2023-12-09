@@ -108,12 +108,14 @@ namespace Rizityo::Content
 		uint64 size = 0;
 		if (!ReadFile("game.bin", gameData, size))
 			return false;
+
 		assert(gameData.get());
 		const uint8* at = gameData.get();
 		constexpr uint32 su32 = sizeof(uint32);
 		const uint32 numEntities = *at; at += su32;
 		if (!numEntities)
 			return false;
+
 		for (uint32 entityIndex = 0; entityIndex < numEntities; entityIndex++)
 		{
 			GameEntity::EntityInfo info{};
@@ -122,6 +124,7 @@ namespace Rizityo::Content
 			const uint32 numComponents = *at; at += su32;
 			if (!numComponents)
 				return false;
+
 			for (uint32 componentIndex = 0; componentIndex < numComponents; componentIndex++)
 			{
 				const uint32 componentType = *at; at += su32;

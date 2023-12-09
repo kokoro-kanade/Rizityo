@@ -1,5 +1,5 @@
 #pragma once
-#include "../Components/ComponentsCommon.h"
+#include "../Components/ComponentsCommonHeaders.h"
 
 namespace Rizityo::Math
 {
@@ -20,7 +20,7 @@ namespace Rizityo::Transform
 		constexpr bool IsValid() const { return ID::IsValid(_ID); }
 
 		[[nodiscard]] Math::Vector3 GetPosition() const;
-		[[nodiscard]] Math::Vector4 GetRotation() const;
+		[[nodiscard]] Math::Quaternion GetRotation() const;
 		[[nodiscard]] Math::Vector3 GetOrientation() const;
 		[[nodiscard]] Math::Vector3 GetScale() const;
 

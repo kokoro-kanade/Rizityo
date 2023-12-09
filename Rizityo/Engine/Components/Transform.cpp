@@ -185,10 +185,10 @@ namespace Rizityo::Transform
 		return Math::Vector3{ Positions[ID::GetIndex(_ID)] };
 	}
 
-	Math::Vector4 Component::GetRotation() const
+	Math::Quaternion Component::GetRotation() const
 	{
 		assert(IsValid());
-		return Math::Vector4{Rotations[ID::GetIndex(_ID)]};
+		return Math::Quaternion{Rotations[ID::GetIndex(_ID)]};
 	}
 
 	Math::Vector3 Component::GetOrientation() const

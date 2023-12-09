@@ -110,9 +110,9 @@ namespace Rizityo::Graphics
     struct MaterialInitInfo
     {
         MaterialType::Type Type;
-        uint32 TextureCount; // テクスチャはない可能性がある(TextureCount == 0)
+        uint32 TextureCount = 0; // テクスチャはない可能性がある(TextureCount == 0)
         ID::IDType ShaderIDs[ShaderType::Count]{ ID::INVALID_ID, ID::INVALID_ID, ID::INVALID_ID, ID::INVALID_ID, ID::INVALID_ID, ID::INVALID_ID, ID::INVALID_ID, ID::INVALID_ID };
-        ID::IDType* TextureIDs;
+        ID::IDType* TextureIDs = nullptr;
     };
 
     ID::IDType AddMaterial(MaterialInitInfo info);

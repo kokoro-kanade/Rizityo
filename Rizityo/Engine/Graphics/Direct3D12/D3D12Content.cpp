@@ -25,7 +25,7 @@ namespace Rizityo::Graphics::D3D12::Content
 		std::mutex TextureMutex{};
 
 		Utility::Vector<ID3D12RootSignature*> RootSignatures;
-		std::unordered_map<uint64, ID::IDType> MaterialRootSignatureMap; // マテリアルタイプ・シェーダーフラグからルートシグネチャーへのマップ
+		std::unordered_map<uint64, ID::IDType> MaterialRootSignatureMap; // (マテリアルタイプ, シェーダーフラグ)からルートシグネチャーへのマップ
 		Utility::FreeList<std::unique_ptr<uint8[]>> Materials;
 		std::mutex MaterialMutex{};
 
@@ -262,8 +262,8 @@ namespace Rizityo::Graphics::D3D12::Content
 
 				parameters[params::PositionBuffer].AsSRV(bufferVisibility, 0);
 				parameters[params::ElementBuffer].AsSRV(bufferVisibility, 1);
-				parameters[params::SrvIndices].AsSRV(D3D12_SHADER_VISIBILITY_PIXEL, 2); // TODO: needs to be visible to any stages that need to sample textures.
-				parameters[params::directional_lights].AsSRV(D3D12_SHADER_VISIBILITY_PIXEL, 3);
+				parameters[params::SrvIndices].AsSRV(D3D12_SHADER_VISIBILITY_PIXEL, 2);
+				parameters[params::DirectionalLights].AsSRV(D3D12_SHADER_VISIBILITY_PIXEL, 3);
 				parameters[params::PerObjectData].AsCBV(dataVisibility, 1);
 
 				rootSignature = Helper::D3D12RootSignatureDesc{ &parameters[0], _countof(parameters), GetRootSignatureFlags(flags) }.Create();
@@ -324,13 +324,13 @@ namespace Rizityo::Graphics::D3D12::Content
 		{
 
 			constexpr uint64 alignedStreamSize{ Math::AlignSizeUp<sizeof(uint64)>(sizeof(Helper::D3D12PipelineStateSubobjectStream)) };
-			uint8* const stream_ptr{ (uint8* const)alloca(alignedStreamSize) };
-			ZeroMemory(stream_ptr, alignedStreamSize);
-			new (stream_ptr) Helper::D3D12PipelineStateSubobjectStream{};
+			uint8* const streamPtr = (uint8* const)alloca(alignedStreamSize);
+			ZeroMemory(streamPtr, alignedStreamSize);
+			new (streamPtr) Helper::D3D12PipelineStateSubobjectStream{};
 
-			Helper::D3D12PipelineStateSubobjectStream& stream{ *(Helper::D3D12PipelineStateSubobjectStream* const)stream_ptr };
+			Helper::D3D12PipelineStateSubobjectStream& stream{ *(Helper::D3D12PipelineStateSubobjectStream* const)streamPtr };
 
-			{
+			{ // ロックスコープ
 				std::lock_guard lock{ MaterialMutex };
 				const D3D12MaterialStream material{ Materials[materialID].get() };
 
@@ -343,7 +343,7 @@ namespace Rizityo::Graphics::D3D12::Content
 				stream.PrimitiveTopology = GetD3D_PrimitiveTopologyType(primitiveTopology);
 				stream.DepthStencilFormat = GPass::DepthBufferFormat;
 				stream.Rasterizer = Helper::RasterizerState.BackfaceCull;
-				stream.DepthStencil1 = Helper::DepthState.ReversedReadonly;
+				stream.DepthStencil1 = Helper::DepthState.ReversedReadonly; // 深度バッファの精度を上げるためにReversedReadonlyを用いる
 				stream.Blend = Helper::BlendState.Disabled;
 
 				const ShaderFlags::Flags flags{ material.ShaderFlags() };
@@ -373,11 +373,11 @@ namespace Rizityo::Graphics::D3D12::Content
 			}
 
 			PSO_ID idPair{};
-			idPair.GPassPSO_ID = CreatePSO_IfNeeded(stream_ptr, alignedStreamSize, false);
+			idPair.GPassPSO_ID = CreatePSO_IfNeeded(streamPtr, alignedStreamSize, false);
 
 			stream.PS = D3D12_SHADER_BYTECODE{};
-			stream.DepthStencil1 = Helper::DepthState.Reversed;
-			idPair.DepthPSO_ID = CreatePSO_IfNeeded(stream_ptr, alignedStreamSize, true);
+			stream.DepthStencil1 = Helper::DepthState.Reversed; // 深度バッファの精度を上げるためにReversedを用いる
+			idPair.DepthPSO_ID = CreatePSO_IfNeeded(streamPtr, alignedStreamSize, true);
 
 			return idPair;
 		}
@@ -544,15 +544,15 @@ namespace Rizityo::Graphics::D3D12::Content
 			Materials.Remove(id);
 		}
 
-		void GetMaterials(const ID::IDType* const material_ids, uint32 material_count, OUT const MaterialsCache& cache)
+		void GetMaterials(const ID::IDType* const materialIDs, uint32 materialCount, OUT const MaterialsCache& cache)
 		{
-			assert(material_ids && material_count);
+			assert(materialIDs && materialCount);
 			assert(cache.RootSignatures && cache.MaterialTypes);
 			std::lock_guard lock{ MaterialMutex };
 
-			for (uint32 i = 0; i < material_count; i++)
+			for (uint32 i = 0; i < materialCount; i++)
 			{
-				const D3D12MaterialStream stream{ Materials[material_ids[i]].get() };
+				const D3D12MaterialStream stream{ Materials[materialIDs[i]].get() };
 				cache.RootSignatures[i] = RootSignatures[stream.RootSignatureID()];
 				cache.MaterialTypes[i] = stream.MaterialType();
 			}
@@ -587,7 +587,7 @@ namespace Rizityo::Graphics::D3D12::Content
 			std::unique_ptr<ID::IDType[]> items{ std::make_unique<ID::IDType[]>(sizeof(ID::IDType) * (1 + (uint64)materialCount + 1)) };
 
 			items[0] = geometryContentID;
-			ID::IDType* const item_ids{ &items[1] };
+			ID::IDType* const itemIDs{ &items[1] };
 
 			std::lock_guard lock{ RenderItemMutex };
 
@@ -597,16 +597,16 @@ namespace Rizityo::Graphics::D3D12::Content
 				item.EntityID = entityID;
 				item.SubmeshGPU_ID = gpuIDs[i];
 				item.MaterialID = materialIDs[i];
-				PSO_ID id_pair{ CreatePSO(item.MaterialID, viewsCache.PrimitiveTopologies[i], viewsCache.ElementsTypes[i]) };
-				item.PSO_ID = id_pair.GPassPSO_ID;
-				item.DepthPSO_ID = id_pair.DepthPSO_ID;
+				PSO_ID idPair{ CreatePSO(item.MaterialID, viewsCache.PrimitiveTopologies[i], viewsCache.ElementsTypes[i]) };
+				item.PSO_ID = idPair.GPassPSO_ID;
+				item.DepthPSO_ID = idPair.DepthPSO_ID;
 
 				assert(ID::IsValid(item.SubmeshGPU_ID) && ID::IsValid(item.MaterialID));
-				item_ids[i] = RenderItems.Add(item);
+				itemIDs[i] = RenderItems.Add(item);
 			}
 
 			// INVALID_IDで末尾を埋める
-			item_ids[materialCount] = ID::INVALID_ID;
+			itemIDs[materialCount] = ID::INVALID_ID;
 
 			return RenderItemIDs.Add(std::move(items));
 		}
@@ -635,12 +635,14 @@ namespace Rizityo::Graphics::D3D12::Content
 
 			std::lock_guard lock{ RenderItemMutex };
 
+			// Geometry IDの取得
 			for (uint32 i = 0; i < count; i++)
 			{
 				const ID::IDType* const buffer = RenderItemIDs[frameInfo.RenderItemIDs[i]].get();
 				FrameCache.GeometryIDs.emplace_back(buffer[0]);
 			}
 
+			// LOD Offsetの取得
 			Rizityo::Content::GetLOD_Offsets(FrameCache.GeometryIDs.data(), frameInfo.Thresholds, count, FrameCache.LOD_Offsets);
 			assert(FrameCache.LOD_Offsets.size() == count);
 
@@ -653,6 +655,7 @@ namespace Rizityo::Graphics::D3D12::Content
 			assert(d3d12RenderItemCount);
 			d3d12RenderItemIDs.resize(d3d12RenderItemCount);
 
+			// D3D12RenderItem IDの取得
 			uint32 itemIndex = 0;
 			for (uint32 i = 0; i < count; i++)
 			{

@@ -268,6 +268,7 @@ namespace Editor.Content
         public GeometryImportSetting()
         {
             SmoothingAngle = 178f;
+            //SmoothingAngle = 0;
             CalculateNormals = false;
             CalculateTangents = false;
             ReverseHandedness = false;
@@ -587,7 +588,7 @@ namespace Editor.Content
                 }
 
                 // テスト用
-                // PackForEngine();
+                PackForEngine();
 
             }
             catch (Exception ex)

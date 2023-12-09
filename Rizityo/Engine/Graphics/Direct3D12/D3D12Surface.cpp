@@ -71,6 +71,7 @@ namespace Rizityo::Graphics::D3D12
 		desc.BufferCount = BufferCount;
 		desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		desc.Flags = _AllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+		//desc.Flags = 0;
 		desc.Format = ToNonSRGB(DefaultBackBufferFormat);
 		desc.Height = _Window.Height();
 		desc.Width = _Window.Width();
@@ -100,6 +101,7 @@ namespace Rizityo::Graphics::D3D12
 	void D3D12Surface::Present() const
 	{
 		assert(_SwapChain);
+		//DXCall(_SwapChain->Present(0, 0));
 		DXCall(_SwapChain->Present(0, _PresentFlags));
 		_CurrentBackBufferIndex = _SwapChain->GetCurrentBackBufferIndex();
 	}

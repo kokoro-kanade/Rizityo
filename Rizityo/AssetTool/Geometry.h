@@ -98,7 +98,7 @@ namespace Rizityo::AssetTool
             uint8 Padding;
         };
 
-    } // namespace Elements
+    } // Elements
 
     struct Vertex
     {

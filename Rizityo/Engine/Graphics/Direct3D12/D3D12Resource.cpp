@@ -125,8 +125,7 @@ namespace Rizityo::Graphics::D3D12
 		SET_NAME_D3D12_OBJECT_INDEXED(_Buffer, _Size, L"D3D12 Buffer - size");
 	}
 
-	void
-		D3D12Buffer::Release()
+	void D3D12Buffer::Release()
 	{
 		Core::DeferredRelease(_Buffer);
 		_GPU_Address = 0;
@@ -160,7 +159,6 @@ namespace Rizityo::Graphics::D3D12
 	}
 
 	// D3D12Texture
-
 	D3D12Texture::D3D12Texture(D3D12TextureInitInfo info)
 	{
 		auto* const device = Core::GetMainDevice();
@@ -210,7 +208,6 @@ namespace Rizityo::Graphics::D3D12
 	}
 
 	// D3D12RenderTexture
-
 	D3D12RenderTexture::D3D12RenderTexture(D3D12TextureInitInfo info)
 		: _Texture{ info }
 	{
@@ -246,7 +243,6 @@ namespace Rizityo::Graphics::D3D12
 	}
 
 	// D3D12DepthBuffer
-
 	D3D12DepthBuffer::D3D12DepthBuffer(D3D12TextureInitInfo info)
 	{
 		assert(info.Desc);

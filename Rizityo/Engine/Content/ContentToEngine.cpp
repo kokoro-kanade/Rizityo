@@ -39,12 +39,13 @@ namespace Rizityo::Content
                 if (_LOD_Count == 1)
                     return 0;
 
-                for (uint32 i{ _LOD_Count - 1 }; i > 0; --i)
+                for (uint32 i = _LOD_Count - 1; i > 0; i--)
                 {
-                    if (_Thresholds[i] <= threshold) return i;
+                    if (_Thresholds[i] <= threshold)
+                        return i;
                 }
 
-                assert(false); // shouldn't ever get here.
+                //assert(false);
                 return 0;
             }
 
@@ -126,7 +127,7 @@ namespace Rizityo::Content
             for (uint32 lodIndex = 0; lodIndex < lodCount; lodIndex++)
             {
                 stream.Thresholds()[lodIndex] = reader.Read<float32>();
-                const uint32 idCount = reader.Read<uint32>();
+                const uint32 idCount = reader.Read<uint32>(); // SubmeshCount
                 assert(idCount < (1 << 16));
 
                 stream.LOD_Offsets()[lodIndex] = { (uint16)submeshIndex, (uint16)idCount };
@@ -210,7 +211,7 @@ namespace Rizityo::Content
         //         struct {
         //             uint32 ElementSize, uint32 VertexCount,
         //             uint32 IndexCount, uint32 ElementsType, uint32 PrimitiveTopology
-        //             uint8 Positions[sizeof(float32) * 3 * VertexCount],     // sizeof(positions)は4の倍数である必要(必要ならパディング)
+        //             uint8 Positions[sizeof(float32) * 3 * VertexCount], // sizeof(positions)は4の倍数である必要(必要ならパディング)
         //             uint8 Elements[sizeof(ElementSize) * VertexCount], // sizeof(elements)は4の倍数である必要(必要ならパディング)
         //             uint8 Indices[IndexSize * IndexCount]
         //         } Submeshes[SubmeshCount]

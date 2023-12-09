@@ -228,11 +228,11 @@ namespace Rizityo::Graphics::D3D12::Camera
         Math::DX_Vector3 dir{ entity.GetTransformComponent().GetOrientation() };
         _Position = XMLoadFloat3(&pos);
         _Direction = XMLoadFloat3(&dir);
-        _View = XMMatrixLookToRH(_Position, _Direction, _UpVector);
+        _View = XMMatrixLookToRH(_Position, _Direction, _UpVector); // 右手座標系
 
         if (_UpdateFlag)
         {
-            // D3D12の向きと合わせるためにnearZとfarZを入れ替えている
+            // 深度バッファの精度を上げるためにnearZとfarZを入れ替えている
             _Projection = (_ProjectionType == Graphics::Camera::Type::Perspective)
                 ? XMMatrixPerspectiveFovRH(_FieldOfView * XM_PI, _AspectRatio, _FarZ, _NearZ)
                 : XMMatrixOrthographicRH(_ViewWidth, _ViewHeight, _FarZ, _NearZ);

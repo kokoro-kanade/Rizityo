@@ -180,7 +180,7 @@ namespace Rizityo::AssetTool
 
 		// 頂点の取得
 		const int32 numVertices = fbxMesh->GetControlPointsCount();
-		FbxDX_Vector4* vertices = fbxMesh->GetControlPoints();
+		FbxVector4* vertices = fbxMesh->GetControlPoints();
 		const int32 numIndices = fbxMesh->GetPolygonVertexCount();
 		int32* indices = fbxMesh->GetPolygonVertices();
 
@@ -200,7 +200,7 @@ namespace Rizityo::AssetTool
 			}
 			else
 			{
-				FbxDX_Vector4 v = transform.MultT(vertices[vIndex]) * _LevelScale;
+				FbxVector4 v = transform.MultT(vertices[vIndex]) * _LevelScale;
 				mesh.RawIndices[i] = static_cast<uint32>(mesh.Positions.size());
 				vertexRef[vIndex] = mesh.RawIndices[i];
 				mesh.Positions.emplace_back(static_cast<float32>(v[0]), static_cast<float32>(v[1]), static_cast<float32>(v[2]));
@@ -234,13 +234,13 @@ namespace Rizityo::AssetTool
 		// 法線のインポート
 		if (importNormals)
 		{
-			FbxArray<FbxDX_Vector4> normals;
+			FbxArray<FbxVector4> normals;
 			if (fbxMesh->GenerateNormals() && fbxMesh->GetPolygonVertexNormals(normals) && normals.Size() > 0)
 			{
 				const int32 numNormals = normals.Size();
 				for (int32 i = 0; i < numNormals; i++)
 				{
-					FbxDX_Vector4 normal{ inverse_transpose.MultT(normals[i]) };
+					FbxVector4 normal{ inverse_transpose.MultT(normals[i]) };
 					normal.Normalize();
 					mesh.Normals.emplace_back(static_cast<float32>(normal[0]), static_cast<float32>(normal[1]), static_cast<float32>(normal[2]));
 				}
@@ -254,13 +254,13 @@ namespace Rizityo::AssetTool
 		// 接線のインポート
 		if (importTangents)
 		{
-			FbxLayerElementArrayTemplate<FbxDX_Vector4>* tangents = nullptr;
+			FbxLayerElementArrayTemplate<FbxVector4>* tangents = nullptr;
 			if (fbxMesh->GenerateTangentsData() && fbxMesh->GetTangents(&tangents) && tangents && tangents->GetCount() > 0)
 			{
 				const int32 numTangent = tangents->GetCount();
 				for (int32 i = 0; i < numTangent; i++)
 				{
-					FbxDX_Vector4 tangent = tangents->GetAt(i);
+					FbxVector4 tangent = tangents->GetAt(i);
 					const float32 handedness = (float32)tangent[3]; // 接線の第４成分に右手/左手座標系の情報が入っている
 					tangent[3] = 0.0;
 					tangent = transform.MultT(tangent);
