@@ -1,19 +1,21 @@
 #include "Entity.h"
 #include "Transform.h"
 #include "Script.h"
+#include "Render.h"
 
 namespace Rizityo::GameEntity
 {
 	namespace
 	{
-		Utility::Vector<Transform::Component> TransformComponents;
-		Utility::Vector<Script::Component> ScriptComponents;
+		Vector<Transform::Component> TransformComponents;
+		Vector<Script::Component> ScriptComponents;
+		Vector<Render::Component> RenderComponents;
 
-		Utility::Vector<ID::GENERATION_TYPE> Generations;
-		Utility::Deque<EntityID> FreeIds;
+		Vector<ID::GENERATION_TYPE> Generations;
+		Deque<EntityID> FreeIds;
 	}
 
-	Entity CreateGameEntity(const EntityInfo& info)
+	Entity CreateGameEntity(const InitInfo& info)
 	{
 		assert(info.Transform);
 		if (!info.Transform)
@@ -36,6 +38,7 @@ namespace Rizityo::GameEntity
 
 			TransformComponents.emplace_back();
 			ScriptComponents.emplace_back();
+			RenderComponents.emplace_back();
 		}
 
 		const Entity newEntity{ id };
@@ -55,6 +58,14 @@ namespace Rizityo::GameEntity
 			assert(ScriptComponents[index].IsValid());
 		}
 
+		// RendererComponent
+		if (info.Render)
+		{
+			assert(!RenderComponents[index].IsValid());
+			RenderComponents[index] = Render::CreateComponent(*info.Render, newEntity);
+			assert(RenderComponents[index].IsValid());
+		}
+
 		return newEntity;
 	}
 
@@ -70,6 +81,12 @@ namespace Rizityo::GameEntity
 		{
 			Script::RemoveComponent(ScriptComponents[index]);
 			ScriptComponents[index] = {};
+		}
+
+		if (RenderComponents[index].IsValid())
+		{
+			Render::RemoveComponent(RenderComponents[index]);
+			RenderComponents[index] = {};
 		}
 
 		FreeIds.push_back(id);

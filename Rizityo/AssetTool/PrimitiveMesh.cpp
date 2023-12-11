@@ -54,7 +54,7 @@ namespace Rizityo::AssetTool
 
 			Mesh mesh{};
 			mesh.Name = "Plane";
-			Utility::Vector<DX_Vector2> uvs;
+			Vector<DX_Vector2> uvs;
 
 			for (uint32 i = 0; i <= verticalCount; i++)
 			{
@@ -164,7 +164,7 @@ namespace Rizityo::AssetTool
 			c = 0;
 			const uint32 numIndices = 2 * (3 * phiCount) + 2 * 3 * phiCount * (thetaCount - 2);
 			mesh.RawIndices.resize(numIndices);
-			Utility::Vector<DX_Vector2> uvs{ numIndices };
+			Vector<DX_Vector2> uvs{ numIndices };
 			const float32 uvThetaStep = 1.f / thetaCount;
 			const float32 uvPhiStep = 1.f / phiCount;
 

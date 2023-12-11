@@ -1,7 +1,7 @@
 #pragma once
 #include "CommonHeaders.h"
 
-namespace Rizityo::Utility
+namespace Rizityo
 {
 	template<typename T>
 	class FreeList
@@ -81,7 +81,7 @@ namespace Rizityo::Utility
 		}
 
 	private:
-		Utility::Vector<T, false> _Array;
+		Vector<T, false> _Array;
 		uint32 _Size = 0;
 		uint32 _NextFreeIndex = UINT32_INVALID_NUM;
 

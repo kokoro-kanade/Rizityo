@@ -1,8 +1,8 @@
 #pragma once
 #include "CommonHeaders.h"
 
-namespace Rizityo::Utility {
-
+namespace Rizityo::IO
+{
     // 注意: このクラスはローカルに用いる
     //       メンバ変数として持ったりしない
     class BinaryReader
@@ -55,7 +55,7 @@ namespace Rizityo::Utility {
         explicit BinaryWriter(uint8* dstBuffer, size_t buffer_size)
             :_Buffer{ dstBuffer }, _Position{ dstBuffer }, _BufferSize{ buffer_size }
         {
-            assert(dstBuffer&& buffer_size);
+            assert(dstBuffer && buffer_size);
         }
 
         // プリミティブ型を想定
@@ -103,3 +103,4 @@ namespace Rizityo::Utility {
     };
 
 }
+

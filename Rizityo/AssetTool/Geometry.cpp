@@ -1,5 +1,5 @@
 #include "Geometry.h"
-#include "../Utility/IOStream.h"
+#include "../Core/Utility/IO/BinaryIO.h"
 
 namespace Rizityo::AssetTool
 {
@@ -44,7 +44,7 @@ namespace Rizityo::AssetTool
 			assert(numIndices && numVertices);
 
 			mesh.Indices.resize(numIndices);
-			Utility::Vector<Utility::Vector<uint32>> indexRefs(numVertices);
+			Vector<Vector<uint32>> indexRefs(numVertices);
 			for (uint32 i = 0; i < numIndices; i++)
 			{
 				indexRefs[mesh.RawIndices[i]].emplace_back(i);
@@ -91,16 +91,16 @@ namespace Rizityo::AssetTool
 
 		void ProcessUVs(Mesh& mesh)
 		{
-			Utility::Vector<Vertex> oldVertices;
+			Vector<Vertex> oldVertices;
 			oldVertices.swap(mesh.Vertices);
-			Utility::Vector<uint32> oldIndices(mesh.Indices.size());
+			Vector<uint32> oldIndices(mesh.Indices.size());
 			oldIndices.swap(mesh.Indices);
 
 			const uint32 numVertices = (uint32)oldVertices.size();
 			const uint32 numIndices = (uint32)oldIndices.size();
 			assert(numVertices && numIndices);
 
-			Utility::Vector<Utility::Vector<uint32>> indexRefs(numVertices);
+			Vector<Vector<uint32>> indexRefs(numVertices);
 			for (uint32 i = 0; i < numIndices; i++)
 			{
 				indexRefs[oldIndices[i]].emplace_back(i);
@@ -200,10 +200,10 @@ namespace Rizityo::AssetTool
 			struct u16v2 { uint16 x, y; };
 			struct u8v3 { uint8 x, y, z; };
 
-			Utility::Vector<uint8> TSigns(numVertices);
-			Utility::Vector<u16v2> Normals(numVertices);
-			Utility::Vector<u16v2> Tangents(numVertices);
-			Utility::Vector<u8v3> JointWeights(numVertices);
+			Vector<uint8> TSigns(numVertices);
+			Vector<u16v2> Normals(numVertices);
+			Vector<u16v2> Tangents(numVertices);
+			Vector<u8v3> JointWeights(numVertices);
 
 			if (mesh.ElementsType & Elements::ElementsType::StaticNormal)
 			{
@@ -436,7 +436,7 @@ namespace Rizityo::AssetTool
 			return size;
 		}
 
-		void PackMeshData(const Mesh& mesh,Utility::BinaryWriter& binaryWriter)
+		void PackMeshData(const Mesh& mesh,IO::BinaryWriter& binaryWriter)
 		{
 			// メッシュ名
 			binaryWriter.Write((uint32)mesh.Name.size());
@@ -478,7 +478,7 @@ namespace Rizityo::AssetTool
 			// インデックスデータ
 			const uint32 index_buffer_size{ indexSize * numIndices };
 			const uint8* data{ (const uint8*)mesh.Indices.data() };
-			Utility::Vector<uint16> indices;
+			Vector<uint16> indices;
 			// インデックスは32bitで保存していたのでサイズが16bitの場合は変換する
 			if (indexSize == sizeof(uint16))
 			{
@@ -501,7 +501,7 @@ namespace Rizityo::AssetTool
 			submesh.UVSets.resize(mesh.UVSets.size());
 
 			const uint32 numPolygons = static_cast<uint32>(mesh.RawIndices.size()) / 3;
-			Utility::Vector<uint32> vertexRef(mesh.Positions.size(), UINT32_INVALID_NUM);
+			Vector<uint32> vertexRef(mesh.Positions.size(), UINT32_INVALID_NUM);
 
 			for (uint32 i = 0; i < numPolygons; i++)
 			{
@@ -552,7 +552,7 @@ namespace Rizityo::AssetTool
 		{
 			for (auto& lodGroup : level.LODGroups)
 			{
-				Utility::Vector<Mesh> newMeshes;
+				Vector<Mesh> newMeshes;
 
 				for (auto& mesh : lodGroup.Meshes)
 				{
@@ -601,7 +601,7 @@ namespace Rizityo::AssetTool
 		data.Data = (uint8*)CoTaskMemAlloc(levelSize);
 		assert(data.Data);
 
-		Utility::BinaryWriter binaryWriter{ data.Data, data.DataSize };
+		IO::BinaryWriter binaryWriter{ data.Data, data.DataSize };
 
 		// レベル名の長さ
 		binaryWriter.Write((uint32)level.Name.size());

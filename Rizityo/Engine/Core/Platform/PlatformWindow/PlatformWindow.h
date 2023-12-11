@@ -1,5 +1,6 @@
 #pragma once
 #include "CommonHeaders.h"
+#include "../Window.h"
 
 #ifdef _WIN64
 
@@ -27,3 +28,10 @@ namespace Rizityo::Platform
 }
 
 #endif // _WIN64
+
+namespace Rizityo::Platform
+{
+	// TODO? : window.hにうつす？ Windowを使う際にこれらの関数を知っておく必要がないならここで良い
+	Window CreateMyWindow(const WindowInitInfo* const initInfo = nullptr);
+	void RemoveMyWindow(WindowID id);
+}

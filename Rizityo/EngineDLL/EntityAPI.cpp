@@ -66,7 +66,8 @@ ID::IDType CreateGameEntity(GameEntityDescriptor* d)
 	GameEntityDescriptor& desc{ *d };
 	Transform::InitInfo transformInfo{ desc.Transform.ToInitInfo() };
 	Script::InitInfo scriptInfo{ desc.Script.ToInitInfo() };
-	GameEntity::EntityInfo entityInfo{
+	GameEntity::InitInfo entityInfo
+	{
 		&transformInfo,
 		&scriptInfo
 	};

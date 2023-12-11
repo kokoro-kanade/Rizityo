@@ -1,12 +1,12 @@
 #include "D3D12Camera.h"
-#include "EngineAPI/GameEntity.h"
+#include "API/GameEntity.h"
 
 namespace Rizityo::Graphics::D3D12::Camera
 {
     namespace
     {
 
-        Utility::FreeList<D3D12Camera> Cameras;
+        FreeList<D3D12Camera> Cameras;
 
         void SetUpVector(D3D12Camera& camera, const void* const data, uint32 size)
         {

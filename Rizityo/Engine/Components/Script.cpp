@@ -8,25 +8,27 @@ namespace Rizityo::Script
 {
 	namespace
 	{
-		Utility::Vector<Internal::ScriptPtr> EntityScripts; // 連続領域に保存
-		Utility::Vector<ID::IDType> IdMapping; // Componentのindex -> EntityScriptsの場所
+		Vector<Internal::ScriptPtr> EntityScripts; // 連続領域に保存
+		Vector<ID::IDType> ID_Mapping; // Componentのindex -> EntityScriptsの場所
 
-		Utility::Vector<ID::GENERATION_TYPE> Generations;
-		Utility::Deque<ScriptID> FreeIds;
+		Vector<ID::GENERATION_TYPE> Generations;
+		Deque<ScriptID> FreeIds;
 
-		Utility::Vector<Transform::ComponentCache> TransformCache;
+		Vector<Transform::ComponentCache> TransformCache;
+	} // 変数
 
+	namespace
+	{
 #if USE_TRANSFORM_CACHE_MAP
 		std::unordered_map<ID::IDType, uint32> CacheMap;
 #endif
 
-		// TODO?: EntityのIsAliveのようにヘッダーに関数宣言して定義すればよいのではないか？ -> Existsをほかのファイルから使うかどうか
 		bool Exists(ScriptID id)
 		{
 			assert(ID::IsValid(id));
 			const ID::IDType index{ ID::GetIndex(id) };
-			assert(index < Generations.size() && IdMapping[index] < EntityScripts.size());
-			return (Generations[index] == ID::GetGeneration(id) && EntityScripts[IdMapping[index]] && EntityScripts[IdMapping[index]]->IsValid());
+			assert(index < Generations.size() && ID_Mapping[index] < EntityScripts.size());
+			return (Generations[index] == ID::GetGeneration(id) && EntityScripts[ID_Mapping[index]] && EntityScripts[ID_Mapping[index]]->IsValid());
 		}
 
 		using ScriptRegister = std::unordered_map<size_t, Internal::ScriptCreateFunc>;
@@ -37,9 +39,9 @@ namespace Rizityo::Script
 		}
 
 #ifdef USE_EDITOR
-		Utility::Vector<std::string>& ScriptNames()
+		Vector<std::string>& ScriptNames()
 		{
-			static Utility::Vector<std::string> names;
+			static Vector<std::string> names;
 			return names;
 		}
 #endif // USE_EDITOR
@@ -90,7 +92,7 @@ namespace Rizityo::Script
 		}
 #endif
 
-	}
+	} // 関数
 
 	namespace Internal
 	{
@@ -136,26 +138,29 @@ namespace Rizityo::Script
 		{
 			id = ScriptID{ (ID::IDType)Generations.size() };
 			Generations.push_back(0);
-			IdMapping.emplace_back();
+			ID_Mapping.emplace_back();
 		}
 
 		assert(ID::IsValid(id));
+
 		EntityScripts.emplace_back(info.CreateFunc(entity));
 		assert(EntityScripts.back()->ID() == entity.ID());
+
 		const ID::IDType entityScriptIndex{ (ID::IDType)EntityScripts.size() - 1 };
-		IdMapping[ID::GetIndex(id)] = entityScriptIndex;
-		return Component{ id };
+		ID_Mapping[ID::GetIndex(id)] = entityScriptIndex;
+		return Script::Component{ id };
 	}
 
 	void RemoveComponent(Script::Component component)
 	{
 		assert(component.IsValid() && Exists(component.ID()));
 		const ScriptID id{ component.ID() };
-		const ID::IDType scriptEntityIndex{ IdMapping[ID::GetIndex(id)] };
-		const ScriptID lastId{ (scriptEntityIndex != EntityScripts.size() - 1) ? EntityScripts.back()->GetScriptComponent().ID() : id };
-		Utility::EraseUnordered(EntityScripts, scriptEntityIndex);
-		IdMapping[ID::GetIndex(lastId)] = scriptEntityIndex;
-		IdMapping[ID::GetIndex(id)] = ID::INVALID_ID; // 要素が一つの時はid == lastIdなのでinvalid_idの代入が後
+		const ID::IDType scriptEntityIndex{ ID_Mapping[ID::GetIndex(id)] };
+		const ScriptID lastID{ (scriptEntityIndex != EntityScripts.size() - 1) ? EntityScripts.back()->GetScriptComponent().ID() : id };
+		EraseUnordered(EntityScripts, scriptEntityIndex);
+		ID_Mapping[ID::GetIndex(lastID)] = scriptEntityIndex;
+		ID_Mapping[ID::GetIndex(id)] = ID::INVALID_ID; // 要素が一つの時はid == lastIDなのでINVALID_IDの代入が後
+		FreeIds.push_back(id);
 	}
 
 	void Update(float dt)
@@ -208,7 +213,7 @@ namespace Rizityo::Script
 	EntityScript* Script::Component::GetEntityScript(ScriptID id)
 	{
 		const ID::IDType index{ ID::GetIndex(id) };
-		return EntityScripts[IdMapping[index]].get();
+		return EntityScripts[ID_Mapping[index]].get();
 	}
 
 } // Script

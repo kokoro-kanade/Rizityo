@@ -6,7 +6,7 @@ namespace Rizityo::Input
     {
         struct InputBinding
         {
-            Utility::Vector<InputSource> Sources;
+            Vector<InputSource> Sources;
             InputValue Value{};
             bool IsDirty = true; // 値を取得するときにtrueであれば値を更新する(必要になったら更新する)
         };
@@ -14,7 +14,7 @@ namespace Rizityo::Input
         std::unordered_map<uint64, InputValue> InputValueMap;       // キーは(typeとcodeをつなげたもの)
         std::unordered_map<uint64, InputBinding> InputBindingMap;   // キーはバインディング用に設定したもの
         std::unordered_map<uint64, uint64> BindingKeyMap;           // キーは(typeとcodeをつなげたもの)
-        Utility::Vector<Internal::InputSystemBase*> InputSystems;
+        Vector<Internal::InputSystemBase*> InputSystems;
 
         constexpr uint64 GetKey(InputSource::Type type, uint32 code)
         {
@@ -45,7 +45,7 @@ namespace Rizityo::Input
         const uint64 bindingKey = BindingKeyMap[key];
         assert(InputBindingMap.count(bindingKey));
         InputBinding& binding{ InputBindingMap[bindingKey] };
-        Utility::Vector<InputSource>& sources{ binding.Sources };
+        Vector<InputSource>& sources{ binding.Sources };
         uint32 index = UINT32_INVALID_NUM;
         for (uint32 i = 0; i < sources.size(); i++)
         {
@@ -59,7 +59,7 @@ namespace Rizityo::Input
 
         if (index != UINT32_INVALID_NUM)
         {
-            Utility::EraseUnordered(sources, index);
+            EraseUnordered(sources, index);
             BindingKeyMap.erase(key);
         }
 
@@ -75,7 +75,7 @@ namespace Rizityo::Input
         if (!InputBindingMap.count(bindingKey))
             return;
 
-        Utility::Vector<InputSource>& sources{ InputBindingMap[bindingKey].Sources };
+        Vector<InputSource>& sources{ InputBindingMap[bindingKey].Sources };
         for (const auto& source : sources)
         {
             assert(source.BindingKey == bindingKey);
@@ -139,7 +139,7 @@ namespace Rizityo::Input
             return;
         }
 
-        Utility::Vector<InputSource>& sources{ InputBindingMap[bindingKey].Sources };
+        Vector<InputSource>& sources{ InputBindingMap[bindingKey].Sources };
         InputValue subInputValue{};
         InputValue result{};
 
@@ -180,7 +180,7 @@ namespace Rizityo::Input
         {
             if (InputSystems[i] == this)
             {
-                Utility::EraseUnordered(InputSystems, i);
+                EraseUnordered(InputSystems, i);
                 break;
             }
         }

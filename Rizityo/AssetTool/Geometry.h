@@ -115,23 +115,23 @@ namespace Rizityo::AssetTool
 	struct Mesh
 	{
 		// 初期化データ
-		Utility::Vector<Math::DX_Vector3> Positions;
-        Utility::Vector<Math::DX_Vector3> Colors;
-		Utility::Vector<Math::DX_Vector3> Normals;
-		Utility::Vector<Math::DX_Vector4> Tangents;
-		Utility::Vector<Utility::Vector<Math::DX_Vector2>> UVSets;
-		Utility::Vector<uint32> MaterialIndices;
-		Utility::Vector<uint32> MaterialUsed;
-		Utility::Vector<uint32> RawIndices;
+		Vector<Math::DX_Vector3> Positions;
+        Vector<Math::DX_Vector3> Colors;
+		Vector<Math::DX_Vector3> Normals;
+		Vector<Math::DX_Vector4> Tangents;
+		Vector<Vector<Math::DX_Vector2>> UVSets;
+		Vector<uint32> MaterialIndices;
+		Vector<uint32> MaterialUsed;
+		Vector<uint32> RawIndices;
 
 		// 中間データ
-		Utility::Vector<Vertex> Vertices;
-		Utility::Vector<uint32> Indices;
+		Vector<Vertex> Vertices;
+		Vector<uint32> Indices;
 
 		// 出力データ
         Elements::ElementsType::Type ElementsType;
-        Utility::Vector<uint8>  PositionBuffer;
-        Utility::Vector<uint8>  ElementBuffer;
+        Vector<uint8>  PositionBuffer;
+        Vector<uint8>  ElementBuffer;
 
 		std::string Name;
 		float32 LODThreshold = { -1.f };
@@ -141,13 +141,13 @@ namespace Rizityo::AssetTool
 	struct LODGroup
 	{
 		std::string Name;
-		Utility::Vector<Mesh> Meshes;
+		Vector<Mesh> Meshes;
 	};
 
 	struct Level
 	{
 		std::string Name;
-		Utility::Vector<LODGroup> LODGroups;
+		Vector<LODGroup> LODGroups;
 	};
 
 	struct GeometryImportSetting

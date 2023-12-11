@@ -53,7 +53,7 @@ namespace Rizityo::Graphics::D3D12
 		std::lock_guard lock{ _Mutex };
 		assert(frameIndex < FrameBufferCount);
 
-		Utility::Vector<uint32>& indices{ _DeferredFreeIndices[frameIndex] };
+		Vector<uint32>& indices{ _DeferredFreeIndices[frameIndex] };
 		if (!indices.empty())
 		{
 			for (auto index : indices)

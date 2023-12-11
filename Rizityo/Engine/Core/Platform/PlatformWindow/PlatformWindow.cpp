@@ -1,6 +1,5 @@
-#include "Platform.h"
-#include "PlatformTypes.h"
-#include "PlatformInput/PlatformInput.h"
+#include "PlatformWindow.h"
+#include "../PlatformInput/PlatformInput.h"
 
 namespace Rizityo::Platform
 {
@@ -19,9 +18,9 @@ namespace Rizityo::Platform
 			bool IsClosed = false;
 		};
 
-		Utility::Vector<int> v;
+		Vector<int32> v;
 
-		Utility::FreeList<WindowInfo> Windows;
+		FreeList<WindowInfo> Windows;
 
 		bool Resized = false;
 	} // ïœêî

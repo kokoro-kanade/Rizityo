@@ -45,5 +45,5 @@ namespace Rizityo::Content {
     };
 
     void GetSubmeshGPU_IDs(ID::IDType geometryContentID, uint32 idCount, OUT ID::IDType* const gpuIDs);
-    void GetLOD_Offsets(const ID::IDType* const geometryIds, const float32* const thresholds, uint32 idCount, OUT Utility::Vector<LOD_Offset>& offsets);
+    void GetLOD_Offsets(const ID::IDType* const geometryIds, const float32* const thresholds, uint32 idCount, OUT Vector<LOD_Offset>& offsets);
 }

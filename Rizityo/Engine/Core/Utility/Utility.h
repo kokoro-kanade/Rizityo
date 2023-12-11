@@ -6,7 +6,7 @@
 
 #if USE_STL_VECTOR
 #include <vector>
-namespace Rizityo::Utility
+namespace Rizityo
 {
 	template<typename T>
 	using Vector = std::vector<T>;
@@ -28,7 +28,7 @@ namespace Rizityo::Utility
 }
 #else
 #include "Container/Vector.h"
-namespace Rizityo::Utility
+namespace Rizityo
 {
 	template<typename T>
 	void EraseUnordered(T& v, size_t index)
@@ -40,7 +40,7 @@ namespace Rizityo::Utility
 
 #if USE_STL_DEQUE
 #include <deque>
-namespace Rizityo::Utility
+namespace Rizityo
 {
 	template<typename T>
 	using Deque = std::deque<T>;

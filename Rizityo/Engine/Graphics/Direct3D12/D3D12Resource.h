@@ -52,7 +52,7 @@ namespace Rizityo::Graphics::D3D12
 		D3D12_CPU_DESCRIPTOR_HANDLE _CPUStart{};
 		D3D12_GPU_DESCRIPTOR_HANDLE _GPUStart{};
 		std::unique_ptr<uint32[]> _FreeHandles{};
-		Utility::Vector<uint32> _DeferredFreeIndices[FrameBufferCount]{};
+		Vector<uint32> _DeferredFreeIndices[FrameBufferCount]{};
 		uint32 _Capacity = 0;
 		uint32 _Size = 0;
 		uint32 _DescriptorSize = 0;

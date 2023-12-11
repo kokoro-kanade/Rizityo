@@ -46,8 +46,8 @@ namespace Rizityo::AssetTool
 		bool InitializeFBX();
 		void LoadFBXFile(const char* file);
 
-		void GetMeshes(FbxNode* node, Utility::Vector<Mesh>& meshes, uint32 lodID, float32 lodThreshold);
-		void GetMesh(FbxNodeAttribute* nodeAttribute, Utility::Vector<Mesh>& meshes, uint32 lodID, float32 lodThreshold);
+		void GetMeshes(FbxNode* node, Vector<Mesh>& meshes, uint32 lodID, float32 lodThreshold);
+		void GetMesh(FbxNodeAttribute* nodeAttribute, Vector<Mesh>& meshes, uint32 lodID, float32 lodThreshold);
 		bool GetMeshData(FbxMesh* fbxMesh, Mesh& mesh);
 		void GetLODGroup(FbxNodeAttribute* nodeAttribute);
 	};

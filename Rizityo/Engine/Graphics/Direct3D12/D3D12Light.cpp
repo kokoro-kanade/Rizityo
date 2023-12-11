@@ -1,7 +1,7 @@
 #include "D3D12Light.h"
 #include "D3D12Core.h"
 #include "Shaders/SharedTypes.h"
-#include "EngineAPI/GameEntity.h"
+#include "API/GameEntity.h"
 
 namespace Rizityo::Graphics::D3D12::Light
 {
@@ -235,9 +235,9 @@ namespace Rizityo::Graphics::D3D12::Light
 		private:
 
 			// タイトにパックする必要はない
-			Utility::FreeList<LightOwner> _Owners;
-			Utility::Vector<HLSL::DirectionalLightParameters> _NonCullableLights;
-			Utility::Vector<LightID> _NonCullableOwners;
+			FreeList<LightOwner> _Owners;
+			Vector<HLSL::DirectionalLightParameters> _NonCullableLights;
+			Vector<LightID> _NonCullableOwners;
 
 		};
 

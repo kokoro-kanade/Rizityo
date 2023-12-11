@@ -211,7 +211,7 @@ namespace Editor.GameProject
             Debug.Assert(File.Exists(templateSolutionFilePath));
             Debug.Assert(File.Exists(templateProjectFilePath));
 
-            var engineAPIFolderPath = @"$(RIZITYO_ENGINE)Engine\EngineAPI\";
+            var engineAPIFolderPath = @"$(RIZITYO_ENGINE)Engine\API\";
             Debug.Assert(Directory.Exists(engineAPIFolderPath));
 
             var _0 = ProjectName;

@@ -30,9 +30,9 @@
 // ã§í ÉwÉbÉ_Å[
 #include "PrimitiveTypes.h"
 #include "Id.h"
-#include "../Utility/Utility.h"
-#include "../Utility/Math/MathType.h"
-#include "../Utility/Math/Math.h"
+#include "../Core/Utility/Utility.h"
+#include "../Core/Utility/Math/MathType.h"
+#include "../Core/Utility/Math/Math.h"
 
 #ifndef DISABLE_COPY
 #define DISABLE_COPY(T)				  \

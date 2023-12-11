@@ -8,18 +8,20 @@ namespace Rizityo
 	// ‘O•ûéŒ¾
 	INIT_INFO(Transform);
 	INIT_INFO(Script);
+	INIT_INFO(Render);
 
 #undef INIT_INFO
 
 	namespace GameEntity
 	{
-		struct EntityInfo // Rename: InitInfo
+		struct InitInfo
 		{
-			Transform::InitInfo* Transform{ nullptr };
-			Script::InitInfo* Script{ nullptr };
+			Transform::InitInfo* Transform = nullptr;
+			Script::InitInfo* Script = nullptr;
+			Render::InitInfo* Render = nullptr;
 		};
 	
-		Entity CreateGameEntity(const EntityInfo& info); // TODO?: QÆ“n‚µ‚©‚ç’l“n‚µ‚É‚·‚é
+		Entity CreateGameEntity(const InitInfo& info); // TODO?: QÆ“n‚µ‚©‚ç’l“n‚µ‚É‚·‚é
 		void RemoveGameEnity(EntityID id);
 		bool IsAlive(EntityID id);
 	

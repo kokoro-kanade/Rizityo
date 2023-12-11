@@ -21,7 +21,7 @@ namespace Rizityo::Content
 			Count
 		};
 
-		Utility::Vector<GameEntity::Entity> entities;
+		Vector<GameEntity::Entity> entities;
 
 		// infoはポインタを持つので関数のローカル変数ではなくてここで定義した変数を渡す
 		Transform::InitInfo TransformInfo{};
@@ -30,7 +30,7 @@ namespace Rizityo::Content
 
 	namespace
 	{
-		bool ReadTransform(const uint8*& data, GameEntity::EntityInfo& info)
+		bool ReadTransform(const uint8*& data, GameEntity::InitInfo& info)
 		{
 			using namespace DirectX;
 			float32 rotation[3];
@@ -50,7 +50,7 @@ namespace Rizityo::Content
 			return true;
 		}
 
-		bool ReadScript(const uint8*& data, GameEntity::EntityInfo& info)
+		bool ReadScript(const uint8*& data, GameEntity::InitInfo& info)
 		{
 			assert(!info.Script);
 			const uint32 nameLength = *data; data += sizeof(uint32);
@@ -68,7 +68,7 @@ namespace Rizityo::Content
 			return ScriptInfo.CreateFunc != nullptr;
 		}
 
-		using ComponentReader = bool(*)(const uint8*&, GameEntity::EntityInfo&);
+		using ComponentReader = bool(*)(const uint8*&, GameEntity::InitInfo&);
 		ComponentReader componentReaders[]
 		{
 			ReadTransform,
@@ -118,7 +118,7 @@ namespace Rizityo::Content
 
 		for (uint32 entityIndex = 0; entityIndex < numEntities; entityIndex++)
 		{
-			GameEntity::EntityInfo info{};
+			GameEntity::InitInfo info{};
 			// エンティティ型は無視
 			at += su32;
 			const uint32 numComponents = *at; at += su32;

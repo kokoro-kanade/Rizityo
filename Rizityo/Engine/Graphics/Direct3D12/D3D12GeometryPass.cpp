@@ -32,7 +32,7 @@ namespace Rizityo::Graphics::D3D12::GPass
 
 		struct GPassCache
 		{
-			Utility::Vector<ID::IDType> D3D12RenderItemIDs;
+			Vector<ID::IDType> D3D12RenderItemIDs;
 
 			// 配列で管理
 			// 配列のサイズが変わるときはResizeする必要
@@ -135,7 +135,7 @@ namespace Rizityo::Graphics::D3D12::GPass
 				sizeof(D3D12_GPU_VIRTUAL_ADDRESS)      // PerObjectData
 			};
 
-			Utility::Vector<uint8> _Buffer;
+			Vector<uint8> _Buffer;
 		} FrameCache;
 
 #undef CONSTEXPR

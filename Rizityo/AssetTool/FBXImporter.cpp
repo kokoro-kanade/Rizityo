@@ -98,7 +98,7 @@ namespace Rizityo::AssetTool
 		}
 	}
 
-	void FBXContext::GetMeshes(FbxNode* node, Utility::Vector<Mesh>& meshes, uint32 lodID, float32 lodThreshold)
+	void FBXContext::GetMeshes(FbxNode* node, Vector<Mesh>& meshes, uint32 lodID, float32 lodThreshold)
 	{
 		assert(node && lodID != UINT32_INVALID_NUM);
 
@@ -133,7 +133,7 @@ namespace Rizityo::AssetTool
 		}
 	}
 
-	void FBXContext::GetMesh(FbxNodeAttribute* nodeAttribute, Utility::Vector<Mesh>& meshes, uint32 lodID, float32 lodThreshold)
+	void FBXContext::GetMesh(FbxNodeAttribute* nodeAttribute, Vector<Mesh>& meshes, uint32 lodID, float32 lodThreshold)
 	{
 		assert(nodeAttribute);
 
@@ -189,7 +189,7 @@ namespace Rizityo::AssetTool
 			return false;
 
 		mesh.RawIndices.resize(numIndices);
-		Utility::Vector vertexRef(numVertices, UINT32_INVALID_NUM);
+		Vector vertexRef(numVertices, UINT32_INVALID_NUM);
 
 		for (int32 i = 0; i < numIndices; i++)
 		{

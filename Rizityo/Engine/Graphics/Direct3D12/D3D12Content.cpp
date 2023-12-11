@@ -1,8 +1,8 @@
 #include "D3D12Content.h"
 #include "D3D12Core.h"
 #include "D3D12GeometryPass.h"
-#include "Utility/IOStream.h"
-#include "Content/ContentToEngine.h"
+#include "Core/Utility/IO/BinaryIO.h"
+#include "Content/AssetToEngine.h"
 
 namespace Rizityo::Graphics::D3D12::Content
 {
@@ -17,16 +17,16 @@ namespace Rizityo::Graphics::D3D12::Content
 			uint32 ElementsType{};
 		};
 
-		Utility::FreeList<ID3D12Resource*> SubmeshBuffers{};
-		Utility::FreeList<SubmeshView> SubmeshViews{};
+		FreeList<ID3D12Resource*> SubmeshBuffers{};
+		FreeList<SubmeshView> SubmeshViews{};
 		std::mutex SubmeshMutex{};
 
-		Utility::FreeList<D3D12Texture> Textures;
+		FreeList<D3D12Texture> Textures;
 		std::mutex TextureMutex{};
 
-		Utility::Vector<ID3D12RootSignature*> RootSignatures;
+		Vector<ID3D12RootSignature*> RootSignatures;
 		std::unordered_map<uint64, ID::IDType> MaterialRootSignatureMap; // (マテリアルタイプ, シェーダーフラグ)からルートシグネチャーへのマップ
-		Utility::FreeList<std::unique_ptr<uint8[]>> Materials;
+		FreeList<std::unique_ptr<uint8[]>> Materials;
 		std::mutex MaterialMutex{};
 
 		ID::IDType CreateRootSignature(MaterialType::Type type, ShaderFlags::Flags flags);
@@ -146,8 +146,8 @@ namespace Rizityo::Graphics::D3D12::Content
 			ID::IDType DepthPSO_ID;
 		};
 
-		Utility::FreeList<D3D12RenderItem> RenderItems;
-		Utility::FreeList<std::unique_ptr<ID::IDType[]>> RenderItemIDs;
+		FreeList<D3D12RenderItem> RenderItems;
+		FreeList<std::unique_ptr<ID::IDType[]>> RenderItemIDs;
 		std::mutex RenderItemMutex{};
 
 		struct PSO_ID
@@ -156,13 +156,13 @@ namespace Rizityo::Graphics::D3D12::Content
 			ID::IDType DepthPSO_ID{ ID::INVALID_ID };
 		};
 
-		Utility::Vector<ID3D12PipelineState*> PipelineStates;
+		Vector<ID3D12PipelineState*> PipelineStates;
 		std::unordered_map<uint64, ID::IDType> PSO_Map;
 		std::mutex PSO_Mutex{};
 
 		struct {
-			Utility::Vector<Rizityo::Content::LOD_Offset> LOD_Offsets;
-			Utility::Vector<ID::IDType> GeometryIDs;
+			Vector<Rizityo::Content::LOD_Offset> LOD_Offsets;
+			Vector<ID::IDType> GeometryIDs;
 		} FrameCache;
 
 	} // 変数
@@ -353,7 +353,7 @@ namespace Rizityo::Graphics::D3D12::Content
 				{
 					if (flags & (1 << i))
 					{
-						const uint32 key{ GetShaderType(flags & (1 << i)) == ShaderType::Vertex ? elementsType : UINT32_INVALID_NUM };
+						const uint32 key = GetShaderType(flags & (1 << i)) == ShaderType::Vertex ? elementsType : UINT32_INVALID_NUM;
 						Rizityo::Content::CompiledShaderPtr shader{ Rizityo::Content::GetShader(material.ShaderIDs()[shaderIndex], key) };
 						assert(shader);
 						shaders[i].pShaderBytecode = shader->ByteCode();
@@ -423,7 +423,7 @@ namespace Rizityo::Graphics::D3D12::Content
 		// - 位置と頂点属性は4バイトの倍数である必要がある
 		ID::IDType Add(const uint8*& data)
 		{
-			Utility::BinaryReader reader{ (const uint8*)data };
+			IO::BinaryReader reader{ (const uint8*)data };
 
 			const uint32 elementSize = reader.Read<uint32>();
 			const uint32 vertexCount = reader.Read<uint32>();
@@ -614,17 +614,17 @@ namespace Rizityo::Graphics::D3D12::Content
 		void Remove(ID::IDType id)
 		{
 			std::lock_guard lock{ RenderItemMutex };
-			const ID::IDType* const item_ids{ &RenderItemIDs[id][1] };
+			const ID::IDType* const itemIDs{ &RenderItemIDs[id][1] };
 
-			for (uint32 i = 0; item_ids[i] != ID::INVALID_ID; i++)
+			for (uint32 i = 0; itemIDs[i] != ID::INVALID_ID; i++)
 			{
-				RenderItems.Remove(item_ids[i]);
+				RenderItems.Remove(itemIDs[i]);
 			}
 
 			RenderItemIDs.Remove(id);
 		}
 
-		void GetD3D12RenderItemIDs(const FrameInfo& frameInfo, OUT Utility::Vector<ID::IDType>& d3d12RenderItemIDs)
+		void GetD3D12RenderItemIDs(const FrameInfo& frameInfo, OUT Vector<ID::IDType>& d3d12RenderItemIDs)
 		{
 			assert(frameInfo.RenderItemIDs && frameInfo.Thresholds && frameInfo.RenderItemCount);
 			assert(d3d12RenderItemIDs.empty());

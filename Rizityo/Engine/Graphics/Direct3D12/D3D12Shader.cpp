@@ -1,6 +1,6 @@
 #include "D3D12Shader.h"
 #include "Content/ContentLoader.h"
-#include "Content/ContentToEngine.h"
+#include "Content/AssetToEngine.h"
 
 namespace Rizityo::Graphics::D3D12::Shader
 {
@@ -62,8 +62,12 @@ namespace Rizityo::Graphics::D3D12::Shader
 	D3D12_SHADER_BYTECODE GetEngineShader(EngineShader::ID id)
 	{
 		assert(id < EngineShader::Count);
-		const Content::CompiledShaderPtr& shader = EngineShaders[id];
-		assert(shader && shader->ByteCodeSize());
-		return { shader->ByteCode(), shader->ByteCodeSize()};
+		if (id < EngineShader::Count)
+		{
+			const Content::CompiledShaderPtr& shader = EngineShaders[id];
+			assert(shader && shader->ByteCodeSize());
+			return { shader->ByteCode(), shader->ByteCodeSize()};
+		}
+		return {};
 	}
 }

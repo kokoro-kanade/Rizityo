@@ -1,9 +1,8 @@
 #include "Common.h"
 #include "CommonHeaders.h"
-#include "../Engine/Components/Script.h"
-#include "../Graphics/Renderer.h"
-#include "../Platform/PlatformTypes.h"
-#include "../Platform/Platform.h"
+#include "Components/Script.h"
+#include "Graphics/Renderer.h"
+#include "Core/Platform/PlatformWindow/PlatformWindow.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -22,7 +21,7 @@ namespace
 	using _GetScriptNames = LPSAFEARRAY(*)(void);
 	_GetScriptNames GetScriptNames{ nullptr };
 
-	Utility::Vector<Graphics::RenderSurface> Surfaces;
+	Vector<Graphics::RenderSurface> Surfaces;
 }
 
 EDITOR_INTERFACE
@@ -30,6 +29,7 @@ uint32 LoadGameCodeDll(const char* dllPath)
 {
 	if (GameCodeDll)
 		return FALSE;
+
 	GameCodeDll = LoadLibraryA(dllPath);
 	assert(GameCodeDll);
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "CommonHeaders.h"
 
-namespace Rizityo::Utility
+namespace Rizityo
 {
 	template<typename T, bool Destruct = true>
 	class Vector

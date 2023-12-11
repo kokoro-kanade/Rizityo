@@ -57,7 +57,7 @@ namespace Rizityo::Graphics::D3D12::Content
 
 		ID::IDType Add(ID::IDType entityID, ID::IDType geometryContentID, uint32 materialCount, const ID::IDType* const materialIDs);
 		void Remove(ID::IDType id);
-		void GetD3D12RenderItemIDs(const FrameInfo& info, OUT Utility::Vector<ID::IDType>& d3d12RenderItemIDs);
+		void GetD3D12RenderItemIDs(const FrameInfo& info, OUT Vector<ID::IDType>& d3d12RenderItemIDs);
 		void GetItems(const ID::IDType* const d3d12RenderItemIDs, uint32 idCount, OUT const ItemsCache& cache);
 	} // RenderItem
 }

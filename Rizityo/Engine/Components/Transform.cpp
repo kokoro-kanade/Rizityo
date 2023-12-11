@@ -4,15 +4,15 @@ namespace Rizityo::Transform
 {
 	namespace
 	{
-		Utility::Vector<Math::DX_Vector3> Positions;
-		Utility::Vector<Math::DX_Vector4> Rotations;
-		Utility::Vector<Math::DX_Vector3> Orientations;
-		Utility::Vector<Math::DX_Vector3> Scales;
-		Utility::Vector<Math::DX_Matrix4x4> ToWorld;
-		Utility::Vector<Math::DX_Matrix4x4> InvWorld;
-		Utility::Vector<uint8> HasTransform;
+		Vector<Math::DX_Vector3> Positions;
+		Vector<Math::DX_Vector4> Rotations;
+		Vector<Math::DX_Vector3> Orientations;
+		Vector<Math::DX_Vector3> Scales;
+		Vector<Math::DX_Matrix4x4> ToWorld;
+		Vector<Math::DX_Matrix4x4> InvWorld;
+		Vector<uint8> HasTransform;
 
-		Utility::Vector<uint8> ChangesFromPreviousFrame;
+		Vector<uint8> ChangesFromPreviousFrame;
 		uint8 ReadWriteFlag;
 
 	} // ïœêî

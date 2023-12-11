@@ -180,7 +180,7 @@ namespace Rizityo::Graphics::D3D12::Core
 		ID3D12Device* MainDevice{ nullptr };
 		IDXGIFactory7* DxgiFactory{ nullptr };
 		D3D12Command GFX_Command;
-		Utility::FreeList<D3D12Surface> Surfaces;
+		FreeList<D3D12Surface> Surfaces;
 		Helper::D3D12ResourceBarrier ResourceBarriers{};
 		ConstantBuffer ConstantBuffers[FrameBufferCount];
 
@@ -189,7 +189,7 @@ namespace Rizityo::Graphics::D3D12::Core
 		DescriptorHeap UAVDescHeap{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV };
 		DescriptorHeap SRVDescHeap{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV };
 
-		Utility::Vector<IUnknown*> DeferredReleases[FrameBufferCount]{};
+		Vector<IUnknown*> DeferredReleases[FrameBufferCount]{};
 		uint32 DeferredReleasesFlag[FrameBufferCount]{};
 		std::mutex DeferredReleasesMutex{};
 
@@ -256,7 +256,7 @@ namespace Rizityo::Graphics::D3D12::Core
 			UAVDescHeap.ProcessDeferredFree(frameIndex);
 			SRVDescHeap.ProcessDeferredFree(frameIndex);
 
-			Utility::Vector<IUnknown*>& resources{ DeferredReleases[frameIndex] };
+			Vector<IUnknown*>& resources{ DeferredReleases[frameIndex] };
 			if (!resources.empty())
 			{
 				for (auto& resource : resources)

@@ -262,7 +262,7 @@ namespace Rizityo::Input
             BindingCallbackT Callback;
         };
 
-        Utility::Vector<InputCallback> InputCallbacks[InputSource::Type::Count];
-        Utility::Vector<BindingCallback> BindingCallbacks;
+        Vector<InputCallback> InputCallbacks[InputSource::Type::Count];
+        Vector<BindingCallback> BindingCallbacks;
     };
 }

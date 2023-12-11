@@ -1,8 +1,8 @@
 #pragma once
 #include "CommonHeaders.h"
-#include "Platform/Window.h"
-#include "EngineAPI/Camera.h"
-#include "EngineAPI/Light.h"
+#include "Core/Platform/Window.h"
+#include "API/Camera.h"
+#include "API/Light.h"
 
 namespace Rizityo::Graphics
 {

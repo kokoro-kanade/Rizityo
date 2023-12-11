@@ -1,6 +1,6 @@
-#include "ContentToEngine.h"
+#include "AssetToEngine.h"
 #include "Graphics/Renderer.h"
-#include "Utility/IOStream.h"
+#include "Core/Utility/IO/BinaryIO.h"
 
 namespace Rizityo::Content
 {
@@ -63,7 +63,7 @@ namespace Rizityo::Content
         };
 
         constexpr uintptr_t SingleMeshFlag{ (uintptr_t)0x01 }; // GeometryHierarchiesの要素にこのフラグが立っている場合はGPU IDであることを表す
-        Utility::FreeList<uint8*> GeometryHierarchies;
+        FreeList<uint8*> GeometryHierarchies;
         std::mutex GeometryMutex;
 
         // std::vector用
@@ -76,7 +76,7 @@ namespace Rizityo::Content
             NoexceptMap& operator=(NoexceptMap&&) noexcept = default;
         };
 
-        Utility::FreeList<NoexceptMap> ShaderGroups;
+        FreeList<NoexceptMap> ShaderGroups;
         std::mutex ShaderMutex;
 
     } // 変数
@@ -87,7 +87,7 @@ namespace Rizityo::Content
         uint32 GetGeometryHierarchyBufferSize(const void* const data)
         {
             assert(data);
-            Utility::BinaryReader reader{ (const uint8*)data };
+            IO::BinaryReader reader{ (const uint8*)data };
             const uint32 lodCount = reader.Read<uint32>();
             assert(lodCount);
             // LOD_Count, Thresholds, LOD Offsetsのサイズ
@@ -115,7 +115,7 @@ namespace Rizityo::Content
             const uint32 size = GetGeometryHierarchyBufferSize(data);
             uint8* const hierarchyBuffer = (uint8* const)malloc(size);
 
-            Utility::BinaryReader reader{ (const uint8*)data };
+            IO::BinaryReader reader{ (const uint8*)data };
             const uint32 lodCount = reader.Read<uint32>();
             assert(lodCount);
 
@@ -161,7 +161,7 @@ namespace Rizityo::Content
         ID::IDType CreateSingleSubmesh(const void* const data)
         {
             assert(data);
-            Utility::BinaryReader reader{ (const uint8*)data };
+            IO::BinaryReader reader{ (const uint8*)data };
             // LOD_Count, LOD_Threshold, SubmeshCount, SizeOfSubmeshesを無視
             reader.Skip(sizeof(uint32) + sizeof(float32) + sizeof(uint32) + sizeof(uint32));
             const uint8* at = reader.Position();
@@ -180,7 +180,7 @@ namespace Rizityo::Content
         bool IsSingleMesh(const void* const data)
         {
             assert(data);
-            Utility::BinaryReader reader{ (const uint8*)data };
+            IO::BinaryReader reader{ (const uint8*)data };
             const uint32 lodCount = reader.Read<uint32>();
             assert(lodCount);
             if (lodCount > 1)
@@ -379,7 +379,6 @@ namespace Rizityo::Content
         assert(false);
         return nullptr;
     }
-
     
     void GetSubmeshGPU_IDs(ID::IDType geometryContentID, uint32 idCount, OUT ID::IDType* const gpuIDs)
     {
@@ -405,7 +404,7 @@ namespace Rizityo::Content
         }
     }
 
-    void GetLOD_Offsets(const ID::IDType* const geometryIDs, const float32* const thresholds, uint32 idCount, OUT Utility::Vector<LOD_Offset>& offsets)
+    void GetLOD_Offsets(const ID::IDType* const geometryIDs, const float32* const thresholds, uint32 idCount, OUT Vector<LOD_Offset>& offsets)
     {
         assert(geometryIDs && thresholds && idCount);
         assert(offsets.empty());

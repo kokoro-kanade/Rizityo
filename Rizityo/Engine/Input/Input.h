@@ -1,6 +1,6 @@
 #pragma once
 #include "CommonHeaders.h"
-#include "EngineAPI/Input.h"
+#include "API/Input.h"
 
 namespace Rizityo::Input
 {

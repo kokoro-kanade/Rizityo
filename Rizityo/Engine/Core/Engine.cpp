@@ -2,8 +2,7 @@
 
 #include "Content/ContentLoader.h"
 #include "Components/Script.h"
-#include "Platform/PlatformTypes.h"
-#include "Platform/Platform.h"
+#include "Core/Platform/PlatformWindow/PlatformWindow.h"
 #include "Graphics/Renderer.h"
 #include <thread>
 
