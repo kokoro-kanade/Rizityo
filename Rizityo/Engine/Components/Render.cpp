@@ -20,8 +20,7 @@ namespace Rizityo::Render
 		// ゲーム起動時にコンパイルして追加される
 		// TODO? : あらかじめコンパイルしたシェーダーを読み込む
 		// hash(ファイル名/関数名) -> シェーダーID
-		std::unordered_map<size_t, ID::IDType> VertexShaderID_Mapping;
-		std::unordered_map<size_t, ID::IDType> PixelShaderID_Mapping;
+		std::unordered_map<size_t, ID::IDType> ShaderID_Mapping;
 
 		std::unordered_map<size_t, ID::IDType> MaterialID_Mapping;
 
@@ -90,8 +89,8 @@ namespace Rizityo::Render
 		}
 		else
 		{
-			//_model = std::make_shared<std::thread>([&] {LoadModel(info.ModelFilePath, modelFileHash, modelID); });
-			LoadModel(info.ModelFilePath, modelFileHash, modelID);
+			_model = std::make_shared<std::thread>([&] {LoadModel(info.ModelFilePath, modelFileHash, modelID); });
+			//LoadModel(info.ModelFilePath, modelFileHash, modelID);
 		}
 
 		// materialID作成
@@ -108,8 +107,8 @@ namespace Rizityo::Render
 				materials[i] = MaterialID_Mapping[materialHash];
 				continue;
 			}
-			const ID::IDType vsID{ VertexShaderID_Mapping[HashShaderName(mInfo.ShadersInfo[ShaderType::Vertex].FileName, mInfo.ShadersInfo[ShaderType::Vertex].FunctionName)] };
-			const ID::IDType psID{ PixelShaderID_Mapping[HashShaderName(mInfo.ShadersInfo[ShaderType::Pixel].FileName, mInfo.ShadersInfo[ShaderType::Pixel].FunctionName)] };
+			const ID::IDType vsID{ ShaderID_Mapping[HashShaderName(mInfo.ShadersInfo[ShaderType::Vertex].FileName, mInfo.ShadersInfo[ShaderType::Vertex].FunctionName)] };
+			const ID::IDType psID{ ShaderID_Mapping[HashShaderName(mInfo.ShadersInfo[ShaderType::Pixel].FileName, mInfo.ShadersInfo[ShaderType::Pixel].FunctionName)] };
 			Graphics::MaterialInitInfo materialInfo{};
 			materialInfo.ShaderIDs[ShaderType::Vertex] = vsID;
 			materialInfo.ShaderIDs[ShaderType::Pixel] = psID;
@@ -118,10 +117,10 @@ namespace Rizityo::Render
 			MaterialID_Mapping[materialHash] = materialID;
 		}
 
-		/*if (_model.get() != nullptr)
+		if (_model.get() != nullptr)
 		{
 			_model->join();
-		}*/
+		}
 
 		ID::IDType itemID{ Graphics::AddRenderItem(entity.ID(), modelID, materialCount, materials.data()) };
 		RenderItemIDs.emplace_back(itemID);
@@ -161,39 +160,21 @@ namespace Rizityo::Render
 		info.Thresholds = Thresholds.data();
 	}
 
-	void AddVertexShaderID(const char* fileName, const char* functionName, ID::IDType vsID)
+	void AddShaderID(const char* fileName, const char* functionName, ID::IDType sID)
 	{
-		assert(ID::IsValid(vsID));
+		assert(ID::IsValid(sID));
 		size_t hash = HashShaderName(fileName, functionName);
-		assert(VertexShaderID_Mapping.find(hash) == VertexShaderID_Mapping.end());
-		VertexShaderID_Mapping[hash] = vsID;
+		assert(ShaderID_Mapping.find(hash) == ShaderID_Mapping.end());
+		ShaderID_Mapping[hash] = sID;
 	}
 
-	void AddPixelShaderID(const char* fileName, const char* functionName, ID::IDType psID)
-	{
-		assert(ID::IsValid(psID));
-		size_t hash = HashShaderName(fileName, functionName);
-		assert(PixelShaderID_Mapping.find(hash) == PixelShaderID_Mapping.end());
-		PixelShaderID_Mapping[hash] = psID;
-	}
-
-	void RemoveVertexShaderID(const char* fileName, const char* functionName)
+	void RemoveShaderID(const char* fileName, const char* functionName)
 	{
 		size_t hash = HashShaderName(fileName, functionName);
-		assert(VertexShaderID_Mapping.find(hash) != VertexShaderID_Mapping.end());
-		const ID::IDType vsID{ VertexShaderID_Mapping[hash] };
-		Content::RemoveShaderGroup(vsID);
-		VertexShaderID_Mapping.erase(hash);
-	}
-
-	void RemovePixelShaderID(const char* fileName, const char* functionName)
-	{
-		size_t hash = HashShaderName(fileName, functionName);
-		assert(PixelShaderID_Mapping.find(hash) != PixelShaderID_Mapping.end());
-		const ID::IDType psID{ PixelShaderID_Mapping[hash] };
-		assert(ID::IsValid(psID));
-		Content::RemoveShaderGroup(psID);
-		PixelShaderID_Mapping.erase(hash);
+		assert(ShaderID_Mapping.find(hash) != ShaderID_Mapping.end());
+		const ID::IDType sID{ ShaderID_Mapping[hash] };
+		Content::RemoveShaderGroup(sID);
+		ShaderID_Mapping.erase(hash);
 	}
 
 	// MeshとMaterialは追加はエンティティの作成時だが

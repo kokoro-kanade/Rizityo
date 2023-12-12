@@ -30,6 +30,8 @@ namespace Rizityo
 
 			EntityID _ID;
 		};
+
+		Entity Spawn(const char* entityName, const Math::Vector3& pos = {}, const Math::Vector3& rot = {});
 	}
 
 	namespace Script

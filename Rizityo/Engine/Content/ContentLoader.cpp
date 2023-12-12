@@ -3,6 +3,7 @@
 #include "Components/Transform.h"
 #include "Components/Script.h"
 #include "Graphics/Renderer.h"
+#include "Core/Utility/IO/FileIO.h"
 
 #if !defined(SHIPPING) && defined(_WIN64)
 
@@ -26,7 +27,7 @@ namespace Rizityo::Content
 		// infoはポインタを持つので関数のローカル変数ではなくてここで定義した変数を渡す
 		Transform::InitInfo TransformInfo{};
 		Script::InitInfo ScriptInfo{};
-	}
+	} // 変数
 
 	namespace
 	{
@@ -76,37 +77,14 @@ namespace Rizityo::Content
 		};
 
 		static_assert(_countof(componentReaders) == ComponentType::Count);
-
-		bool ReadFile(std::filesystem::path path, OUT std::unique_ptr<uint8[]>& data, OUT uint64& size)
-		{
-			if (!std::filesystem::exists(path))
-				return false;
-
-			size = std::filesystem::file_size(path);
-			assert(size);
-			if (!size)
-				return false;
-
-			data = std::make_unique<uint8[]>(size);
-			std::ifstream file{ path, std::ios::in | std::ios::binary };
-			if (!file || !file.read((char*)data.get(), size))
-			{
-				file.close();
-				return false;
-			}
-
-			file.close();
-			return true;
-		}
-
-	} // 無名空間
+	} // 関数
 
 	bool LoadGame()
 	{
 		// バイナリファイルを読み込んでエンティティを作成
 		std::unique_ptr<uint8[]> gameData{};
 		uint64 size = 0;
-		if (!ReadFile("game.bin", gameData, size))
+		if (!IO::ReadFile("game.bin", gameData, size))
 			return false;
 
 		assert(gameData.get());
@@ -155,7 +133,7 @@ namespace Rizityo::Content
 	bool LoadEngineShaders(std::unique_ptr<uint8[]>& shaders, uint64& size)
 	{
 		auto path = Graphics::GetEngineShadersPath();
-		return ReadFile(path, shaders, size);
+		return IO::ReadFile(path, shaders, size);
 	}
 }
 

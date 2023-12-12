@@ -37,6 +37,7 @@
     <ClInclude Include="API\RenderComponent.h" />
     <ClInclude Include="API\ScriptComponent.h" />
     <ClInclude Include="API\TransformComponent.h" />
+    <ClInclude Include="Core\Utility\Time\Timer.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Camera.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12CommonHeaders.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Content.h" />
@@ -78,6 +79,7 @@
     <ClCompile Include="Core\Engine.cpp" />
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="Core\Utility\IO\FileIO.cpp" />
+    <ClCompile Include="Core\Utility\Time\Timer.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Camera.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Content.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Core.cpp" />

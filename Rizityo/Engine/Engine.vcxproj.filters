@@ -48,6 +48,7 @@
     <ClInclude Include="Components\Render.h" />
     <ClInclude Include="Core\Utility\IO\FileIO.h" />
     <ClInclude Include="Core\Utility\IO\BinaryIO.h" />
+    <ClInclude Include="Core\Utility\Time\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\Entity.cpp" />
@@ -78,6 +79,7 @@
     <ClCompile Include="Core\Utility\Math\Quaternion.cpp" />
     <ClCompile Include="Components\Render.cpp" />
     <ClCompile Include="Core\Utility\IO\FileIO.cpp" />
+    <ClCompile Include="Core\Utility\Time\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

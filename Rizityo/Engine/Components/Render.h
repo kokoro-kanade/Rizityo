@@ -49,11 +49,9 @@ namespace Rizityo::Render
 
 	void GetRenderFrameInfo(OUT Graphics::FrameInfo& info);
 
-	void AddVertexShaderID(const char* fileName, const char* functionName, ID::IDType vsID);
-	void AddPixelShaderID(const char* fileName, const char* functionName, ID::IDType psID);
+	void AddShaderID(const char* fileName, const char* functionName, ID::IDType vsID);
 
-	void RemoveVertexShaderID(const char* fileName, const char* functionName);
-	void RemovePixelShaderID(const char* fileName, const char* functionName);
+	void RemoveShaderID(const char* fileName, const char* functionName);
 	void RemoveModel(const char* modelFilePath);
 	void RemoveMaterial(const char* materialName);
 }

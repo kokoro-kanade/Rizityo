@@ -96,9 +96,9 @@ namespace Rizityo::Script
 
 	namespace Internal
 	{
-		uint8 RegisterScript(size_t tag, ScriptCreateFunc func)
+		uint8 RegisterScript(size_t hash, ScriptCreateFunc func)
 		{
-			bool result = Register().insert(ScriptRegister::value_type{ tag, func }).second;
+			bool result = Register().insert(ScriptRegister::value_type{ hash, func }).second;
 			assert(result);
 			return result;
 		}

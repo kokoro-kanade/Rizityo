@@ -13,6 +13,18 @@ namespace Rizityo::GameEntity
 
 		Vector<ID::GENERATION_TYPE> Generations;
 		Deque<EntityID> FreeIds;
+
+		std::unordered_map<size_t, GameEntity::InitInfo*> EntityInfoMapping;
+	}
+
+	namespace Internal
+	{
+		void RegisterEntity(const char* entityName, GameEntity::InitInfo* info)
+		{
+			size_t hash = StringHash()(entityName);
+			assert(EntityInfoMapping.find(hash) == EntityInfoMapping.end());
+			EntityInfoMapping[hash] = info;
+		}
 	}
 
 	Entity CreateGameEntity(const InitInfo& info)
@@ -112,5 +124,21 @@ namespace Rizityo::GameEntity
 		assert(IsAlive(_ID));
 		const ID::IDType index{ ID::GetIndex(_ID) };
 		return ScriptComponents[index];
+	}
+
+	Entity Spawn(const char* entityName, const Math::Vector3& pos /*= {}*/, const Math::Vector3& rot /*= {}*/)
+	{
+		size_t hash = Internal::StringHash()(entityName);
+		assert(EntityInfoMapping.find(hash) != EntityInfoMapping.end());
+		InitInfo& info{ *EntityInfoMapping[hash] };
+		info.Transform->Position[0] = pos.x;
+		info.Transform->Position[1] = pos.y;
+		info.Transform->Position[2] = pos.z;
+		Math::Quaternion quat{ rot };
+		info.Transform->Rotation[0] = quat.x;
+		info.Transform->Rotation[1] = quat.y;
+		info.Transform->Rotation[2] = quat.z;
+		info.Transform->Rotation[3] = quat.w;
+		return CreateGameEntity(info);
 	}
 }

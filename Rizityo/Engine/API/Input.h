@@ -173,6 +173,9 @@ namespace Rizityo::Input
     void GetInputValue(InputSource::Type type, InputCode::Code code, OUT InputValue& value);
     void GetInputValue(uint64 binding, OUT InputValue& value);
 
+    bool GetKeyUp(InputCode::Code code);
+    bool GetKeyDown(InputCode::Code code);
+
     namespace Internal 
     {
         class InputSystemBase

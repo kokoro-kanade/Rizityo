@@ -169,6 +169,20 @@ namespace Rizityo::Input
         value = result;
     }
 
+    bool GetKeyUp(InputCode::Code code)
+    {
+        InputValue val{};
+        GetInputValue(InputSource::Keyboard, code, val);
+        return Math::IsEqual(val.Current.x - val.Previous.x, -1.f);
+    }
+
+    bool GetKeyDown(InputCode::Code code)
+    {
+        InputValue val{};
+        GetInputValue(InputSource::Keyboard, code, val);
+        return Math::IsEqual(val.Current.x - val.Previous.x, 1.f);
+    }
+
     Internal::InputSystemBase::InputSystemBase()
     {
         InputSystems.emplace_back(this);

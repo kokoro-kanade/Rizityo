@@ -25,5 +25,12 @@ namespace Rizityo
 		void RemoveGameEnity(EntityID id);
 		bool IsAlive(EntityID id);
 	
+		namespace Internal
+		{
+			using StringHash = std::hash<std::string>;
+			// エディタ側から使う想定
+			void RegisterEntity(const char* entityName, GameEntity::InitInfo* info);
+		}
+
 	}
 }
