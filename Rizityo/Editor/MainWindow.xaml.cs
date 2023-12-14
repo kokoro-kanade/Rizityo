@@ -56,7 +56,7 @@ namespace Editor
         private void GetEnginePath()
         {
             var path = Environment.GetEnvironmentVariable("RIZITYO_ENGINE", EnvironmentVariableTarget.User);
-            if (path == null || !Directory.Exists(Path.Combine(path, @"Engine\EngineAPI")))
+            if (path == null || !Directory.Exists(Path.Combine(path, @"Engine\API")))
             {
                 var dialog = new EnginePathDialog();
                 if (dialog.ShowDialog() == true)

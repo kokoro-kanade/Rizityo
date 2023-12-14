@@ -11,10 +11,10 @@ namespace Rizityo::Math
 	{
 	public:
 
-		Vector3() : DirectX::XMFLOAT3A()
+		constexpr Vector3() : DirectX::XMFLOAT3A()
 		{}
 
-		Vector3(float32 x, float32 y, float32 z) : DirectX::XMFLOAT3A(x, y, z)
+		constexpr Vector3(float32 x, float32 y, float32 z) : DirectX::XMFLOAT3A(x, y, z)
 		{}
 
 		explicit Vector3(DX_Vector3 v) : DirectX::XMFLOAT3A(v.x, v.y, v.z)

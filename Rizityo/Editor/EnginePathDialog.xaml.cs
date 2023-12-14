@@ -28,7 +28,7 @@ namespace Editor
             {
                 messageTextBlock.Text = "パスに不正な文字が使われています";
             }
-            else if (!Directory.Exists(Path.Combine(path, @"Engine\EngineAPI\")))
+            else if (!Directory.Exists(Path.Combine(path, @"Engine\API\")))
             {
                 messageTextBlock.Text = "指定された場所にエンジンが見つかりません";
             }

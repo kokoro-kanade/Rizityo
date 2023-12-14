@@ -80,7 +80,7 @@ namespace Rizityo::Render
 		assert(ID::IsValid(id));
 
 		// modelID作成
-		size_t modelFileHash = StringHash()(info.ModelFilePath);
+		size_t modelFileHash = StringHash()(info.ModelName);
 		ID::IDType modelID{};
 		std::shared_ptr<std::thread> _model;
 		if (ModelID_Mapping.find(modelFileHash) != ModelID_Mapping.end())
@@ -90,7 +90,6 @@ namespace Rizityo::Render
 		else
 		{
 			_model = std::make_shared<std::thread>([&] {LoadModel(info.ModelFilePath, modelFileHash, modelID); });
-			//LoadModel(info.ModelFilePath, modelFileHash, modelID);
 		}
 
 		// materialID作成
@@ -168,7 +167,7 @@ namespace Rizityo::Render
 		ShaderID_Mapping[hash] = sID;
 	}
 
-	void RemoveShaderID(const char* fileName, const char* functionName)
+	void RemoveShader(const char* fileName, const char* functionName)
 	{
 		size_t hash = HashShaderName(fileName, functionName);
 		assert(ShaderID_Mapping.find(hash) != ShaderID_Mapping.end());
@@ -179,9 +178,9 @@ namespace Rizityo::Render
 
 	// MeshとMaterialは追加はエンティティの作成時だが
 	// 削除はタイミングを自由に決められるようにする
-	void RemoveModel(const char* modelFilePath)
+	void RemoveModel(const char* modelName)
 	{
-		size_t hash = StringHash()(modelFilePath);
+		size_t hash = StringHash()(modelName);
 		assert(ModelID_Mapping.find(hash) != ModelID_Mapping.end());
 		const ID::IDType modelID{ ModelID_Mapping[hash] };
 		assert(ID::IsValid(modelID));

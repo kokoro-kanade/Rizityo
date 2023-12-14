@@ -3,10 +3,12 @@
 
 namespace Rizityo::AssetTool
 {
-    namespace Elements {
-
-        struct ElementsType {
-            enum Type : uint32 {
+    namespace Elements
+    {
+        struct ElementsType
+        {
+            enum Type : uint32
+            {
                 PositionOnly = 0x00,
                 StaticNormal = 0x01,
                 StaticNormalTexture = 0x03,

@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EngineDLL", "EngineDLL\Engi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssetTool", "AssetTool\AssetTool.vcxproj", "{8EB7E7E3-C5CE-4F61-B54C-0A197F25DBCB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Simulation", "Simulation\Simulation.vcxproj", "{A9B4965D-5879-4DAD-AFAE-E4476EA9A0B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -59,6 +61,14 @@ Global
 		{8EB7E7E3-C5CE-4F61-B54C-0A197F25DBCB}.Release|x64.ActiveCfg = ReleaseEditor|x64
 		{8EB7E7E3-C5CE-4F61-B54C-0A197F25DBCB}.ReleaseEditor|x64.ActiveCfg = ReleaseEditor|x64
 		{8EB7E7E3-C5CE-4F61-B54C-0A197F25DBCB}.ReleaseEditor|x64.Build.0 = ReleaseEditor|x64
+		{A9B4965D-5879-4DAD-AFAE-E4476EA9A0B4}.Debug|x64.ActiveCfg = Debug|x64
+		{A9B4965D-5879-4DAD-AFAE-E4476EA9A0B4}.Debug|x64.Build.0 = Debug|x64
+		{A9B4965D-5879-4DAD-AFAE-E4476EA9A0B4}.DebugEditor|x64.ActiveCfg = Debug|x64
+		{A9B4965D-5879-4DAD-AFAE-E4476EA9A0B4}.DebugEditor|x64.Build.0 = Debug|x64
+		{A9B4965D-5879-4DAD-AFAE-E4476EA9A0B4}.Release|x64.ActiveCfg = Release|x64
+		{A9B4965D-5879-4DAD-AFAE-E4476EA9A0B4}.Release|x64.Build.0 = Release|x64
+		{A9B4965D-5879-4DAD-AFAE-E4476EA9A0B4}.ReleaseEditor|x64.ActiveCfg = Release|x64
+		{A9B4965D-5879-4DAD-AFAE-E4476EA9A0B4}.ReleaseEditor|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

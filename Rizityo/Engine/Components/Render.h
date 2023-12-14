@@ -38,6 +38,7 @@ namespace Rizityo::Render
 	struct InitInfo
 	{
 		const char* ModelFilePath;
+		const char* ModelName;
 		uint32 MaterialCount;
 		Vector<MaterialInfo> MaterialsInfo; // TODO : ê´î\ìIÇ…MaterialInfo*Ç…Ç∑ÇÈ
 	};
@@ -51,7 +52,7 @@ namespace Rizityo::Render
 
 	void AddShaderID(const char* fileName, const char* functionName, ID::IDType vsID);
 
-	void RemoveShaderID(const char* fileName, const char* functionName);
+	void RemoveShader(const char* fileName, const char* functionName);
 	void RemoveModel(const char* modelFilePath);
 	void RemoveMaterial(const char* materialName);
 }

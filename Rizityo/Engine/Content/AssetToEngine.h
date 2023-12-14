@@ -1,7 +1,24 @@
 #pragma once
 #include "CommonHeaders.h"
 
-namespace Rizityo::Content {
+namespace Rizityo::Content
+{
+    struct VertexElementsType
+    {
+        enum Type : uint32
+        {
+            PositionOnly = 0x00,
+            StaticNormal = 0x01,
+            StaticNormalTexture = 0x03,
+            StaticColor = 0x04,
+            Skeletal = 0x08,
+            SkeletalColor = Skeletal | StaticColor,
+            SkeletalNormal = Skeletal | StaticNormal,
+            SkeletalNormalColor = SkeletalNormal | StaticColor,
+            SkeletalNormalTexture = Skeletal | StaticNormalTexture,
+            SkeletalNormalTextureColor = SkeletalNormalTexture | StaticColor,
+        };
+    };
 
     struct AssetType {
         enum Type : uint32 {

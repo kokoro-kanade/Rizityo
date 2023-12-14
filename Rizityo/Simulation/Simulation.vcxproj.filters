@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="BoidSimulation\BoidSimulation.cpp">
+      <Filter>BoidSimulation</Filter>
+    </ClCompile>
+    <ClCompile Include="BoidSimulation\Boid.cpp" />
+    <ClCompile Include="Simulation.cpp" />
+    <ClCompile Include="CameraScript.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Simulation.h" />
+    <ClInclude Include="BoidSimulation\BoidSimulation.h">
+      <Filter>BoidSimulation</Filter>
+    </ClInclude>
+    <ClInclude Include="BoidSimulation\Boid.h" />
+    <ClInclude Include="CameraScript.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="BoidSimulation">
+      <UniqueIdentifier>{4986562e-9c09-40fe-b0a3-c659e0c76deb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
