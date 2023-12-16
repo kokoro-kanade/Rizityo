@@ -1,5 +1,5 @@
 #pragma once
-#include "ToolCommon.h"
+#include "ToolCommonHeader.h"
 
 namespace Rizityo::AssetTool
 {

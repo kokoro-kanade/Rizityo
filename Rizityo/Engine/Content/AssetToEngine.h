@@ -23,12 +23,8 @@ namespace Rizityo::Content
     struct AssetType {
         enum Type : uint32 {
             Unknown = 0,
-            Animation,
-            Audio,
             Material,
             Mesh,
-            Skeleton,
-            Texture,
             Count
         };
     };

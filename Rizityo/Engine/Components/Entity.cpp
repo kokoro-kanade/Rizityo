@@ -22,7 +22,7 @@ namespace Rizityo::GameEntity
 		void RegisterEntity(const char* entityName, GameEntity::InitInfo* info)
 		{
 			size_t hash = StringHash()(entityName);
-			assert(EntityInfoMapping.find(hash) == EntityInfoMapping.end());
+			//assert(EntityInfoMapping.find(hash) == EntityInfoMapping.end());
 			EntityInfoMapping[hash] = info;
 		}
 	}

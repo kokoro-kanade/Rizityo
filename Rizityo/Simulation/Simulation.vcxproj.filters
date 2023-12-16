@@ -8,6 +8,8 @@
     <ClCompile Include="BoidSimulation\Boid.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="CameraScript.cpp" />
+    <ClCompile Include="SynchroSimulation\SynchroSimulation.cpp" />
+    <ClCompile Include="SynchroSimulation\Oscillator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Simulation.h" />
@@ -16,6 +18,8 @@
     </ClInclude>
     <ClInclude Include="BoidSimulation\Boid.h" />
     <ClInclude Include="CameraScript.h" />
+    <ClInclude Include="SynchroSimulation\SynchroSimulation.h" />
+    <ClInclude Include="SynchroSimulation\Oscillator.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="BoidSimulation">

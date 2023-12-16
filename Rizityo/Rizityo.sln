@@ -20,6 +20,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssetTool", "AssetTool\AssetTool.vcxproj", "{8EB7E7E3-C5CE-4F61-B54C-0A197F25DBCB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Simulation", "Simulation\Simulation.vcxproj", "{A9B4965D-5879-4DAD-AFAE-E4476EA9A0B4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0E23CEAF-C429-4255-A496-BAAA96B30C73} = {0E23CEAF-C429-4255-A496-BAAA96B30C73}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

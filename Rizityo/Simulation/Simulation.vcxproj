@@ -83,12 +83,16 @@
     <ClCompile Include="CameraScript.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="SynchroSimulation\Oscillator.cpp" />
+    <ClCompile Include="SynchroSimulation\SynchroSimulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BoidSimulation\Boid.h" />
     <ClInclude Include="BoidSimulation\BoidSimulation.h" />
     <ClInclude Include="CameraScript.h" />
     <ClInclude Include="Simulation.h" />
+    <ClInclude Include="SynchroSimulation\Oscillator.h" />
+    <ClInclude Include="SynchroSimulation\SynchroSimulation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -186,7 +186,6 @@ namespace Rizityo::Script
 		Transform::ComponentCache& cache{ *GetCachePtr(entity) };
 		cache.Flags |= Transform::ComponentFlags::Position;
 		cache.Position = position;
-		// cache.Position = { position.x, position.y position.z };
 	}
 
 	void EntityScript::SetRotation(const GameEntity::Entity* const entity, Math::Quaternion rotationQuaternion)

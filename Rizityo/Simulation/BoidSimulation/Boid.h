@@ -26,7 +26,7 @@ public:
 
 	void Update(float32 dt) override;
 
-	[[nodiscard]] Math::Vector3 GetVerocity() { return _Verocity; }
+	[[nodiscard]] Math::Vector3 GetVerocity() const { return _Verocity; }
 
 private:
 

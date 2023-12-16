@@ -14,7 +14,7 @@
     <ClInclude Include="FBXImporter.h" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="PrimitiveMesh.h" />
-    <ClInclude Include="ToolCommon.h" />
+    <ClInclude Include="ToolCommonHeader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FBXImporter.cpp" />

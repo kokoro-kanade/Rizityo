@@ -53,7 +53,6 @@ namespace Rizityo
 			void SetOrientation(Math::Vector3 orientationVector) const { SetOrientation(this, orientationVector); }
 			void SetScale(Math::Vector3 scale) const { SetScale(this, scale); }
 
-			// TODO? : éQè∆Ç≈éÛÇØéÊÇÈ
 			static void SetPosition(const GameEntity::Entity* const entity, Math::Vector3 position);
 			static void SetRotation(const GameEntity::Entity* const entity, Math::Quaternion rotationQuaternion);
 			static void SetOrientation(const GameEntity::Entity* const entity, Math::Vector3 orientationVector);

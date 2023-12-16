@@ -1,4 +1,5 @@
 #include "BoidSimulation/BoidSimulation.h"
+#include "SynchroSimulation/SynchroSimulation.h"
 #include "Core/Platform/PlatformWindow/PlatformWindow.h"
 #include "Core/Utility/Time/Timer.h"
 #include "Core/Utility/IO/FileIO.h"
@@ -33,9 +34,13 @@ namespace
 	Simulation* Sim = nullptr;
 
 	BoidSimulation BoidSim{};
+	SynchroSimulation SyncSim{};
 
 	bool Resized = false;
 	bool IsRestarting = false;
+
+	bool sim = true;
+	float32 cooltime = 0.f;
 }
 
 bool Initialize();
@@ -251,7 +256,8 @@ bool Initialize()
 
 	_ls.join();
 
-	Sim = &BoidSim;
+	//Sim = &BoidSim;
+	Sim = &SyncSim;
 	Sim->Initialize();
 
 	GameTimer.Reset();
@@ -265,19 +271,32 @@ void Update()
 {
 	GameTimer.Tick();
 
-	// TODO : ボタンを押したら別のシミュレーション
-	if (Input::GetKeyDown(Input::InputCode::Key1))
-	{
-		// Sim->Shutdown();
-		// Sim = &BoidSim;
-		// Sim->Initialize();
-	}
-	else if (Input::GetKeyDown(Input::InputCode::Key2))
-	{
+	if (!sim)
+		cooltime += GameTimer.DeltaTime();
 
+	if (cooltime > 1.f)
+	{
+		sim = true;
+		cooltime = 0.f;
 	}
 
-	// std::this_thread::sleep_for(std::chrono::milliseconds(16));
+	// ボタンを押したら別のシミュレーション
+	if (Input::GetKeyDown(Input::InputCode::Key1) && sim)
+	{
+		 Sim->Shutdown();
+		 Sim = &BoidSim;
+		 Sim->Initialize();
+		 sim = false;
+	}
+	else if (Input::GetKeyDown(Input::InputCode::Key2) && sim)
+	{
+		 Sim->Shutdown();
+		 Sim = &SyncSim;
+		 Sim->Initialize();
+		 sim = false;
+	}
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
 	Sim->Update();
 	Script::Update(GameTimer.DeltaTime());

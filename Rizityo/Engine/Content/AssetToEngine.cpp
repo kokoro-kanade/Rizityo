@@ -197,8 +197,8 @@ namespace Rizityo::Content
         {
             assert((uintptr_t)pointer & SingleMeshFlag);
             static_assert(sizeof(uintptr_t) > sizeof(ID::IDType));
-            constexpr uint8 shift_bits{ (sizeof(uintptr_t) - sizeof(ID::IDType)) << 3 };
-            return (((uintptr_t)pointer) >> shift_bits) & (uintptr_t)ID::INVALID_ID;
+            constexpr uint8 shiftBits{ (sizeof(uintptr_t) - sizeof(ID::IDType)) << 3 };
+            return (((uintptr_t)pointer) >> shiftBits) & (uintptr_t)ID::INVALID_ID;
         }
 
         // dataは以下のフォーマットを仮定
@@ -252,10 +252,10 @@ namespace Rizityo::Content
             else
             {
                 GeometryHierarchyStream stream{ pointer };
-                const uint32 lod_count{ stream.LOD_Count() };
+                const uint32 lodCount{ stream.LOD_Count() };
                 uint32 idIndex = 0;
                 // 全サブメッシュを削除
-                for (uint32 lodIndex = 0; lodIndex < lod_count; lodIndex++)
+                for (uint32 lodIndex = 0; lodIndex < lodCount; lodIndex++)
                 {
                     for (uint32 i = 0; i < stream.LOD_Offsets()[lodIndex].Count; i++)
                     {
@@ -297,16 +297,12 @@ namespace Rizityo::Content
 
         switch (type)
         {
-        case AssetType::Animation: break;
-        case AssetType::Audio:	break;
         case AssetType::Material:
             id = CreateMaterialResource(data);
             break;
         case AssetType::Mesh:
             id = CreateGeometryResource(data); 
             break;
-        case AssetType::Skeleton: break;
-        case AssetType::Texture: break;
         }
 
         assert(ID::IsValid(id));
@@ -319,16 +315,12 @@ namespace Rizityo::Content
         assert(ID::IsValid(id));
         switch (type)
         {
-        case AssetType::Animation: break;
-        case AssetType::Audio:	break;
         case AssetType::Material:
             DestroyMaterialResource(id);
             break;
         case AssetType::Mesh:
             DestroyGeometryResource(id); 
             break;
-        case AssetType::Skeleton: break;
-        case AssetType::Texture: break;
         default:
             assert(false);
             break;
