@@ -8,6 +8,7 @@ Simulationディレクトリ下にこのライブラリを用いて制作した�
 - Visual Studio 2022
 - DirectX12
 - DirectXMath
+- DirectX Shader Compiler
 - FBX SDK
 
 # 実装予定
