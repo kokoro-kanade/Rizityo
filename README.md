@@ -8,16 +8,18 @@ Simulationディレクトリ下にこのライブラリを用いて制作した�
 - Visual Studio 2022
 - DirectX12
 - DirectXMath
+- DirectX Shader Compiler
 - FBX SDK
+- ImGui(現在はEngineプロジェクトに既存の項目としてc++ファイルを追加している)
 
-# 実装予定(優先度順)
+# 実装予定
 - 他のシミュレーション
 - コリジョン
 - UI
-- オーディオ
 
 # Simulation
-現在はBoidシミュレーションを実装しています。
+現在はBoidシミュレーションと同期シミュレーションを実装しています。  
+UI機能を実装した後にパラメータを調整できるようにする予定です。
 ## カメラ操作
 - 前方移動：Wキー
 - 後方移動：Sキー
