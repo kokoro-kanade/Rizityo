@@ -1,5 +1,8 @@
 #include "PlatformWindow.h"
 #include "../PlatformInput/PlatformInput.h"
+#include "ImGui/imgui_impl_win32.h"
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 namespace Rizityo::Platform
 {
@@ -41,6 +44,9 @@ namespace Rizityo::Platform
 
 		LRESULT CALLBACK InternalWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
+			if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
+				return true;
+
 			switch (msg)
 			{
 			case WM_NCCREATE:
@@ -62,7 +68,13 @@ namespace Rizityo::Platform
 				break;
 			}
 
-			ProcessInputMessage(hwnd, msg, wparam, lparam);
+			// ImGuiのウィンドウがマウス入力を処理する場合は入力を無視
+			// TODO : キーボード入力等適切に処理
+			//		  UIの実装クラス側から入力を処理するかどうかのフラグを設定?
+			if (!ImGui::GetIO().WantCaptureMouse)
+			{
+				ProcessInputMessage(hwnd, msg, wparam, lparam);
+			}
 
 			if (Resized && GetAsyncKeyState(VK_LBUTTON) >= 0)
 			{

@@ -20,6 +20,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="API\GUI.h" />
     <ClInclude Include="Common\CommonHeaders.h" />
     <ClInclude Include="Common\PrimitiveTypes.h" />
     <ClInclude Include="Common\Id.h" />
@@ -43,6 +44,7 @@
     <ClInclude Include="Graphics\Direct3D12\D3D12Content.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Core.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12GeometryPass.h" />
+    <ClInclude Include="Graphics\Direct3D12\D3D12GUI.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Helper.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Interface.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Light.h" />
@@ -68,8 +70,16 @@
     <ClInclude Include="Core\Utility\Math\Vector4.h" />
     <ClInclude Include="Core\Utility\Utility.h" />
     <ClInclude Include="Core\Utility\Container\Vector.h" />
+    <ClInclude Include="GUI\GUI.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\External\ImGui\imgui.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="Components\Entity.cpp" />
     <ClCompile Include="Components\Render.cpp" />
     <ClCompile Include="Components\Script.cpp" />
@@ -84,6 +94,7 @@
     <ClCompile Include="Graphics\Direct3D12\D3D12Content.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Core.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12GeometryPass.cpp" />
+    <ClCompile Include="Graphics\Direct3D12\D3D12GUI.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Helper.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Interface.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Light.cpp" />
@@ -99,6 +110,7 @@
     <ClCompile Include="Core\Utility\Math\Quaternion.cpp" />
     <ClCompile Include="Core\Utility\Math\Vector3.cpp" />
     <ClCompile Include="Core\Utility\Math\Vector4.cpp" />
+    <ClCompile Include="GUI\GUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -186,7 +198,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common;$(SolutionDir)External</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -242,7 +254,7 @@
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <CallingConvention>FastCall</CallingConvention>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common;$(SolutionDir)External</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>

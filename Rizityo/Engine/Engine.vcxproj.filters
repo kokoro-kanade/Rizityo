@@ -49,6 +49,9 @@
     <ClInclude Include="Core\Utility\IO\FileIO.h" />
     <ClInclude Include="Core\Utility\IO\BinaryIO.h" />
     <ClInclude Include="Core\Utility\Time\Timer.h" />
+    <ClInclude Include="API\GUI.h" />
+    <ClInclude Include="GUI\GUI.h" />
+    <ClInclude Include="Graphics\Direct3D12\D3D12GUI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\Entity.cpp" />
@@ -80,6 +83,15 @@
     <ClCompile Include="Components\Render.cpp" />
     <ClCompile Include="Core\Utility\IO\FileIO.cpp" />
     <ClCompile Include="Core\Utility\Time\Timer.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="..\External\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="GUI\GUI.cpp" />
+    <ClCompile Include="Graphics\Direct3D12\D3D12GUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

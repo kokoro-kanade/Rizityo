@@ -7,7 +7,12 @@
 #include "D3D12Content.h"
 #include "D3D12Camera.h"
 #include "D3D12Light.h"
+#include "D3D12GUI.h"
 #include "Shaders/SharedTypes.h"
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_win32.h"
+#include "ImGui/imgui_impl_dx12.h"
+#include "GUI/GUI.h"
 
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 611; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
@@ -195,6 +200,7 @@ namespace Rizityo::Graphics::D3D12::Core
 
 		constexpr D3D_FEATURE_LEVEL MinFeatureLevel{ D3D_FEATURE_LEVEL_11_0 };
 
+		bool ShowGUI = true;
 	} // 変数
 
 	namespace
@@ -363,6 +369,8 @@ namespace Rizityo::Graphics::D3D12::Core
 		if (FAILED(hr))
 			return FailedInit();
 
+		SET_NAME_D3D12_OBJECT(MainDevice, L"Main D3D12 Device");
+
 #ifdef _DEBUG
 		{
 			ComPtr<ID3D12InfoQueue> infoQueue;
@@ -401,10 +409,9 @@ namespace Rizityo::Graphics::D3D12::Core
 			  Post::Initialize() &&
 			  Upload::Initialize() &&
 			  Content::Initialize() &&
-			  Light::Initialize()))
+			  Light::Initialize() &&
+			  GUI::Initialize()))
 			return FailedInit();
-
-		SET_NAME_D3D12_OBJECT(MainDevice, L"Main D3D12 Device");
 		
 		return true;
 	}
@@ -419,6 +426,7 @@ namespace Rizityo::Graphics::D3D12::Core
 		}
 
 		// モジュールのシャットダウン
+		GUI::Shutdown();
 		Light::Shutdown();
 		Content::Shutdown();
 		Upload::Shutdown();
@@ -509,6 +517,7 @@ namespace Rizityo::Graphics::D3D12::Core
 	{
 		SurfaceID id{ Surfaces.Add(window) };
 		Surfaces[id].CreateSwapChain(DxgiFactory, GFX_Command.CommandQueue());
+		ImGui_ImplWin32_Init(window.Handle()); // ImGuiの初期化
 		return Surface{ id };
 	}
 
@@ -540,6 +549,9 @@ namespace Rizityo::Graphics::D3D12::Core
 		ID3D12GraphicsCommandList* cmdList{ GFX_Command.CommandList() };
 
 		const uint32 frameIndex = GetCurrentFrameIndex();
+		
+		// GUIの設定
+		GUI::Show();
 
 		// 定数バッファのリセット
 		ConstantBuffer& cbuffer{ ConstantBuffers[frameIndex] };
@@ -596,7 +608,10 @@ namespace Rizityo::Graphics::D3D12::Core
 
 		Post::PostProcess(cmdList, d3d12Info, surface.RTV());
 
-		// ポストプロセス後
+		// GUIの描画
+		GUI::Render(cmdList);
+
+		// 表示準備
 		Helper::TransitionResource(cmdList, currentBackBuffer,
 								   D3D12_RESOURCE_STATE_RENDER_TARGET,
 								   D3D12_RESOURCE_STATE_PRESENT);

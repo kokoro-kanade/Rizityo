@@ -41,7 +41,7 @@ namespace Rizityo::Time
 
 		_CurrentTime = Clock::now();
 
-		_DeltaTime = std::chrono::duration_cast<std::chrono::microseconds>(_CurrentTime - _PrevTime).count();
+		_DeltaTime = static_cast<float32>(std::chrono::duration_cast<std::chrono::microseconds>(_CurrentTime - _PrevTime).count());
 		if (_DeltaTime < 0.f)
 		{
 			_DeltaTime = 0.f;

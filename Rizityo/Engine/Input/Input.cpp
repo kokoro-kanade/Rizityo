@@ -190,7 +190,7 @@ namespace Rizityo::Input
 
     Internal::InputSystemBase::~InputSystemBase()
     {
-        for (uint32 i{ 0 }; i < InputSystems.size(); ++i)
+        for (uint32 i = 0; i < InputSystems.size(); i++)
         {
             if (InputSystems[i] == this)
             {

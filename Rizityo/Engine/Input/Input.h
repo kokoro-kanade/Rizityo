@@ -4,7 +4,6 @@
 
 namespace Rizityo::Input
 {
-
 	void Bind(InputSource source);
 	void Unbind(InputSource::Type type, InputCode::Code code);
 	void Unbind(uint64 binding);
