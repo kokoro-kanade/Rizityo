@@ -10,6 +10,7 @@ Simulationディレクトリ下にこのライブラリを用いて制作した�
 - DirectXMath
 - DirectX Shader Compiler
 - FBX SDK
+- ImGui(現在はEngineプロジェクトに既存の項目としてc++ファイルを追加している)
 
 # 実装予定
 - 他のシミュレーション
