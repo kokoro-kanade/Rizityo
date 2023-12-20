@@ -33,8 +33,8 @@ namespace Rizityo::Render
 		{
 			assert(ID::IsValid(id));
 			const ID::IDType index{ ID::GetIndex(id) };
-			assert(index < Generations.size() && RenderID_ItemIndex_Mapping[index] < RenderItemIDs.size());
-			return (Generations[index] == ID::GetGeneration(id) && ID::IsValid(RenderItemIDs[RenderID_ItemIndex_Mapping[index]]));
+			assert(index < Generations.size());
+			return (Generations[index] == ID::GetGeneration(id) && RenderID_ItemIndex_Mapping[index] < RenderItemIDs.size() && ID::IsValid(RenderItemIDs[RenderID_ItemIndex_Mapping[index]]));
 		}
 
 		size_t HashShaderName(const char* fileName, const char* functionName)

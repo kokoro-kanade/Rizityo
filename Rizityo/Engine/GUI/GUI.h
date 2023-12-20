@@ -6,4 +6,5 @@
 namespace Rizityo::GUI
 {
 	void Show();
+	void Update(float32 dt);
 }

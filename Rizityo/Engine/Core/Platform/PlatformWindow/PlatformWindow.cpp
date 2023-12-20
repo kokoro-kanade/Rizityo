@@ -44,6 +44,7 @@ namespace Rizityo::Platform
 
 		LRESULT CALLBACK InternalWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
+			// ImGuiのイベント処理
 			if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
 				return true;
 
@@ -68,7 +69,7 @@ namespace Rizityo::Platform
 				break;
 			}
 
-			// ImGuiのウィンドウがマウス入力を処理する場合は入力を無視
+			// ImGuiのウィンドウにカーソルがある時は入力を処理しない
 			// TODO : キーボード入力等適切に処理
 			//		  UIの実装クラス側から入力を処理するかどうかのフラグを設定?
 			if (!ImGui::GetIO().WantCaptureMouse)

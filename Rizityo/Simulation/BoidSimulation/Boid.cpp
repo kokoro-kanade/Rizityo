@@ -8,7 +8,17 @@ void BoidScript::BeginPlay() {}
 void BoidScript::Update(float32 dt)
 {
 	using namespace Math;
-	
+
+	if (!Boid::GetUpdateFlag())
+		return;
+
+	float32 alignementWeight = Boid::GetAlignement();
+	float32 cohesionWeight = Boid::GetCohesion();
+	float32 seperationWeight = Boid::GetSeperation();
+	float32 neighborRadius = Boid::GetNeighborRadius();
+	float32 seperationRadius = Boid::GetSeperationRadius();
+	float32 fOV = Boid::GetFOV();
+
 	Vector3 totalNeighborVerocity{ Vector3::ZERO };
 	Vector3 totalNeighborPosition{ Vector3::ZERO };
 	Vector3 totalSeperationPosition{ Vector3::ZERO };
@@ -33,7 +43,7 @@ void BoidScript::Update(float32 dt)
 		float32 dist = dir.Length();
 
 		// ‹ßÚ—Ìˆæ“à‚¾‚¯‚ğl—¶
-		if (dist > _NeighborRadius)
+		if (dist > neighborRadius)
 			continue;
 
 		// ‹ŠE‚É“ü‚Á‚Ä‚¢‚é‚à‚Ì‚¾‚¯‚ğl—¶
@@ -41,7 +51,7 @@ void BoidScript::Update(float32 dt)
 		myVec.Normalize();
 		dir.Normalize();
 		float32 th = dir.Dot(myVec);
-		if (th < cosf(_FOV * PI / 180.f))
+		if (th < cosf(fOV * PI / 180.f))
 			continue;
 
 		neighborCount++;
@@ -53,7 +63,7 @@ void BoidScript::Update(float32 dt)
 		totalNeighborPosition += otherPos;
 
 		// •ª—£‚Í”r‘¼—Ìˆæ“à‚¾‚¯‚ğl—¶
-		if (dist > _SeperationRadius)
+		if (dist > seperationRadius)
 			continue;
 
 		seperationCount++;
@@ -68,13 +78,13 @@ void BoidScript::Update(float32 dt)
 
 	if (neighborCount > 0)
 	{
-		accel += (totalNeighborPosition / neighborCount - myPos) * _Cohesion;		 // Œ‹‡
-		accel += (totalNeighborVerocity / neighborCount - _Verocity) * _Alignement;	 // ®—ñ
+		accel += (totalNeighborPosition / neighborCount - myPos) * cohesionWeight;		 // Œ‹‡
+		accel += (totalNeighborVerocity / neighborCount - _Verocity) * alignementWeight;	 // ®—ñ
 	}
 
 	if (seperationCount > 0)
 	{
-		accel -= (totalSeperationPosition / seperationCount - myPos) * _Seperation;	 // •ª—£
+		accel -= (totalSeperationPosition / seperationCount - myPos) * seperationWeight;	 // •ª—£
 	}
 
 	_Verocity += accel * dt;

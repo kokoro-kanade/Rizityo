@@ -3,6 +3,7 @@
 #include "Components/Transform.h"
 #include "Components/Script.h"
 #include "Components/Render.h"
+#include "API/Input.h"
 #include "API/Light.h"
 #include "Oscillator.h"
 
@@ -46,6 +47,11 @@ namespace
 	float32 OscillatorPhases[OscillatorNum]{};
 	std::unordered_map<ID::IDType, uint32> OscillatorEntityID_IndexMapping;
 
+	float32 Speed = 2.f; // 移動スピード
+	float32 NeighborRadius = 4.f; // 近接領域の半径(m)
+	float32 Weight = 1.f; // 位相更新の重み
+	bool UpdateFlag = true;
+
 	// 壁
 	GameEntity::Entity WallEntities[WallNum]{};
 
@@ -54,6 +60,9 @@ namespace
 	Graphics::Light WorldLight{};
 	GameEntity::Entity LightEntity{};
 
+	// UI
+	SynchroSimulationGUI SimUI{ "Oscillator Parameter", 500, 300 };
+	bool Simulating = false;
 }
 
 namespace
@@ -214,12 +223,19 @@ namespace Oscillator
 			pos.z -= (WallForwardZ - WallBackZ);
 
 	}
+
+	float32 GetSpeed() { return Speed; }
+	float32 GetNeighborRadius() { return NeighborRadius; }
+	float32 GetWeight() { return Weight; }
+	bool GetUpdateFlag() { return UpdateFlag; }
 }
 
 void SynchroSimulation::Initialize()
 {
 	LoadContents();
 	CreateWorld();
+	Simulating = true;
+	SimUI.SetFlag(true);
 }
 
 void SynchroSimulation::Update()
@@ -233,6 +249,60 @@ void SynchroSimulation::Update()
 
 void SynchroSimulation::Shutdown()
 {
+	SimUI.SetFlag(false);
+	Simulating = false;
 	RemoveWorld();
 	UnloadContents();
+}
+
+void SynchroSimulationGUI::ShowContent()
+{
+	// 各種パラメータ(oscillator)
+	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+	if (ImGui::TreeNode("Oscillator Parameters"))
+	{
+		ImGui::SliderFloat("Speed", &Speed, 0.f, 5.f);
+		ImGui::SliderFloat("NeighborRadius", &NeighborRadius, 0.f, 5.f);
+		ImGui::SliderFloat("Weight", &Weight, 0.f, 5.f);
+
+		ImGui::TreePop();
+	}
+
+	ImGui::Dummy({ 0.f, 20.f });
+
+	// スタート/ストップ
+	bool button = false;
+	button = ImGui::Button("Stop", { 60, 40 });
+	if (button) UpdateFlag = false;
+	ImGui::SameLine();
+	ImGui::Dummy({ 5.f, 0 });
+	ImGui::SameLine();
+	button = ImGui::Button("Start", { 60, 40 });
+	if (button) UpdateFlag = true;
+}
+
+// TODO? : この辺の処理をまとめる
+// TODO? : Simulatingフラグを持つかGUIインスタンスをSimulationクラスのメンバに持つか
+void SynchroSimulationGUI::Update(float32 dt)
+{
+	if (!Simulating)
+		return;
+
+	if (_IsCooling)
+	{
+		_ElapsedTime += dt;
+		if (_ElapsedTime > _CoolTime)
+		{
+			_ElapsedTime = 0.f;
+			_IsCooling = false;
+		}
+
+		return;
+	}
+
+	if (Input::GetKeyDown(Input::InputCode::Key0))
+	{
+		_ShowFlag = !_ShowFlag;
+		_IsCooling = true;
+	}
 }

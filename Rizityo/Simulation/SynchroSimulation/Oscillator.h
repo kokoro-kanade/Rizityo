@@ -25,13 +25,10 @@ public:
 
 private:
 
-	float32 _Speed = 2.f;
 	float32 _DirAngle = 0.f;
 
 	float32 _Phase = 0.f;
 	float32 _AngularFreq = Math::HALF_PI / 2;
-	float32 _NeighborRadius = 4.f; // ‹ßÚ—Ìˆæ‚Ì”¼Œa(m)
-	float32 _Weight = 1.f;
 
 	static inline std::random_device _RD{};
 	static inline std::mt19937 _Gen{_RD()};

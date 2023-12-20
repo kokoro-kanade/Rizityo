@@ -2,6 +2,7 @@
 #include "Components/Transform.h"
 #include "Components/Script.h"
 #include "Components/Render.h"
+#include "API/Input.h"
 #include "API/Light.h"
 #include "BoidSimulation.h"
 #include "Boid.h"
@@ -19,13 +20,12 @@ namespace
 	constexpr float32 WallRightX = 15.f;
 	constexpr float32 WallBackZ = -15.f;
 	constexpr float32 WallForwardZ = 15.f;
-	constexpr float32 WallDistance = 5.f;
-	constexpr float32 WallForceScale = 2.f;
 
 	constexpr Math::Vector3 LightPos{ -10.f, 10.f, 0.f };
 	constexpr Math::Vector3 LightRot{ Math::HALF_PI / 2, 0, 0 };
 	constexpr Math::Vector3 LightColor{ 174.f / 255.f, 174.f / 255.f, 174.f / 255.f };
-}
+
+} // 定数
 
 namespace
 {	
@@ -45,13 +45,27 @@ namespace
 	Math::Vector3 BoidVerocities[BoidNum]{};
 	std::unordered_map<ID::IDType, uint32> BoidEntityID_IndexMapping;
 
+	float32 AlignementWeight = 1.f;
+	float32 CohesionWeight = 1.f;
+	float32 SeperationWeight = 1.f;
+	float32 NeighborRadius = 4.f;
+	float32 SeperationRadius = 3.f;
+	float32 FOV = 20.f;
+	bool UpdateFlag = true;
+
 	// 壁
 	GameEntity::Entity WallEntities[WallNum]{};
+	float32 WallForceScale = 2.5f;
+	float32 WallDistance = 5.f;
 
 	// ライト
 	constexpr uint32 LightSetKey = 0;
 	Graphics::Light WorldLight{};
 	GameEntity::Entity LightEntity{};
+
+	// UI
+	BoidSimulationGUI SimUI{"Boid Parameter", 500, 300};
+	bool Simulating = false;
 
 }
 
@@ -213,12 +227,22 @@ namespace Boid
 
 		return force;
 	}
+
+	float32 GetAlignement() { return AlignementWeight; }
+	float32 GetCohesion() { return CohesionWeight; }
+	float32 GetSeperation() { return SeperationWeight; }
+	float32 GetNeighborRadius() { return NeighborRadius; }
+	float32 GetSeperationRadius() { return SeperationRadius; }
+	float32 GetFOV() { return FOV; }
+	bool GetUpdateFlag() { return UpdateFlag; }
 }
 
 void BoidSimulation::Initialize()
 {
 	LoadContents();
 	CreateWorld();
+	Simulating = true;
+	SimUI.SetFlag(true);
 }
 
 void BoidSimulation::Update()
@@ -232,8 +256,64 @@ void BoidSimulation::Update()
 
 void BoidSimulation::Shutdown()
 {
+	SimUI.SetFlag(false);
+	Simulating = false;
 	RemoveWorld();
 	UnloadContents();
+}
+
+void BoidSimulationGUI::ShowContent()
+{
+	// 各種パラメータ(boid)
+	ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+	if (ImGui::TreeNode("Boid Parameters"))
+	{
+		ImGui::SliderFloat("Alignement Weight", &AlignementWeight, 0.f, 5.f);
+		ImGui::SliderFloat("Cohesion Weight", &CohesionWeight, 0.f, 5.f);
+		ImGui::SliderFloat("Seperation Weight", &SeperationWeight, 0.f, 5.f);
+		ImGui::SliderFloat("Neighbor Radius", &NeighborRadius, 0.f, 5.f);
+		ImGui::SliderFloat("Seperation Radius", &SeperationRadius, 0.f, 5.f);
+		ImGui::SliderFloat("FOV", &FOV, 0.f, 45.f);
+
+		ImGui::TreePop();
+	}
+
+	ImGui::Dummy({ 0.f, 20.f });
+	
+	// スタート/ストップ
+	bool button = false;
+	button = ImGui::Button("Stop", {60, 40});
+	if (button) UpdateFlag = false;
+	ImGui::SameLine();
+	ImGui::Dummy({ 5.f, 0 });
+	ImGui::SameLine();
+	button = ImGui::Button("Start", {60, 40});
+	if(button) UpdateFlag = true;
+
+}
+
+void BoidSimulationGUI::Update(float32 dt)
+{
+	if (!Simulating)
+		return;
+
+	if (_IsCooling)
+	{
+		_ElapsedTime += dt;
+		if (_ElapsedTime > _CoolTime)
+		{
+			_ElapsedTime = 0.f;
+			_IsCooling = false;
+		}
+
+		return;
+	}
+
+	if (Input::GetKeyDown(Input::InputCode::Key0))
+	{
+		_ShowFlag = !_ShowFlag;
+		_IsCooling = true;
+	}
 }
 
 

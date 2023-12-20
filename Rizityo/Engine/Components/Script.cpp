@@ -27,8 +27,8 @@ namespace Rizityo::Script
 		{
 			assert(ID::IsValid(id));
 			const ID::IDType index{ ID::GetIndex(id) };
-			assert(index < Generations.size() && ID_Mapping[index] < EntityScripts.size());
-			return (Generations[index] == ID::GetGeneration(id) && EntityScripts[ID_Mapping[index]] && EntityScripts[ID_Mapping[index]]->IsValid());
+			assert(index < Generations.size());
+			return (Generations[index] == ID::GetGeneration(id) && ID_Mapping[index] < EntityScripts.size() && EntityScripts[ID_Mapping[index]] && EntityScripts[ID_Mapping[index]]->IsValid());
 		}
 
 		using ScriptRegister = std::unordered_map<size_t, Internal::ScriptCreateFunc>;

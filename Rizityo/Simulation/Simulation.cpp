@@ -9,6 +9,7 @@
 #include "Components/Script.h"
 #include "Components/Render.h"
 #include "Input/Input.h"
+#include "GUI/GUI.h"
 #include "Content/AssetToEngine.h"
 
 
@@ -39,8 +40,9 @@ namespace
 	bool Resized = false;
 	bool IsRestarting = false;
 
-	bool sim = true;
-	float32 cooltime = 0.f;
+	bool SimCooling = false;
+	float32 CoolTime = 1.f;
+	float32 ElapsedTime = 0.f;
 }
 
 bool Initialize();
@@ -256,13 +258,15 @@ bool Initialize()
 
 	_ls.join();
 
-	//Sim = &BoidSim;
-	Sim = &SyncSim;
+	Sim = &BoidSim;
+	//Sim = &SyncSim;
 	Sim->Initialize();
 
 	GameTimer.Reset();
 
 	IsRestarting = false;
+	SimCooling = false;
+	ElapsedTime = 0.f;
 
 	return true;
 }
@@ -271,35 +275,48 @@ void Update()
 {
 	GameTimer.Tick();
 
-	if (!sim)
-		cooltime += GameTimer.DeltaTime();
+	float32 delta = GameTimer.DeltaTime();
 
-	if (cooltime > 1.f)
+	if (SimCooling)
 	{
-		sim = true;
-		cooltime = 0.f;
-	}
+		ElapsedTime += delta;
+		if (ElapsedTime > CoolTime)
+		{
+			SimCooling = false;
+			ElapsedTime = 0.f;
+		}
+	}	
 
 	// ボタンを押したら別のシミュレーション
-	if (Input::GetKeyDown(Input::InputCode::Key1) && sim)
+	// TODO : GUIからシミュレーションの変更を行う
+	if (!SimCooling)
 	{
-		 Sim->Shutdown();
-		 Sim = &BoidSim;
-		 Sim->Initialize();
-		 sim = false;
-	}
-	else if (Input::GetKeyDown(Input::InputCode::Key2) && sim)
-	{
-		 Sim->Shutdown();
-		 Sim = &SyncSim;
-		 Sim->Initialize();
-		 sim = false;
+		if (Input::GetKeyDown(Input::InputCode::Key1))
+		{
+			Sim->Shutdown();
+			Sim = &BoidSim;
+			Sim->Initialize();
+			SimCooling = true;
+		}
+		else if (Input::GetKeyDown(Input::InputCode::Key2))
+		{
+			Sim->Shutdown();
+			Sim = &SyncSim;
+			Sim->Initialize();
+			SimCooling = true;
+		}
 	}
 
+	// TODO : 固定フレームレートにするか
+	//		  固定フレームレートの場合タイマーの時間は固定フレームの時間か待ち時間を差し引いたものなのか調べる
+	//		  待ち時間を差し引く場合はタイマーをストップしたりsleep_forの引数を変える必要がある
 	std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
 	Sim->Update();
-	Script::Update(GameTimer.DeltaTime());
+	GUI::Update(delta);
+	Script::Update(delta);
+
+	// Render::Update();
 
 	if (Window.Surface.Surface.IsValid())
 	{

@@ -11,9 +11,15 @@ void OscillatorScript::Update(float32 dt)
 
 	static std::uniform_real_distribution<float32> angleDistribution(-Math::TWO_PI, Math::TWO_PI);
 
+	if (!Oscillator::GetUpdateFlag())
+		return;
+
+	float32 Speed = Oscillator::GetSpeed();
+	float32 NeighborRadius = Oscillator::GetNeighborRadius();
+	float32 Weight = Oscillator::GetWeight();
+
 	Vector3 myPos{ GetPosition() };
 
-	// TODO : パラメータ調整
 	// 乱数を用いて方向を更新して位置更新
 	_DirAngle += angleDistribution(_Gen) * dt;
 	if (_DirAngle > Math::TWO_PI)
@@ -24,7 +30,7 @@ void OscillatorScript::Update(float32 dt)
 	{
 		_DirAngle += Math::TWO_PI;
 	}
-	Vector3 verocity{ _Speed * cosf(_DirAngle), 0.f, _Speed * sinf(_DirAngle) };
+	Vector3 verocity{ Speed * cosf(_DirAngle), 0.f, Speed * sinf(_DirAngle) };
 	Vector3 newPos{ myPos + verocity * dt };
 	// 周期的境界条件
 	Oscillator::ApplyWallCondition(newPos);
@@ -46,12 +52,11 @@ void OscillatorScript::Update(float32 dt)
 
 		Vector3 otherPos{ positions[i] };
 		float32 distSquare = (otherPos - myPos).LengthSquared();
-		if (distSquare > _NeighborRadius * _NeighborRadius)
+		if (distSquare > NeighborRadius * NeighborRadius)
 			continue;
 
 		// TODO : 対ごとに重みをつけるかどうか(ex. 距離で減衰する重み)
-		// TODO : 重みをこのクラスで持つかシミュレーション側で持つか
-		total += sinf(phases[i] - _Phase) * _Weight;
+		total += sinf(phases[i] - _Phase) * Weight;
 	}
 
 	_Phase += (_AngularFreq + total) * dt;

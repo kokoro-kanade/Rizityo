@@ -33,12 +33,4 @@ private:
 	Math::Vector3 _Verocity = { 1.f, 0.f, 0.f };
 	constexpr static float32 _MinSpeed = 2.f;
 	constexpr static float32 _MaxSpeed = 4.f;
-
-	float32 _NeighborRadius = 4.f; // ‹ßÚ—Ìˆæ‚Ì”¼Œa(m)
-	float32 _SeperationRadius = 3.f; // ”r‘¼—Ìˆæ‚Ì”¼Œa(m)
-	float32 _FOV = 20.f; // ‹ŠE‚Ì”¼•ª‚ÌŠp“x(“x)
-
-	float32 _Alignement = 1.f;
-	float32 _Cohesion = 1.f;
-	float32 _Seperation = 1.f;
 };
