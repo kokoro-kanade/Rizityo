@@ -20,9 +20,11 @@ Simulationディレクトリ下にこのライブラリを用いて制作した�
 現在はボイドシミュレーションと同期シミュレーションを実装しています。  
 UIを用いてパラメータを調整できます。  
 ## ボイドシミュレーション
+Boidsアルゴリズムによる群れのシミュレーションです。
 ![boid](https://github.com/kokoro-kanade/Rizityo/assets/49611290/8a2441bf-9f57-446e-badf-c4d81b1228af)
 ## 同期シミュレーション
-
+振動子が移動しながら近傍の振動子と相互作用して同期するモデルのシミュレーションです。
+![sync](https://github.com/kokoro-kanade/Rizityo/assets/49611290/fcb07c8b-46f1-4632-b432-e42b45bd34a6)
 ## Simulation操作
 - Boidシミュレーション : 1キー
 - 同期シミュレーション : 2キー
